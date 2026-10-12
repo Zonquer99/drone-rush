@@ -199,6 +199,11 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
 .item.ulock canvas{filter:grayscale(1);opacity:.5}
 #misLock{text-align:center;margin:4px 0 0}
 .set-test{display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:12px;border:1px dashed var(--line)}
+.pause-tip{position:absolute;left:50%;top:28%;transform:translate(-50%,-50%);z-index:6;pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 22px;border-radius:16px;background:rgba(15,10,35,.82);border:1px solid var(--line);text-align:center;animation:pz 1.4s ease-in-out infinite}
+.pause-tip b{font-family:var(--display);font-size:26px;color:var(--gold)}
+.pause-tip span{font-family:var(--ui);font-weight:700;font-size:15px;color:var(--ink)}
+@keyframes pz{50%{transform:translate(-50%,-50%) scale(1.04)}}
+@media (prefers-reduced-motion:reduce){.pause-tip{animation:none}}
 .race-tag{background:#d6283f;color:#fff}
 .match-box{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;padding:8px 0}
 .match-box b{font-family:var(--ui);font-size:20px}
@@ -396,6 +401,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
     <div class="bat"><span data-en="Battery">Batería</span> <div class="bat-shell"><div class="bat-fill" id="batFill"></div></div><span id="hudRoy" class="tag roy" hidden></span><span id="hudSh" class="tag sh" hidden></span><span id="hudPh" class="tag ph" hidden></span><span id="hudPo" class="tag myth" hidden></span><span id="hudFz" class="tag sh" hidden></span><span id="hudBh" class="tag rar-epica" hidden></span><span id="hudGh" class="tag rar-temporada" hidden></span></div>
   </div>
   <div class="hint" id="hint" hidden data-en="Hold to fly up">Mantén pulsado para subir</div>
+  <div class="pause-tip" id="pauseTip" hidden><b data-en="Paused">En pausa</b><span data-en="Tap to keep flying">Toca la pantalla para seguir volando</span></div>
 
   <!-- Menú -->
   <section class="panel" id="pMenu">
@@ -819,7 +825,7 @@ const TURBO_M=[0,50,100,200];
 const drone={x:100,y:300,vy:0,tilt:0};
 let holding=false,obs=[],pick=[],parts=[],floats=[];
 
-function startGame(m){holeWindStop();
+function startGame(m){holeWindStop();unfreeze();
   state='play';mult=m;t=0;dist=0;speed=210;coins=0;battery=100;revives=3;invuln=0;banked=0;
   drone.x=Math.min(110,LW*.28);drone.y=300;drone.vy=-120;drone.tilt=0;
   obs=[];pick=[];parts=[];floats=[];acc=-LW*.35;spacing=300;hintT=2.2;holding=false;
@@ -901,8 +907,12 @@ function crash(why){holeWindStop();
 }
 
 /* ======================= UPDATE ======================= */
+let frozen=false;
+function freeze(){if(state!=='play')return;frozen=true;holding=false;hintT=0;$('hint').hidden=true;$('pauseTip').hidden=false}
+function unfreeze(){if(!frozen)return;frozen=false;$('pauseTip').hidden=true}
 function update(dt){
   t+=dt;
+  if(frozen&&state==='play')return;
   if(state==='menu'||(state==='ad'&&!obs.length)){
     dist+=70*dt;drone.x=Math.min(110,LW*.28);drone.y=300+Math.sin(t*2)*10;drone.tilt=Math.sin(t*1.3)*.06;
     const sk=skin();if(sk.trail&&Math.random()<sk.tr*.5)emitTrail(sk,70);
@@ -2128,7 +2138,7 @@ $('setNameOk').onclick=()=>{const v=$('setName').value.trim(),e=nameError(v,M.pi
   m.hidden=false;if(e){m.textContent=e;m.className='note bad';return}
   if(!(M.nameChanges>0))return;if(v===M.pilot){m.textContent=L('Escribe un nombre distinto.','Type a different name.');m.className='note bad';return}
   M.pilot=v;M.nameChanges--;save();renderNameSet();m.textContent=L('Nombre cambiado.','Name changed.');m.className='note new'};
-function showMenu(){holeWindStop();state='menu';obs=[];pick=[];$('hud').hidden=true;tourCheckWeek();fillMenu();M.offered++;save();show('pMenu')}
+function showMenu(){holeWindStop();unfreeze();state='menu';obs=[];pick=[];$('hud').hidden=true;tourCheckWeek();fillMenu();M.offered++;save();show('pMenu')}
 function showOver(m,rec){
   state='over';$('hud').hidden=true;
   $('oWhy').textContent=whyDead;$('oM').textContent=fmt(m);$('oC').textContent=fmt(coins);
@@ -2429,7 +2439,7 @@ function revive(){misAdd('revive',1);setTimeout(()=>{if(holeOn)holeWindStart()},
   M.revAds++;revives--;save();
   obs=obs.filter(o=>o.x>drone.x+420||o.x<drone.x-200);pick=pick.filter(p=>p.x>drone.x+60);
   drone.y=LH*.42;drone.vy=-150;drone.tilt=0;battery=Math.max(battery,60);invuln=2;acc=-120;
-  lifeStart=Math.floor(dist/PXM);state='play';show(null);$('hud').hidden=false;lastB=-1;hintT=1.2;
+  lifeStart=Math.floor(dist/PXM);state='play';show(null);$('hud').hidden=false;lastB=-1;hintT=1.2;freeze();
 }
 
 /* ======================= BUTTONS ======================= */
@@ -2463,10 +2473,11 @@ $('bMusic').onclick=()=>{M.music=M.music===false;save();refreshSet()};
 $('bSound').onclick=()=>{M.sound=!M.sound;save();refreshSet();unlock();beep(880,.08)};
 
 /* ======================= INPUT ======================= */
-wrap.addEventListener('pointerdown',e=>{if(e.target.closest('button,input,.panel,.ad-screen'))return;e.preventDefault();unlock();holding=true});
+wrap.addEventListener('pointerdown',e=>{if(e.target.closest('button,input,.panel,.ad-screen'))return;e.preventDefault();unlock();if(frozen){unfreeze();return}holding=true});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)freeze()});
 const up=()=>{holding=false};
 window.addEventListener('pointerup',up);window.addEventListener('pointercancel',up);window.addEventListener('blur',up);
-window.addEventListener('keydown',e=>{if((e.code==='Space'||e.code==='ArrowUp')&&state==='play'){e.preventDefault();unlock();holding=true}});
+window.addEventListener('keydown',e=>{if((e.code==='Space'||e.code==='ArrowUp')&&state==='play'){e.preventDefault();unlock();if(frozen){unfreeze();return}holding=true}});
 window.addEventListener('keyup',e=>{if(e.code==='Space'||e.code==='ArrowUp')holding=false});
 wrap.addEventListener('contextmenu',e=>e.preventDefault());
 
