@@ -2210,7 +2210,7 @@ async function cloudPush(){if(!cloudOk||cloudBusy||!M.named||!M.pilot)return;clo
       if(r.error&&r.error.code==='23505'){ // nombre cogido por otro: le añadimos números
         M.pilot=(M.pilot.slice(0,12)+'_'+Math.floor(100+Math.random()*900));try{localStorage.setItem(KEY,JSON.stringify(M))}catch(e){}
         r=await sb.from('players').insert(cloudPayload())}
-      if(!r.error)cloudHasRow=true}
+      if(!r.error){cloudHasRow=true;setTimeout(tgLink,500)}}
     if(r.error)console.warn('[nube] guardar',r.error.message)}
   catch(e){console.warn('[nube] guardar',e)}finally{cloudBusy=false}}
 async function cloudInit(){try{
@@ -2226,8 +2226,20 @@ async function cloudInit(){try{
     // la nube tiene una partida más avanzada: la cargamos
     sessionStorage.setItem('dr.cloudload','1');try{localStorage.setItem(KEY,JSON.stringify(Object.assign({},data.save,{named:true,pilot:data.name})))}catch(e){}
     location.reload();return}
-  cloudPush()}
+  await tgLink();cloudPush()}
   catch(e){console.warn('[nube] sin conexión, se juega en local',e)}}
+// Liga la partida a la cuenta de Telegram (verificado en el servidor) o la recupera si cambias de móvil
+var tgLinked=false;
+async function tgLink(){try{
+  const tg=window.Telegram&&Telegram.WebApp;if(!cloudOk||tgLinked||M.newbie||!tg||!tg.initData)return;
+  const{data,error}=await sb.functions.invoke('tg-auth',{body:{initData:tg.initData}});
+  if(error||!data){console.warn('[telegram] no se pudo ligar',error);return}
+  if(data.status==='linked')tgLinked=true;
+  else if(data.status==='restored'&&data.save&&!sessionStorage.getItem('dr.tgload')){
+    sessionStorage.setItem('dr.tgload','1');cloudHasRow=true;
+    try{localStorage.setItem(KEY,JSON.stringify(Object.assign({},data.save,{named:true,pilot:data.name})))}catch(e){}
+    location.reload()}
+}catch(e){console.warn('[telegram]',e)}}
 async function nameFree(v){if(!cloudOk)return true;
   try{const{data,error}=await sb.rpc('name_available',{n:v});if(error)return true;return data!==false}catch(e){return true}}
 
