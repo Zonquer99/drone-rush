@@ -2097,7 +2097,7 @@ function setTgl(el,on){el.classList.toggle('on',on);el.textContent=on?L('Sí','O
 function refreshSet(){setTgl($('bSound'),!!M.sound);setTgl($('bMusic'),M.music!==false);
   $('bLang').textContent=LANG==='en'?'English':'Español';$('bLang2').textContent=LANG==='en'?'Español':'English';
   $('setTest').hidden=!MODO_PRUEBA_CFG;$('setNewbie').hidden=!!M.newbie;$('setAll').hidden=!M.newbie;$('setTestTxt').innerHTML=M.newbie?L('Estás jugando como un <b>jugador nuevo</b>: sin monedas infinitas ni skins de prueba. Tu partida de prueba está guardada aparte.','You are playing as a <b>new player</b>: no infinite coins or test skins. Your test save is kept aside.'):L('Prueba el juego como un jugador real desde cero: sin monedas, sin skins y con todo por desbloquear. Tu partida de prueba se guarda y puedes volver a ella.','Try the game as a real player from zero: no coins, no skins, everything locked. Your test save is kept and you can go back to it.');
-  $('setId').textContent=L('ID de jugador: ','Player ID: ')+(M.refId||'')}
+  $('setId').textContent=L('ID de jugador: ','Player ID: ')+(M.refId||'')+(MODO_PRUEBA&&netStat?' · '+netStat:'')}
 /* nombres de usuario únicos */
 const RESERVED=['admin','administrador','moderador','mod','soporte','support','dronerush','drone_rush','sistema','system'];
 function nameError(v,own){v=(v||'').trim();
@@ -2221,20 +2221,22 @@ async function cloudInit(){try{
   cloudUid=session.user.id;
   const{data,error}=await sb.from('players').select('name,save,updated_at').eq('id',cloudUid).maybeSingle();
   if(error)throw error;
-  cloudOk=true;cloudHasRow=!!data;
+  cloudOk=true;cloudHasRow=!!data;stat('Nube OK');
   if(data&&data.save&&(data.save.games||0)>(M.games||0)&&!sessionStorage.getItem('dr.cloudload')){
     // la nube tiene una partida más avanzada: la cargamos
     sessionStorage.setItem('dr.cloudload','1');try{localStorage.setItem(KEY,JSON.stringify(Object.assign({},data.save,{named:true,pilot:data.name})))}catch(e){}
     location.reload();return}
   await tgLink();cloudPush()}
-  catch(e){console.warn('[nube] sin conexión, se juega en local',e)}}
+  catch(e){stat('Nube: error '+(e&&e.message||e));console.warn('[nube] sin conexión, se juega en local',e)}}
 // Liga la partida a la cuenta de Telegram (verificado en el servidor) o la recupera si cambias de móvil
-var tgLinked=false;
+var tgLinked=false,netStat='';
+function stat(x){netStat=x;try{if(MODO_PRUEBA&&$('pSet')&&!$('pSet').hidden)refreshSet()}catch(e){}}
 async function tgLink(){try{
-  const tg=window.Telegram&&Telegram.WebApp;if(!cloudOk||tgLinked||M.newbie||!tg||!tg.initData)return;
+  const tg=window.Telegram&&Telegram.WebApp;if(!cloudOk||tgLinked||M.newbie)return;if(!tg||!tg.initData){stat('Telegram: no abierto desde Telegram');return}
   const{data,error}=await sb.functions.invoke('tg-auth',{body:{initData:tg.initData}});
-  if(error||!data){console.warn('[telegram] no se pudo ligar',error);return}
-  if(data.status==='linked')tgLinked=true;
+  if(error||!data){let msg=error&&error.message||'?';try{if(error&&error.context&&error.context.json){const j=await error.context.json();msg=(error.context.status||'')+' '+(j.error||j.message||JSON.stringify(j))}}catch(e){}
+    stat('Telegram: error '+msg);console.warn('[telegram] no se pudo ligar',error);return}
+  stat('Telegram: '+data.status);if(data.status==='linked')tgLinked=true;
   else if(data.status==='restored'&&data.save&&!sessionStorage.getItem('dr.tgload')){
     sessionStorage.setItem('dr.tgload','1');cloudHasRow=true;
     try{localStorage.setItem(KEY,JSON.stringify(Object.assign({},data.save,{named:true,pilot:data.name})))}catch(e){}
