@@ -8,3 +8,6 @@ create unique index if not exists players_tg_id on public.players (tg_id) where 
 revoke insert, update on public.players from authenticated;
 grant insert (id, name, best, trophies, frame, save) on public.players to authenticated;
 grant update (name, best, trophies, frame, save) on public.players to authenticated;
+
+-- Permisos para el servidor (funciones con service_role)
+grant select, insert, update, delete on public.players to service_role;
