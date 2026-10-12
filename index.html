@@ -3,6 +3,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#1b1638">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://libtl.com/sdk.js" data-zone="12015673" data-sdk="show_12015673"></script>
 <title>Drone Rush</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Russo+One&family=Barlow:wght@400;600;700&family=Baloo+2:wght@600;700;800&display=swap">
@@ -626,7 +627,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
     <p class="eyebrow" data-en="Rewarded ad">Anuncio con recompensa</p>
     <div class="ad-box">
       <div class="ad-count" id="adCount">5</div>
-      <div data-en="The real ad from the ad network will show here.">Aquí se mostrará el anuncio real de la red de anuncios.</div>
+      <div id="adMsg" data-en="The real ad from the ad network will show here.">Aquí se mostrará el anuncio real de la red de anuncios.</div>
       <div id="adReward" style="color:var(--apricot);font-weight:700"></div>
     </div>
     <div class="prog"><i id="adProg"></i></div>
@@ -2388,7 +2389,31 @@ $('bShopBack').onclick=()=>{if(shopFrom==='pMenu'){state='menu';fillMenu();show(
 
 /* ======================= ADS (simulated) ======================= */
 let adTimer=null,adBack=null,adReward=null,adPrev='menu';
+/* ---- anuncios reales (Monetag). Solo hay recompensa si Monetag confirma que el anuncio se vio entero ---- */
+const MONETAG_FN='show_12015673';
+const realAds=()=>typeof window[MONETAG_FN]==='function';
+let adBusy=false;
+function adFail(msg){clearInterval(adTimer);adBusy=false;$('adCount').textContent='✕';$('adMsg').textContent=msg;$('adProg').style.width='0%';
+  $('bAdOk').hidden=true;$('bAdSkip').textContent=L('Volver','Back');$('bAdSkip').hidden=false}
+function showRealAd(label,onReward,back){
+  const prev=state;adPrev=prev;state='ad';adReward=onReward;adBack=()=>{state=prev;back()};
+  M.accepted++;save();adBusy=true;
+  $('adReward').textContent=L('Recompensa: ','Reward: ')+label;$('adCount').textContent='…';
+  $('adMsg').textContent=L('Cargando anuncio…','Loading ad…');$('adProg').style.width='0%';
+  $('bAdOk').hidden=true;$('bAdSkip').hidden=true;show('pAd');
+  try{AC&&AC.suspend()}catch(e){}
+  let done=false;const fin=()=>{done=true;adBusy=false;try{AC&&AC.resume()}catch(e){}};
+  const to=setTimeout(()=>{if(done)return;fin();adFail(L('El anuncio no ha cargado. Prueba otra vez en un momento.','The ad did not load. Try again in a moment.'))},60000);
+  let p;try{p=window[MONETAG_FN]({ymid:(M.refId||'p')+'-'+Date.now(),requestVar:String(label).slice(0,40)})}catch(e){p=Promise.reject(e)}
+  Promise.resolve(p).then(r=>{if(done)return;clearTimeout(to);fin();
+    if(r&&r.reward_event_type==='valued'){M.completed++;misAdd('ads',1);save();const f=adReward;adReward=null;f()}
+    else adFail(L('Tienes que ver el anuncio completo para conseguir la recompensa.','You have to watch the whole ad to get the reward.')+(MODO_PRUEBA?' ['+(r&&r.reward_event_type||'sin dato')+']':''))
+  }).catch(()=>{if(done)return;clearTimeout(to);fin();adFail(L('Ahora mismo no hay anuncios disponibles. Prueba otra vez en un momento.','No ads available right now. Try again in a moment.'))})}
 function showAd(label,onReward,back){
+  if(adBusy)return;
+  $('bAdOk').hidden=false;$('bAdSkip').hidden=false;$('bAdSkip').textContent=L('Saltar sin recompensa','Skip without reward');
+  $('adMsg').textContent=L('Aquí se mostrará el anuncio real de la red de anuncios.','The real ad from the ad network will show here.');
+  if(realAds())return showRealAd(label,onReward,back);
   const prev=state;adPrev=prev;state='ad';adReward=onReward;adBack=()=>{state=prev;back()};
   M.accepted++;save();
   $('adReward').textContent=L('Recompensa: ','Reward: ')+label;
