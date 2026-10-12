@@ -2,6 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#1b1638">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <title>Drone Rush</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Russo+One&family=Barlow:wght@400;600;700&family=Baloo+2:wght@600;700;800&display=swap">
@@ -2459,6 +2460,9 @@ function frame(now){
 if(!TORNEO_ACTIVO){const t=$('bTour');t.disabled=true;t.classList.add('locked');
   t.dataset.es='Torneo<small>próximamente · 500 jugadores</small>';t.dataset.en='Tournament<small>coming soon · 500 players</small>'}
 guardBtn('bShop','shop');guardBtn('bMis','mis');guardBtn('bInv','inv');guardBtn('bPvp','pvp');
+// Telegram Mini App: pantalla completa y sin cerrar al deslizar
+try{const tg=window.Telegram&&Telegram.WebApp;if(tg&&tg.initData!==undefined){tg.ready();tg.expand();
+  if(tg.disableVerticalSwipes)tg.disableVerticalSwipes();if(tg.setHeaderColor)tg.setHeaderColor('#1b1638');if(tg.setBackgroundColor)tg.setBackgroundColor('#1b1638')}}catch(e){}
 resize();applyLang();if(M.named)showMenu();else showName();requestAnimationFrame(frame);
 })();
 </script>
