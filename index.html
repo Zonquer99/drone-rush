@@ -2211,8 +2211,9 @@ async function cloudPush(){if(!cloudOk||cloudBusy||!M.named||!M.pilot)return;clo
         M.pilot=(M.pilot.slice(0,12)+'_'+Math.floor(100+Math.random()*900));try{localStorage.setItem(KEY,JSON.stringify(M))}catch(e){}
         r=await sb.from('players').insert(cloudPayload())}
       if(!r.error){cloudHasRow=true;setTimeout(tgLink,500)}}
-    if(r.error)console.warn('[nube] guardar',r.error.message)}
-  catch(e){console.warn('[nube] guardar',e)}finally{cloudBusy=false}}
+    if(r.error){stat('Guardar: error '+(r.error.code||'')+' '+r.error.message);console.warn('[nube] guardar',r.error.message)}
+    else if(!tgLinked&&netStat.indexOf('Telegram')<0)stat('Nube: guardado')}
+  catch(e){stat('Guardar: error '+(e&&e.message||e));console.warn('[nube] guardar',e)}finally{cloudBusy=false}}
 async function cloudInit(){try{
   if(!window.supabase||!supabase.createClient)return;
   sb=supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:'dronerush.auth'+(M.newbie?'.nuevo':'')}});
