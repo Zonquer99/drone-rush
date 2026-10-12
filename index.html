@@ -3,6 +3,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#1b1638">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="https://libtl.com/sdk.js" data-zone="12015673" data-sdk="show_12015673"></script>
 <title>Drone Rush</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -667,7 +668,7 @@ let M=Object.assign({},DEF);
 try{Object.assign(M,JSON.parse(localStorage.getItem(KEY))||{})}catch(e){}
 // en la partida de "jugador nuevo" el modo prueba se apaga del todo
 const MODO_PRUEBA=MODO_PRUEBA_CFG&&!M.newbie;
-function save(){try{localStorage.setItem(KEY,JSON.stringify(M))}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(M))}catch(e){}cloudQueue()}
 if(!Array.isArray(M.owned))M.owned=['clasico'];
 M.up=Object.assign({bat:0,mag:0,pila:0,shield:0,turbo:0},M.up||{});
 M.up.turbo=Math.min(2,M.up.turbo);delete M.up.ruby;
@@ -2109,7 +2110,9 @@ function nameError(v,own){v=(v||'').trim();
 function showName(){state='menu';$('hud').hidden=true;$('nameIn').value='';$('nameMsg').hidden=true;refreshSet();show('pName');setTimeout(()=>{try{$('nameIn').focus()}catch(e){}},50)}
 $('nameOk').onclick=()=>{const v=$('nameIn').value.trim(),e=nameError(v);
   if(e){$('nameMsg').textContent=e;$('nameMsg').hidden=false;beep(200,.2,'square',.05,120);return}
-  M.pilot=v;M.named=true;save();showMenu()};
+  const b=$('nameOk');b.disabled=true;nameFree(v).then(ok=>{b.disabled=false;
+    if(!ok){$('nameMsg').textContent=L('Ese nombre ya está cogido. Prueba con otro.','That name is already taken. Try another one.');$('nameMsg').hidden=false;beep(200,.2,'square',.05,120);return}
+    M.pilot=v;M.named=true;save();cloudPush();showMenu()})};
 $('nameIn').addEventListener('keydown',e=>{if(e.key==='Enter')$('nameOk').click()});
 $('bLang2').onclick=()=>{LANG=LANG==='en'?'es':'en';M.lang=LANG;save();applyLang();refreshSet()};
 const FRAMES=[{id:'none',n:['Sin marco','No frame']},{id:'platino',n:['Platino','Platinum'],lk:['Liga Platino','Platinum league']},
@@ -2137,7 +2140,8 @@ $('setBack').onclick=()=>{state='menu';fillMenu();show('pMenu')};
 $('setNameOk').onclick=()=>{const v=$('setName').value.trim(),e=nameError(v,M.pilot),m=$('setNameMsg');
   m.hidden=false;if(e){m.textContent=e;m.className='note bad';return}
   if(!(M.nameChanges>0))return;if(v===M.pilot){m.textContent=L('Escribe un nombre distinto.','Type a different name.');m.className='note bad';return}
-  M.pilot=v;M.nameChanges--;save();renderNameSet();m.textContent=L('Nombre cambiado.','Name changed.');m.className='note new'};
+  nameFree(v).then(ok=>{if(!ok&&v.toLowerCase()!==M.pilot.toLowerCase()){m.textContent=L('Ese nombre ya está cogido. Prueba con otro.','That name is already taken. Try another one.');m.className='note bad';return}
+    M.pilot=v;M.nameChanges--;save();cloudPush();renderNameSet();m.textContent=L('Nombre cambiado.','Name changed.');m.className='note new'})};
 function showMenu(){holeWindStop();unfreeze();state='menu';obs=[];pick=[];$('hud').hidden=true;tourCheckWeek();fillMenu();M.offered++;save();show('pMenu')}
 function showOver(m,rec){
   state='over';$('hud').hidden=true;
@@ -2191,6 +2195,41 @@ function applyUnl(){
 function lockedMsg(k){const u=unlBy(k),n=$('mMsg');n.hidden=false;n.className='note';
   n.textContent=L(`🔒 ${u.t[0]}: ${u.need[0].toLowerCase()} para desbloquearlo.`,`🔒 ${u.t[1]}: ${u.need[1].toLowerCase()} to unlock it.`);beep(260,.15,'sine',.04,200)}
 function guardBtn(id,k){const f=$(id).onclick;$(id).onclick=e=>{if(!isOn(k)){lockedMsg(k);return}clearNew(k);f&&f(e)}}
+
+/* ======================= NUBE (Supabase) ======================= */
+// Si la nube falla, el juego sigue funcionando con lo guardado en el móvil.
+const SB_URL='https://tshsagnrcgvyixsouedv.supabase.co',SB_KEY='sb_publishable_Dp9EHu9v6unGj2yI1E-2Yg_kcZQxZMj';
+var sb=null,cloudUid=null,cloudOk=false,cloudT=null,cloudHasRow=false,cloudBusy=false; // var: save() se usa antes de llegar aquí
+function cloudPayload(){const s=Object.assign({},M);return{id:cloudUid,name:M.pilot,best:Math.min(10000000,Math.floor(M.best||0)),
+  trophies:Math.min(1000000,Math.floor(M.trophies||0)),frame:M.frame||'none',save:s}}
+function cloudQueue(){if(!cloudOk||!M.named||!M.pilot)return;clearTimeout(cloudT);cloudT=setTimeout(cloudPush,4000)}
+async function cloudPush(){if(!cloudOk||cloudBusy||!M.named||!M.pilot)return;cloudBusy=true;
+  try{const p=cloudPayload();let r;
+    if(cloudHasRow)r=await sb.from('players').update({name:p.name,best:p.best,trophies:p.trophies,frame:p.frame,save:p.save}).eq('id',cloudUid);
+    else{r=await sb.from('players').insert(p);
+      if(r.error&&r.error.code==='23505'){ // nombre cogido por otro: le añadimos números
+        M.pilot=(M.pilot.slice(0,12)+'_'+Math.floor(100+Math.random()*900));try{localStorage.setItem(KEY,JSON.stringify(M))}catch(e){}
+        r=await sb.from('players').insert(cloudPayload())}
+      if(!r.error)cloudHasRow=true}
+    if(r.error)console.warn('[nube] guardar',r.error.message)}
+  catch(e){console.warn('[nube] guardar',e)}finally{cloudBusy=false}}
+async function cloudInit(){try{
+  if(!window.supabase||!supabase.createClient)return;
+  sb=supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:'dronerush.auth'+(M.newbie?'.nuevo':'')}});
+  let{data:{session}}=await sb.auth.getSession();
+  if(!session){const r=await sb.auth.signInAnonymously();if(r.error)throw r.error;session=r.data.session}
+  cloudUid=session.user.id;
+  const{data,error}=await sb.from('players').select('name,save,updated_at').eq('id',cloudUid).maybeSingle();
+  if(error)throw error;
+  cloudOk=true;cloudHasRow=!!data;
+  if(data&&data.save&&(data.save.games||0)>(M.games||0)&&!sessionStorage.getItem('dr.cloudload')){
+    // la nube tiene una partida más avanzada: la cargamos
+    sessionStorage.setItem('dr.cloudload','1');try{localStorage.setItem(KEY,JSON.stringify(Object.assign({},data.save,{named:true,pilot:data.name})))}catch(e){}
+    location.reload();return}
+  cloudPush()}
+  catch(e){console.warn('[nube] sin conexión, se juega en local',e)}}
+async function nameFree(v){if(!cloudOk)return true;
+  try{const{data,error}=await sb.rpc('name_available',{n:v});if(error)return true;return data!==false}catch(e){return true}}
 
 /* ======================= SHOP ======================= */
 let shopTab='skins',shopFrom='pMenu',sel=M.skin;
@@ -2499,6 +2538,6 @@ guardBtn('bShop','shop');guardBtn('bMis','mis');guardBtn('bInv','inv');guardBtn(
 // Telegram Mini App: pantalla completa y sin cerrar al deslizar
 try{const tg=window.Telegram&&Telegram.WebApp;if(tg&&tg.initData!==undefined){tg.ready();tg.expand();
   if(tg.disableVerticalSwipes)tg.disableVerticalSwipes();if(tg.setHeaderColor)tg.setHeaderColor('#1b1638');if(tg.setBackgroundColor)tg.setBackgroundColor('#1b1638')}}catch(e){}
-resize();applyLang();if(M.named)showMenu();else showName();requestAnimationFrame(frame);
+resize();applyLang();if(M.named)showMenu();else showName();cloudInit();requestAnimationFrame(frame);
 })();
 </script>
