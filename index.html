@@ -747,11 +747,11 @@ const SKINS=[
     coinX:2.5,hole:true,accent:'#ffd35a',trail:['#ffd35a','#fff1a8','#ff8a1a'],tr:.9,tsz:3,add:true}
 ];
 const UPS=[
-  {id:'bat',en:'Long battery',fxEn:l=>l?`Uses ${l*8}% less`:'Uses less battery',name:'Batería larga',max:5,cost:[3000,7500,15000,27000,45000],fx:l=>l?`Gasta ${l*8} % menos`:'Gasta menos batería'},
-  {id:'mag',en:'Coin magnet',fxEn:l=>l?`Pulls coins from ${60+l*25} px`:'Pulls in nearby coins',name:'Imán de monedas',max:5,cost:[4500,10500,21000,36000,60000],fx:l=>l?`Atrae monedas a ${60+l*25} px`:'Atrae las monedas cercanas'},
-  {id:'pila',en:'Better batteries',fxEn:l=>`Each battery adds +${35+l*5}%`,name:'Pilas mejoradas',max:5,cost:[2400,6000,12000,24000,39000],fx:l=>`Cada pila carga +${35+l*5} %`},
-  {id:'shield',en:'Shield',fxEn:l=>l?`Survives ${l} hit${l>1?'s':''} per run`:'Survives one hit per run',name:'Escudo',max:2,cost:[36000,120000],fx:l=>l?`Aguanta ${l} golpe${l>1?'s':''} por partida`:'Aguanta un golpe por partida'},
-  {id:'turbo',en:'Turbo start',fxEn:l=>l?`Blast off ${[0,50,100,200][l]} m without crashing`:'Blast off without crashing',name:'Arranque turbo',max:3,cost:[75000,180000],fx:l=>l?`Sales disparado ${[0,50,100,200][l]} m sin poder chocar`:'Sales disparado sin poder chocar'},
+  {id:'bat',en:'Long battery',fxEn:l=>l?`Uses ${l*8}% less`:'Uses less battery',name:'Batería larga',max:5,cost:[1000,2000,3000,4000,5000],fx:l=>l?`Gasta ${l*8} % menos`:'Gasta menos batería'},
+  {id:'mag',en:'Coin magnet',fxEn:l=>l?`Pulls coins from ${60+l*25} px`:'Pulls in nearby coins',name:'Imán de monedas',max:5,cost:[2000,3000,4000,5000,6000],fx:l=>l?`Atrae monedas a ${60+l*25} px`:'Atrae las monedas cercanas'},
+  {id:'pila',en:'Better batteries',fxEn:l=>`Each battery adds +${35+l*5}%`,name:'Pilas mejoradas',max:5,cost:[1500,2500,3500,4500,5500],fx:l=>`Cada pila carga +${35+l*5} %`},
+  {id:'shield',en:'Shield',fxEn:l=>l?`Survives ${l} hit${l>1?'s':''} per run`:'Survives one hit per run',name:'Escudo',max:2,cost:[10000,30000],fx:l=>l?`Aguanta ${l} golpe${l>1?'s':''} por partida`:'Aguanta un golpe por partida'},
+  {id:'turbo',en:'Turbo start',fxEn:l=>l?`Blast off ${[0,50,100,200][l]} m without crashing`:'Blast off without crashing',name:'Arranque turbo',max:3,cost:[10000,50000],fx:l=>l?`Sales disparado ${[0,50,100,200][l]} m sin poder chocar`:'Sales disparado sin poder chocar'},
   {id:'ruby',en:'Ruby coins',fxEn:l=>'',name:'Monedas rubí',max:4,fx:l=>l?`Cada 10 s: ${l*5} % de que salga un rubí x${rubyX(l)}`:'Cada 10 s puede salir un rubí que multiplica'}
 ];
 const rubyX=l=>Math.min(5,l+1);
