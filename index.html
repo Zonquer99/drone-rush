@@ -516,6 +516,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
     <p class="eyebrow" data-en="Leagues">Ligas</p>
     <p class="note" data-en="Win races to earn trophies and climb leagues. Each league gives you an advantage in races and a reward when the season ends.">Gana carreras para sumar trofeos y subir de liga. Cada liga te da una ventaja en las carreras y un premio cuando termina la temporada.</p>
     <div class="lg-table" id="lgTable"></div>
+    <div id="trBox" hidden><p class="eyebrow" data-en="Top pilots by trophies">Mejores pilotos por trofeos</p><ol class="board" id="trBoard"></ol></div>
     <p class="note" data-en="For now the rivals are test ghosts. Once the game is on Telegram they will be recordings of real players.">De momento los rivales son fantasmas de prueba. Cuando el juego esté en Telegram serán grabaciones de jugadores reales.</p>
     <button class="btn sec" id="pvpBack" style="min-height:48px" data-en="Back">Volver</button>
   </section>
@@ -647,7 +648,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
 (function(){
 /* ======================= CONFIG ======================= */
 const MODO_PRUEBA_CFG=true; // modo prueba del desarrollador
-const TORNEO_ACTIVO=false;   // el torneo se activa cuando haya 500 jugadores: ponlo en true   // true = monedas infinitas y skin del torneo desbloqueada (ponlo en false para publicar)
+const TORNEO_ACTIVO=false;var tourOn=TORNEO_ACTIVO;   // el torneo se activa cuando haya 500 jugadores: ponlo en true   // true = monedas infinitas y skin del torneo desbloqueada (ponlo en false para publicar)
 
 const $=id=>document.getElementById(id);
 const wrap=$('wrap'),cvs=$('cv'),ctx=cvs.getContext('2d');
@@ -901,7 +902,7 @@ function crash(why){holeWindStop();
   if(m>M.best){M.best=m;rec=true}
   if(!race&&m>(M.uB||0))M.uB=m;
   coins=Math.floor(coins);M.coins+=coins-banked;banked=coins;
-  tourCheckWeek();if(m>M.tourBest)M.tourBest=m;
+  tourCheckWeek();if(m>M.tourBest)M.tourBest=m;if(!race)cloudTour(m);
   misMax('run',m);misAdd('dist',Math.max(0,m-distBank));distBank=m;
   save();
   setTimeout(()=>{if(state==='dead'){if(race){race.lastM=m;if((race.revs||0)<RACE_REVIVES)showRaceRevive(m);else showRaceEnd(m)}else showOver(m,rec)}},750);
@@ -1785,6 +1786,8 @@ const BOTS=['AlbaFPV','dronmaster_23','Kike_Vuela','LuciaSky','Rafa.RC','Nerea_8
   'pablo_quad','Ines.Air','Hugo_Rotor','CarlosVLOS','DaniHelix','Ana_Gimbal','Toni_Lipo','Marta_Hover'];
 const BASES=[3900,3420,3050,2720,2430,2160,1920,1710,1520,1340,1170,1010,870,730,600,470,350,230];
 function board(key,prog,myScore){
+  if(tourRows&&tourRowsWeek===key){const rows=tourRows.filter(x=>!x.me).map(x=>({name:x.name,score:x.score,frame:x.frame}));
+    rows.push({name:M.pilot,score:myScore,me:true});rows.sort((a,b)=>b.score-a.score||(a.me?-1:1));return rows}
   const r=seedRng(key),names=BOTS.slice();
   for(let i=names.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[names[i],names[j]]=[names[j],names[i]]}
   const rows=BASES.map((b,i)=>({name:names[i],score:Math.round(b*(.85+r()*.3)*(.45+.55*prog))}));
@@ -1796,7 +1799,8 @@ const myRank=rows=>rows.findIndex(x=>x.me)+1;
 function tourCheckWeek(){
   const w=weekInfo();
   if(M.tourWeek&&M.tourWeek!==w.key){
-    if(M.tourBest>0){
+    if(M.tourBest>0&&tourOn&&cloudOk&&M.tourPaid!==M.tourWeek){const old=M.tourWeek;M.tourPaid=old;M.tourBest=0;M.tourWeek=w.key;save();tourPayReal(old);return}
+    if(M.tourBest>0&&tourOn){
       const rk=myRank(board(M.tourWeek,1,M.tourBest));
       if(rk<=3){if(!M.owned.includes('dragon'))M.owned.push('dragon');M.coins+=10000;M.tourMsg=L(`¡Quedaste ${rk}.º en el torneo! Has ganado el Dragón Real y 10.000 monedas.`,`You finished #${rk} in the tournament! You won the Royal Dragon and 10,000 coins.`)}
       else if(rk<=10){M.coins+=5000;M.nameChanges=(M.nameChanges||0)+1;M.tourMsg=L(`Quedaste ${rk}.º en el torneo. Has ganado 5.000 monedas y 1 cambio de nombre.`,`You finished #${rk} in the tournament. You won 5,000 coins and 1 name change.`)}
@@ -1817,7 +1821,7 @@ function renderTour(){
   const ol=$('tBoard');ol.innerHTML='';
   const add=(row,pos)=>{const li=document.createElement('li');li.className=(pos<=3?'p'+pos:'')+(row.me?' me':'');
     const a=document.createElement('span');a.className='pos';a.textContent=pos;
-    const b=document.createElement('span');b.className='nm';b.innerHTML=(row.me?myTag():nameTag(row.name,pos===1?'leyenda':pos<=3?'diamante':pos<=6?'platino':'none'))+(row.me?L(' (tú)',' (you)'):'');
+    const b=document.createElement('span');b.className='nm';b.innerHTML=(row.me?myTag():nameTag(row.name,row.frame!==undefined?row.frame:pos===1?'leyenda':pos<=3?'diamante':pos<=6?'platino':'none'))+(row.me?L(' (tú)',' (you)'):'');
     const c=document.createElement('span');c.className='sc';c.textContent=row.me&&!row.score?'—':fmt(row.score)+' m';
     li.append(a,b,c);ol.append(li)};
   rows.slice(0,10).forEach((row,i)=>add(row,i+1));
@@ -1926,7 +1930,7 @@ function payLeague(){if(seasonOn()||M.leaguePaid===SEASON.n)return;
   if(i>=4){if(!M.frames.includes('diamante'))M.frames.push('diamante');M.diamondTrail=true}
   if(i>=5){if(!M.frames.includes('leyenda'))M.frames.push('leyenda');if(!M.owned.includes('emperador'))M.owned.push('emperador')}
   M.leaguePaid=SEASON.n;M.tourMsg=L(`Fin de temporada: liga ${LN(lg)}. Has ganado ${fmt(lg.end)} monedas${lg.extra[0]?' '+lg.extra[0]:''}.`,`Season over: ${LN(lg)} league. You won ${fmt(lg.end)} coins${lg.extra[1]?' '+lg.extra[1]:''}.`);save()}
-function renderPvp(){const tr=M.trophies||0,lg=leagueOf(tr),i=LEAGUES.indexOf(lg),nx=LEAGUES[i+1];
+function renderPvp(){cloudTrophyBoard();const tr=M.trophies||0,lg=leagueOf(tr),i=LEAGUES.indexOf(lg),nx=LEAGUES[i+1];
   $('pvpTro').textContent=fmt(tr);$('pvpWins').textContent=fmt(M.raceWins||0)+' / '+fmt(M.races||0);
   $('pvpLeague').innerHTML=`<i class="lg-badge" style="--lc:${lg.c}"></i><b style="color:${lg.c}">${LN(lg)}</b>`;
   $('pvpNext').textContent=nx?L(`${fmt(nx.min-tr)} trofeos para ${LN(nx)}`,`${fmt(nx.min-tr)} trophies to ${LN(nx)}`):L('Liga máxima','Top league');
@@ -2148,7 +2152,7 @@ function showOver(m,rec){
   $('oWhy').textContent=whyDead;$('oM').textContent=fmt(m);$('oC').textContent=fmt(coins);
   $('oBest').textContent=fmt(M.best)+' m';$('oNew').hidden=!rec;
   const w=weekInfo(),rk=myRank(board(w.key,w.prog,M.tourBest));
-  $('oTour').innerHTML='';$('oTour').hidden=!TORNEO_ACTIVO;const s=document.createElement('span');
+  $('oTour').innerHTML='';$('oTour').hidden=!tourOn;const s=document.createElement('span');
   s.textContent=rk<=3?L(`Torneo: vas ${rk}.º. ¡Ahora mismo ganarías el Dragón Real!`,`Tournament: you're #${rk}. Right now you'd win the Royal Dragon!`):L(`Torneo: vas ${rk}.º. Top 3 gana el Dragón Real.`,`Tournament: you're #${rk}. Top 3 win the Royal Dragon.`);
   if(rk<=3)s.className='win';$('oTour').append(s);
   $('bRevive').hidden=revives<=0;$('oRev').textContent='('+revives+L(' de 3)',' of 3)');
@@ -2227,7 +2231,7 @@ async function cloudInit(){try{
     // la nube tiene una partida más avanzada: la cargamos
     sessionStorage.setItem('dr.cloudload','1');try{localStorage.setItem(KEY,JSON.stringify(Object.assign({},data.save,{named:true,pilot:data.name})))}catch(e){}
     location.reload();return}
-  await tgLink();cloudPush()}
+  await tgLink();cloudPush();cloudCount();cloudTourFetch()}
   catch(e){stat('Nube: error '+(e&&e.message||e));console.warn('[nube] sin conexión, se juega en local',e)}}
 // Liga la partida a la cuenta de Telegram (verificado en el servidor) o la recupera si cambias de móvil
 var tgLinked=false,netStat='';
@@ -2243,6 +2247,23 @@ async function tgLink(){try{
     try{localStorage.setItem(KEY,JSON.stringify(Object.assign({},data.save,{named:true,pilot:data.name})))}catch(e){}
     location.reload()}
 }catch(e){console.warn('[telegram]',e)}}
+// ---- torneo y ranking reales ----
+var tourRows=null,tourRowsWeek='',tourFetchT=0;
+async function cloudTourFetch(){if(!cloudOk)return;try{const{data,error}=await sb.rpc('tour_board',{wk:weekInfo().key});if(error)return;
+  tourRows=(data||[]).map(r=>({name:r.name,score:r.best,frame:r.frame||'none',me:!!r.me}));tourRowsWeek=weekInfo().key;
+  if(!$('pTour').hidden)renderTour()}catch(e){}}
+async function cloudTour(m){if(!cloudOk||!M.named)return;try{await sb.rpc('submit_tour',{score:Math.floor(m)});
+  clearTimeout(tourFetchT);tourFetchT=setTimeout(cloudTourFetch,800)}catch(e){}}
+async function tourPayReal(wk){try{const{data,error}=await sb.rpc('tour_board',{wk});if(error)throw error;
+  const mine=(data||[]).find(r=>r.me);const rk=mine?Number(mine.pos):0;
+  if(rk>=1&&rk<=3){if(!M.owned.includes('dragon'))M.owned.push('dragon');M.coins+=10000;M.tourMsg=L(`¡Quedaste ${rk}.º en el torneo! Has ganado el Dragón Real y 10.000 monedas.`,`You finished #${rk} in the tournament! You won the Royal Dragon and 10,000 coins.`)}
+  else if(rk>=4&&rk<=10){M.coins+=5000;M.nameChanges=(M.nameChanges||0)+1;M.tourMsg=L(`Quedaste ${rk}.º en el torneo. Has ganado 5.000 monedas y 1 cambio de nombre.`,`You finished #${rk} in the tournament. You won 5,000 coins and 1 name change.`)}
+  save();try{if(state==='menu')fillMenu()}catch(e){}}catch(e){M.tourPaid='';save()}}
+async function cloudTrophyBoard(){if(!cloudOk)return;try{const{data,error}=await sb.rpc('top_players',{kind:'trophies',lim:10});if(error||!data||!data.length)return;
+  const ol=$('trBoard');ol.innerHTML='';data.forEach((r,i)=>{const li=document.createElement('li');const me=r.name===M.pilot;li.className=(i<3?'p'+(i+1):'')+(me?' me':'');
+    li.innerHTML=`<span class="pos">${i+1}</span><span class="nm">${nameTag(r.name,r.frame||'none')}${me?L(' (tú)',' (you)'):''}</span><span class="sc">${fmt(r.trophies)} 🏆</span>`;ol.append(li)});
+  $('trBox').hidden=false}catch(e){}}
+async function cloudCount(){if(!cloudOk)return;try{const{data,error}=await sb.rpc('player_count');if(!error&&Number(data)>=500)openTourLive()}catch(e){}}
 async function nameFree(v){if(!cloudOk)return true;
   try{const{data,error}=await sb.rpc('name_available',{n:v});if(error)return true;return data!==false}catch(e){return true}}
 
@@ -2277,7 +2298,7 @@ function renderSkins(){
   const a=$('sAct');a.onclick=null;a.disabled=false;
   if(eq){a.textContent=L('Equipada','Equipped');a.disabled=true}
   else if(own){a.textContent=L('Equipar','Equip');a.onclick=()=>{M.skin=sk.id;save();beep(660,.08,'triangle');renderShop()}}
-  else if(sk.excl){if(TORNEO_ACTIVO){a.textContent=L('Gánala en el torneo','Win it in the tournament');a.onclick=()=>{renderTour();show('pTour')}}else{a.textContent=L('Torneo próximamente','Tournament coming soon');a.disabled=true}}
+  else if(sk.excl){if(tourOn){a.textContent=L('Gánala en el torneo','Win it in the tournament');a.onclick=()=>{renderTour();show('pTour')}}else{a.textContent=L('Torneo próximamente','Tournament coming soon');a.disabled=true}}
   else if(sk.season){a.textContent=L('Consíguela en el pase de temporada','Get it in the season pass');a.onclick=()=>{misTab='season';renderMis();show('pMis');$('pMis').scrollTop=0}}
   else if(sk.league){a.textContent=L('Premio de la liga Leyenda','Legend league reward');a.disabled=true}
   else if(sk.invite){a.textContent=L('Consíguela invitando a 10 amigos','Get it by inviting 10 friends');a.onclick=()=>openInv('pShop')()}
@@ -2547,8 +2568,10 @@ function frame(now){
   if(!$('pShop').hidden&&shopTab==='ups')for(const c of $('sUps').querySelectorAll('canvas.up-ic'))drawUpIcon(c,c.dataset.up);
   requestAnimationFrame(frame);
 }
-if(!TORNEO_ACTIVO){const t=$('bTour');t.disabled=true;t.classList.add('locked');
+const tourOrig={es:$('bTour').dataset.es||$('bTour').innerHTML,en:$('bTour').dataset.en};
+if(!tourOn){const t=$('bTour');t.disabled=true;t.classList.add('locked');
   t.dataset.es='Torneo<small>próximamente · 500 jugadores</small>';t.dataset.en='Tournament<small>coming soon · 500 players</small>'}
+function openTourLive(){if(tourOn)return;tourOn=true;const t=$('bTour');t.disabled=false;t.classList.remove('locked');t.dataset.es=tourOrig.es;if(tourOrig.en)t.dataset.en=tourOrig.en;applyLang();try{fillMenu()}catch(e){}}
 guardBtn('bShop','shop');guardBtn('bMis','mis');guardBtn('bInv','inv');guardBtn('bPvp','pvp');
 // Telegram Mini App: pantalla completa y sin cerrar al deslizar
 try{const tg=window.Telegram&&Telegram.WebApp;if(tg&&tg.initData!==undefined){tg.ready();tg.expand();
