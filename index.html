@@ -207,6 +207,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
 @media (prefers-reduced-motion:reduce){.pause-tip{animation:none}}
 .note.priv{text-align:center;font-size:12px}.note.priv a{color:var(--apricot)}
 .cups{display:inline-flex;gap:3px;margin-left:5px;vertical-align:middle;font-size:.85em}.cups b{font-weight:800;color:var(--gold);white-space:nowrap}
+#iShare{width:100%}.inv-row em{font-style:normal;color:var(--good);font-weight:800;margin-left:auto;font-size:13px}
 .race-tag{background:#d6283f;color:#fff}
 .match-box{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;padding:8px 0}
 .match-box b{font-family:var(--ui);font-size:20px}
@@ -624,13 +625,14 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
     </div>
     <div class="inv-per"><b>+2.000 <i class="coin"></i></b><span data-en="for every friend who plays with your link">por cada amigo que juegue con tu enlace</span></div>
     <div class="inv-prog">
-      <div class="inv-row"><b id="iCount">0/10</b><span data-en="friends">amigos</span></div>
+      <div class="inv-row"><b id="iCount">0/10</b><span data-en="friends">amigos</span><em id="iVx" hidden data-en="Vortex unlocked ✓">Vórtice conseguido ✓</em></div>
       <div class="inv-bar"><i id="iBar"></i></div>
     </div>
     <div class="inv-link"><input id="iLink" readonly aria-label="Enlace de invitación"><button class="btn primary" id="iCopy" data-en="Copy">Copiar</button></div>
+    <button class="btn primary" id="iShare" data-en="Share on Telegram">Compartir en Telegram</button>
     <p class="note win" id="iMsg" hidden></p>
     <button class="btn ad" id="iSim" hidden data-en='Simulate a friend <span class="tag test">TEST MODE</span>'>Simular amigo <span class="tag test">MODO PRUEBA</span></button>
-    <p class="note" data-en="Friends will be counted automatically once the game is live on Telegram.">Los amigos se contarán solos cuando el juego esté publicado en Telegram.</p>
+    <p class="note" data-en="Your friend must open the game with your link and be a new player. There's no limit: every friend adds 2,000 coins.">Tu amigo tiene que abrir el juego con tu enlace y ser un jugador nuevo. No hay límite: cada amigo suma 2.000 monedas.</p>
     <button class="btn sec" id="iBack" style="min-height:48px" data-en="Back">Volver</button>
   </section>
 
@@ -2092,14 +2094,15 @@ function misBadge(){const n=misReady(),b=$('misBadge');b.hidden=!n;b.textContent
 /* ======================= AMIGOS ======================= */
 const FRIEND_COINS=2000,FRIEND_GOAL=10;
 if(!M.refId){M.refId=Math.random().toString(36).slice(2,8).toUpperCase();save()}
-const inviteLink=()=>`https://t.me/DroneRushGameBot?start=ref_${M.refId}`;
+const inviteLink=()=>`https://t.me/dronerushhbot?startapp=${M.refCode||M.refId}`;
 let invMsg='';
 function addFriend(){M.friends=(M.friends||0)+1;M.coins+=FRIEND_COINS;
   invMsg=L(`¡Nuevo amigo! +${fmt(FRIEND_COINS)} monedas.`,`New friend! +${fmt(FRIEND_COINS)} coins.`);
   if(M.friends>=FRIEND_GOAL&&!M.owned.includes('vortice')){M.owned.push('vortice');invMsg=L('¡10 amigos! Has desbloqueado el Vórtice.','10 friends! You unlocked the Vortex.');beep(660,.6,'square',.06,1980);buzz([40,40,80])}
   else beep(990,.18,'square',.05,1760);save();renderInv()}
-function renderInv(){const f=M.friends||0;
-  $('iCount').textContent=Math.min(f,FRIEND_GOAL)+'/'+FRIEND_GOAL;$('iBar').style.width=Math.min(100,f/FRIEND_GOAL*100)+'%';
+function renderInv(){const f=M.friends||0;cloudInvClaim();
+  $('iCount').textContent=f>=FRIEND_GOAL?fmt(f):f+'/'+FRIEND_GOAL;$('iBar').style.width=Math.min(100,f/FRIEND_GOAL*100)+'%';
+  $('iVx').hidden=f<FRIEND_GOAL;
   $('iLink').value=inviteLink();$('iSim').hidden=!MODO_PRUEBA;$('iMsg').hidden=!invMsg;$('iMsg').textContent=invMsg}
 let invFrom='pMenu';
 const openInv=from=>()=>{unlock();invFrom=from;invMsg='';renderInv();show('pInv');$('pInv').scrollTop=0};
@@ -2107,6 +2110,9 @@ $('iCopy').onclick=()=>{const v=inviteLink();
   const ok=()=>{invMsg=L('Enlace copiado. Pégalo en un chat para invitar.','Link copied. Paste it in a chat to invite.');renderInv()};
   try{navigator.clipboard.writeText(v).then(ok,()=>{$('iLink').select();ok()})}catch(e){$('iLink').select();ok()}};
 $('iSim').onclick=addFriend;
+$('iShare').onclick=()=>{const u=inviteLink(),txt=L('¡Juega conmigo a Drone Rush! 🚁 Esquiva torres, molinos y pájaros y compite en Batallas PvP.','Play Drone Rush with me! 🚁 Dodge pylons, turbines and birds and race in PvP Battles.');
+  const sh='https://t.me/share/url?url='+encodeURIComponent(u)+'&text='+encodeURIComponent(txt);
+  try{const tg=window.Telegram&&Telegram.WebApp;if(tg&&tg.initData&&tg.openTelegramLink){tg.openTelegramLink(sh);return}}catch(e){}window.open(sh,'_blank','noopener')};
 $('iBack').onclick=()=>{if(invFrom==='pShop'){renderShop();show('pShop')}else{state='menu';fillMenu();show('pMenu')}};
 $('bInv').onclick=openInv('pMenu');
 $('bMis').onclick=()=>{unlock();renderMis();show('pMis');$('pMis').scrollTop=0};
@@ -2125,7 +2131,13 @@ function refreshSet(){setTgl($('bSound'),!!M.sound);setTgl($('bMusic'),M.music!=
   $('setId').textContent=L('ID de jugador: ','Player ID: ')+(M.refId||'')+(MODO_PRUEBA&&netStat?' · '+netStat:'')}
 /* nombres de usuario únicos */
 const RESERVED=['admin','administrador','moderador','mod','soporte','support','dronerush','drone_rush','sistema','system'];
-function nameError(v,own){v=(v||'').trim();
+// mismo filtro que el servidor (bad_name)
+const BAD_SUB=/(hijodeputa|hijaputa|gilipoll|maricon|mariquita|subnormal|retrasad|follar|folla|pollas|cabron|zorras|putit|putas|mierda|cojon|chupamela|chupapolla|pajer|nazi|hitler|fuck|shit|bitch|cunt|nigg|negrat|fagg|whore|pussy|penis|vagin|porn|rape|violad|pedof|pedoph|kkk|asshole|motherf|dickhead|bastard|jihad|terroris)/;
+const BAD_TOK=new Set(['puta','puto','putos','polla','coño','cono','culo','tonto','idiota','imbecil','mongolo','zorra','perra','guarra','marica','sexo','sex','dick','cock','fag','ass','tits','cum','nig','admin','moderador','soporte','support','dronerush']);
+function badName(n){const tr={'á':'a','é':'e','í':'i','ó':'o','ú':'u','ü':'u','ñ':'n','0':'o','1':'i','3':'e','4':'a','5':'s','7':'t','@':'a','$':'s'};
+  const norm=(n||'').toLowerCase().replace(/[áéíóúüñ013457@$]/g,c=>tr[c]);if(BAD_SUB.test(norm.replace(/[^a-z]/g,'')))return true;
+  return norm.split(/[^a-z]+/).some(t=>BAD_TOK.has(t))}
+function nameError(v,own){v=(v||'').trim();if(v&&badName(v))return L('Ese nombre no está permitido. Elige otro.','That name is not allowed. Choose another one.');
   if(v.length<3)return L('Mínimo 3 caracteres.','At least 3 characters.');
   if(v.length>16)return L('Máximo 16 caracteres.','Maximum 16 characters.');
   if(!/^[A-Za-z0-9_.ÁÉÍÓÚÜÑáéíóúüñ]+$/.test(v))return L('Solo letras, números, puntos o guion bajo. Sin espacios.','Only letters, numbers, dots or underscores. No spaces.');
@@ -2254,7 +2266,7 @@ async function cloudInit(){try{
     // la nube tiene una partida más avanzada: la cargamos
     sessionStorage.setItem('dr.cloudload','1');try{localStorage.setItem(KEY,JSON.stringify(Object.assign({},data.save,{named:true,pilot:data.name})))}catch(e){}
     location.reload();return}
-  await tgLink();cloudPush();cloudCount();cloudTourFetch();cloudCups()}
+  await tgLink();cloudPush();cloudCount();cloudTourFetch();cloudCups();cloudRef();cloudInvClaim()}
   catch(e){stat('Nube: error '+(e&&e.message||e));console.warn('[nube] sin conexión, se juega en local',e)}}
 // Liga la partida a la cuenta de Telegram (verificado en el servidor) o la recupera si cambias de móvil
 var tgLinked=false,netStat='';
@@ -2264,7 +2276,7 @@ async function tgLink(){try{
   const{data,error}=await sb.functions.invoke('tg-auth',{body:{initData:tg.initData}});
   if(error||!data){let msg=error&&error.message||'?';try{if(error&&error.context&&error.context.json){const j=await error.context.json();msg=(error.context.status||'')+' '+(j.error||j.message||JSON.stringify(j))}}catch(e){}
     stat('Telegram: error '+msg);console.warn('[telegram] no se pudo ligar',error);return}
-  stat('Telegram: '+data.status);if(data.status==='linked')tgLinked=true;
+  stat('Telegram: '+data.status);if(data.status==='linked'){tgLinked=true;cloudRegisterRef()}
   else if(data.status==='restored'&&data.save&&!sessionStorage.getItem('dr.tgload')){
     sessionStorage.setItem('dr.tgload','1');cloudHasRow=true;
     try{localStorage.setItem(KEY,JSON.stringify(Object.assign({},data.save,{named:true,pilot:data.name})))}catch(e){}
@@ -2286,6 +2298,18 @@ async function cloudTrophyBoard(){if(!cloudOk)return;try{const{data,error}=await
   const ol=$('trBoard');ol.innerHTML='';data.forEach((r,i)=>{const li=document.createElement('li');const me=r.name===M.pilot;li.className=(i<3?'p'+(i+1):'')+(me?' me':'');
     li.innerHTML=`<span class="pos">${i+1}</span><span class="nm">${me?myTag():nameTag(r.name,r.frame||'none',r.cups)}${me?L(' (tú)',' (you)'):''}</span><span class="sc">${fmt(r.trophies)} 🏆</span>`;ol.append(li)});
   $('trBox').hidden=false}catch(e){}}
+// ---- invitaciones reales ----
+var refBusy=false;
+async function cloudRef(){if(!cloudOk)return;try{const{data,error}=await sb.rpc('my_ref');if(!error&&data){M.refCode=data;save();if(!$('pInv').hidden)$('iLink').value=inviteLink()}}catch(e){}}
+async function cloudRegisterRef(){try{const tg=window.Telegram&&Telegram.WebApp;const sp=tg&&tg.initDataUnsafe&&tg.initDataUnsafe.start_param;
+  if(!cloudOk||!sp||M.refSent||M.newbie)return;const{data,error}=await sb.rpc('register_ref',{code:String(sp).slice(0,16)});
+  if(!error){M.refSent=true;save();stat('Invitación: '+data)}}catch(e){}}
+async function cloudInvClaim(){if(!cloudOk||refBusy)return;refBusy=true;try{const{data,error}=await sb.rpc('claim_refs');if(error||!data||!data.length)return;
+  const n=Number(data[0].nuevos)||0,tot=Number(data[0].total)||0;
+  if(n>0){M.coins+=FRIEND_COINS*n;invMsg=L(`¡${n} amigo${n>1?'s':''} nuevo${n>1?'s':''}! +${fmt(FRIEND_COINS*n)} monedas.`,`${n} new friend${n>1?'s':''}! +${fmt(FRIEND_COINS*n)} coins.`);beep(990,.18,'square',.05,1760)}
+  M.friends=Math.max(M.friends||0,tot);
+  if(M.friends>=FRIEND_GOAL&&!M.owned.includes('vortice')){M.owned.push('vortice');invMsg=L('¡10 amigos! Has desbloqueado el Vórtice.','10 friends! You unlocked the Vortex.');buzz([40,40,80])}
+  save();if(!$('pInv').hidden){$('iCount').textContent=M.friends>=FRIEND_GOAL?fmt(M.friends):M.friends+'/'+FRIEND_GOAL;$('iBar').style.width=Math.min(100,M.friends/FRIEND_GOAL*100)+'%';$('iVx').hidden=M.friends<FRIEND_GOAL;$('iMsg').hidden=!invMsg;$('iMsg').textContent=invMsg}}catch(e){}finally{refBusy=false}}
 async function cloudCups(){if(!cloudOk)return;try{const{data,error}=await sb.rpc('my_cups');if(!error&&Array.isArray(data)){M.cups=data;save()}}catch(e){}}
 async function cloudCount(){if(!cloudOk)return;try{const{data,error}=await sb.rpc('player_count');if(!error&&Number(data)>=500)openTourLive()}catch(e){}}
 // ---- fantasmas reales para las Batallas ----
