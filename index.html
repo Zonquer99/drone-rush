@@ -517,7 +517,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
     <p class="note" data-en="Win races to earn trophies and climb leagues. Each league gives you an advantage in races and a reward when the season ends.">Gana carreras para sumar trofeos y subir de liga. Cada liga te da una ventaja en las carreras y un premio cuando termina la temporada.</p>
     <div class="lg-table" id="lgTable"></div>
     <div id="trBox" hidden><p class="eyebrow" data-en="Top pilots by trophies">Mejores pilotos por trofeos</p><ol class="board" id="trBoard"></ol></div>
-    <p class="note" data-en="For now the rivals are test ghosts. Once the game is on Telegram they will be recordings of real players.">De momento los rivales son fantasmas de prueba. Cuando el juego esté en Telegram serán grabaciones de jugadores reales.</p>
+    <p class="note" data-en="Rivals are recordings of real players on the same course. If none is available, you race a training pilot.">Los rivales son grabaciones de jugadores reales en el mismo recorrido. Si no hay ninguno disponible, corres contra un piloto de entrenamiento.</p>
     <button class="btn sec" id="pvpBack" style="min-height:48px" data-en="Back">Volver</button>
   </section>
 
@@ -831,7 +831,8 @@ function startGame(m){holeWindStop();unfreeze();
   state='play';mult=m;t=0;dist=0;speed=210;coins=0;battery=100;revives=3;invuln=0;banked=0;
   drone.x=Math.min(110,LW*.28);drone.y=300;drone.vy=-120;drone.tilt=0;
   obs=[];pick=[];parts=[];floats=[];acc=-LW*.35;spacing=300;hintT=2.2;holding=false;
-  battleBg=false;if(raceNext){raceInit(raceNext);raceNext=null}else{race=null;crsFn=Math.random}
+  battleBg=false;ghFlush();runClock=0;ghRec=[];ghAcc=0;
+  if(raceNext){raceInit(raceNext);raceNext=null;ghSeed=race.seed}else{race=null;ghSeed='n'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);crsFn=seedRng(ghSeed)}
   SK=skin();mythRun=false;
   if(M.mythArmed&&(M.mythPass||0)>0){SK=skinById('serafin');M.mythPass--;M.mythArmed=false;mythRun=true}
   shields=M.up.shield+(SK.shield||0);phases=SK.phase||0;crownNext=800;royal=0;royalFx=0;ghostNext=GHOST_EVERY;ghostT=0;lastGh='';holeNext=HOLE_EVERY;holeFx=0;holeLeft=0;holeOn=false;lastBh='';freezeT=0;nextFreeze=FREEZE_EVERY;lastFz='';portals=[];portalCount=0;nextPortal=100;portalRecharge=Infinity;flash=0;lastPo='';
@@ -902,7 +903,7 @@ function crash(why){holeWindStop();
   if(m>M.best){M.best=m;rec=true}
   if(!race&&m>(M.uB||0))M.uB=m;
   coins=Math.floor(coins);M.coins+=coins-banked;banked=coins;
-  tourCheckWeek();if(m>M.tourBest)M.tourBest=m;if(!race)cloudTour(m);
+  tourCheckWeek();if(m>M.tourBest)M.tourBest=m;if(!race)cloudTour(m);ghFinish(m);
   misMax('run',m);misAdd('dist',Math.max(0,m-distBank));distBank=m;
   save();
   setTimeout(()=>{if(state==='dead'){if(race){race.lastM=m;if((race.revs||0)<RACE_REVIVES)showRaceRevive(m);else showRaceEnd(m)}else showOver(m,rec)}},750);
@@ -937,7 +938,7 @@ function update(dt){
     if(batsOn()&&Math.random()<.3)parts.push({x:drone.x-18+rnd(-6,6),y:drone.y+rnd(-10,10),vx:-speed*.35+rnd(-30,10),vy:rnd(-40,20),gr:-10,life:rnd(.6,1.1),max:1.1,c:'#140a20',r:rnd(3.5,6),sh:'bat',ph:Math.random()*6});
     if(!batsOn()&&!diamOn()&&SK.trail&&Math.random()<SK.tr)emitTrail(SK,speed);
     else if(!batsOn()&&!diamOn()&&thrust&&!SK.trail&&Math.random()<.5)parts.push({x:drone.x+rnd(-20,20),y:drone.y+8,vx:-speed*.3,vy:rnd(40,90),life:.3,max:.3,c:'rgba(255,246,234,.5)',r:1.5});
-    raceUpdate(dt);
+    ghRecTick(dt);raceUpdate(dt);
     acc+=speed*dt;if(acc>=spacing){acc=0;spacing=crsR(270,350);spawn()}
     const rl=rubyLv();
     // cada 10 s se tira la probabilidad; si toca, lluvia de rubís durante 3 s
@@ -1857,6 +1858,10 @@ function makeRival(){
   return {name:BOTS[Math.floor(Math.random()*BOTS.length)],skin:sk.id,end,best:Math.round(end*rnd(1.02,1.35)),trophies:tro,frame,seed:'r'+Date.now()}}
 function raceInit(r){race={...r,gd:0,gy:300,dead:false,deadT:0,won:false,endPx:r.end*PXM};crsFn=seedRng(r.seed)}
 function raceUpdate(dt){if(!race)return;
+  if(race.real&&!race.dead){const g=ghAt(race.path,runClock);if(g){race.gd=g.d;race.gy=clamp(g.y,40,GY-12);
+      if(g.end||race.gd>=race.endPx){race.dead=true;race.vy=-60;const gx2=drone.x+(race.gd-dist);floatTxt(Math.min(LW-60,Math.max(60,gx2)),Math.max(60,race.gy-40),L(`${race.name} se ha estrellado`,`${race.name} crashed`),'#c9bfe0');beep(300,.3,'triangle',.05,120)}}}
+  else if(race.real){race.deadT+=dt;race.vy+=900*dt;race.gy=Math.min(GY-12,race.gy+race.vy*dt)}
+  if(race.real){if(race.dead&&!race.won&&dist>=race.endPx){race.won=true;floatTxt(LW/2,170,L('¡HAS GANADO LA CARRERA!','YOU WON THE RACE!'),'#7bd88f');beep(660,.5,'square',.06,1320);buzz([30,30,60])}return}
   const gx=drone.x+(race.gd-dist)/1;
   if(!race.dead){race.gd+=(210+Math.min(260,t*5))*dt;
     if(race.gd>=race.endPx){race.dead=true;race.vy=-60;floatTxt(Math.min(LW-60,Math.max(60,gx)),Math.max(60,race.gy-40),L(`${race.name} se ha estrellado`,`${race.name} crashed`),'#c9bfe0');beep(300,.3,'triangle',.05,120)}
@@ -1894,7 +1899,7 @@ function showRaceEnd(m){
   $('reRw').innerHTML=win?`+${fmt(prize)} ${COIN} · +${TROPHY_WIN} ${L('trofeos','trophies')}`:(lost?`−${lost} ${L('trofeos','trophies')}`:L('En Bronce no pierdes trofeos','In Bronze you lose no trophies'));
   const up=$('reLeague');up.hidden=lg1.id===lg0.id;if(!up.hidden){up.textContent=lg1.min>lg0.min?L(`¡Has subido a la liga ${LN(lg1)}!`,`You reached the ${LN(lg1)} league!`):L(`Has bajado a la liga ${LN(lg1)}`,`You dropped to the ${LN(lg1)} league`);up.className='note '+(lg1.min>lg0.min?'win':'bad')}
   $('reCoins').textContent=fmt(coins);$('reTro').textContent=fmt(M.trophies);
-  lastRival={name:r.name,skin:r.skin,frame:r.frame,trophies:r.trophies,best:Math.max(r.best,r.end),end:r.end,rivalWon:!win};
+  lastRival={name:r.name,skin:r.skin,frame:r.frame,trophies:r.trophies,best:Math.max(r.best,r.end),end:r.end,rivalWon:!win,ghost:r.real?{name:r.name,skin:r.skin,end:r.end,best:r.best,trophies:r.trophies,frame:r.frame,seed:r.seed,path:r.path,real:true}:null};
   checkUnl();unlCard($('reUnl'));
   rmReset();race=null;battleBg=true;crsFn=Math.random;show('pRaceEnd');
   if(Math.random()<(win?.55:.3))rmT.push(setTimeout(()=>{rmTheyWant=true;rmMsg(L(`⚔ ${lastRival.name} quiere la revancha`,`⚔ ${lastRival.name} wants a rematch`),'win');
@@ -1903,6 +1908,7 @@ let lastRival=null,rmT=[],rmTheyWant=false,battleBg=false;const battleOn=()=>!!r
 function rmMsg(tx,c){const n=$('reRmNote');n.hidden=!tx;n.textContent=tx||'';n.className='note rm-note '+(c||'')}
 function rmReset(){rmT.forEach(clearTimeout);rmT=[];rmTheyWant=false;const b=$('reRematch');b.hidden=false;b.disabled=false;b.classList.remove('hot');b.innerHTML=L('Revancha','Rematch');rmMsg('')}
 function rmStart(){const r=lastRival;rmT.forEach(clearTimeout);rmT=[];
+  if(r.ghost){raceNext=Object.assign({},r.ghost,{rematch:true});startGame(1);return}
   const end=Math.round(Math.max(650,(r.end+(M.best||r.end))/2)*rnd(.8,1.2));
   raceNext={name:r.name,skin:r.skin,frame:r.frame,trophies:Math.max(0,r.trophies+(r.rivalWon?TROPHY_WIN:-10)),best:Math.max(r.best,end),end,seed:'rm'+Date.now(),rematch:true};
   startGame(1)}
@@ -1917,11 +1923,13 @@ function showRaceRevive(m){state='over';$('hud').hidden=true;
   const left=RACE_REVIVES-(race.revs||0);$('rrRevive').innerHTML=`<span class="adtag">▶ ${L('VÍDEO','VIDEO')}</span> `+L(`Revivir (${left} de ${RACE_REVIVES})`,`Revive (${left} of ${RACE_REVIVES})`);
   show('pRaceRev')}
 let matchT=null;
-function findRival(){unlock();clearTimeout(matchT);const r=makeRival();$('mtMe').innerHTML=myTag();
+function findRival(){unlock();clearTimeout(matchT);$('mtMe').innerHTML=myTag();
   $('mtSearch').hidden=false;$('mtFound').hidden=true;show('pMatch');
+  const t0=performance.now(),tok=Symbol();findRival.tok=tok;
+  ghFind().then(g=>{if(findRival.tok!==tok||$('pMatch').hidden)return;const r=g||makeRival();
   matchT=setTimeout(()=>{$('mtSearch').hidden=true;$('mtFound').hidden=false;$('mtName').innerHTML=nameTag(r.name,r.frame);
-    $('mtInfo').textContent=L(`Récord ${fmt(r.best)} m · ${fmt(r.trophies)} trofeos`,`Best ${fmt(r.best)} m · ${fmt(r.trophies)} trophies`);
-    $('mtSkin').textContent=SN(skinById(r.skin));mtRival=r;beep(880,.15,'triangle',.05,1320)},1400+Math.random()*900)}
+    $('mtInfo').textContent=L(`Récord ${fmt(r.best)} m · ${fmt(r.trophies)} trofeos`,`Best ${fmt(r.best)} m · ${fmt(r.trophies)} trophies`)+' · '+(r.real?L('Jugador real','Real player'):L('Piloto de entrenamiento','Training pilot'));
+    $('mtSkin').textContent=SN(skinById(r.skin));mtRival=r;beep(880,.15,'triangle',.05,1320)},Math.max(0,1400+Math.random()*900-(performance.now()-t0)))})}
 let mtRival=null;
 function payLeague(){if(seasonOn()||M.leaguePaid===SEASON.n)return;
   const lg=leagueOf(M.trophies||0),i=LEAGUES.indexOf(lg);M.coins+=lg.end;
@@ -2146,7 +2154,7 @@ $('setNameOk').onclick=()=>{const v=$('setName').value.trim(),e=nameError(v,M.pi
   if(!(M.nameChanges>0))return;if(v===M.pilot){m.textContent=L('Escribe un nombre distinto.','Type a different name.');m.className='note bad';return}
   nameFree(v).then(ok=>{if(!ok&&v.toLowerCase()!==M.pilot.toLowerCase()){m.textContent=L('Ese nombre ya está cogido. Prueba con otro.','That name is already taken. Try another one.');m.className='note bad';return}
     M.pilot=v;M.nameChanges--;save();cloudPush();renderNameSet();m.textContent=L('Nombre cambiado.','Name changed.');m.className='note new'})};
-function showMenu(){holeWindStop();unfreeze();state='menu';obs=[];pick=[];$('hud').hidden=true;tourCheckWeek();fillMenu();M.offered++;save();show('pMenu')}
+function showMenu(){holeWindStop();unfreeze();ghFlush();state='menu';obs=[];pick=[];$('hud').hidden=true;tourCheckWeek();fillMenu();M.offered++;save();show('pMenu')}
 function showOver(m,rec){
   state='over';$('hud').hidden=true;
   $('oWhy').textContent=whyDead;$('oM').textContent=fmt(m);$('oC').textContent=fmt(coins);
@@ -2264,6 +2272,21 @@ async function cloudTrophyBoard(){if(!cloudOk)return;try{const{data,error}=await
     li.innerHTML=`<span class="pos">${i+1}</span><span class="nm">${nameTag(r.name,r.frame||'none')}${me?L(' (tú)',' (you)'):''}</span><span class="sc">${fmt(r.trophies)} 🏆</span>`;ol.append(li)});
   $('trBox').hidden=false}catch(e){}}
 async function cloudCount(){if(!cloudOk)return;try{const{data,error}=await sb.rpc('player_count');if(!error&&Number(data)>=500)openTourLive()}catch(e){}}
+// ---- fantasmas reales para las Batallas ----
+// Cada partida usa una semilla (mismo recorrido para todos) y se graba la posición del dron cada 0,2 s
+var GH_STEP=.2,runClock=0,ghRec=[],ghAcc=0,ghSeed='',ghPending=null;
+function ghRecTick(dt){runClock+=dt;ghAcc+=dt;if(ghAcc>=GH_STEP&&ghRec.length<12000){ghAcc-=GH_STEP;ghRec.push(Math.round(dist),Math.round(drone.y))}}
+function ghFinish(m){if(ghRec.length>=10&&m>=200&&ghSeed)ghPending={seed:ghSeed,dist:Math.floor(m),skin:SK.id||M.skin,path:ghRec.slice()}}
+async function ghFlush(){const g=ghPending;ghPending=null;if(!g||!cloudOk||!M.named)return;
+  try{await sb.rpc('submit_ghost',{seed:g.seed,dist:g.dist,skin:g.skin,path:g.path})}catch(e){}}
+async function ghFind(){if(!cloudOk)return null;
+  try{const{data,error}=await sb.rpc('find_ghost',{tro:Math.floor(M.trophies||0)});if(error||!data||!data.length)return null;const g=data[0];
+    return{name:g.name,skin:skinById(g.skin)?g.skin:'clasico',end:g.dist,best:Math.max(g.best||0,g.dist),trophies:g.trophies||0,frame:g.frame||'none',seed:g.seed,path:g.path,real:true}}
+  catch(e){return null}}
+// posición del fantasma real en el momento runClock
+function ghAt(path,tm){const n=path.length/2;if(!n)return null;const f=tm/GH_STEP,i=Math.floor(f);
+  if(i>=n-1)return{d:path[(n-1)*2],y:path[(n-1)*2+1],end:true};
+  const k=f-i;return{d:path[i*2]+(path[i*2+2]-path[i*2])*k,y:path[i*2+1]+(path[i*2+3]-path[i*2+1])*k,end:false}}
 async function nameFree(v){if(!cloudOk)return true;
   try{const{data,error}=await sb.rpc('name_available',{n:v});if(error)return true;return data!==false}catch(e){return true}}
 
