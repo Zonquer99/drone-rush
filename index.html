@@ -210,6 +210,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
 .cups{display:inline-flex;gap:3px;margin-left:5px;vertical-align:middle;font-size:.85em}.cups b{font-weight:800;color:var(--gold);white-space:nowrap}
 #iShare{width:100%}.inv-row em{font-style:normal;color:var(--good);font-weight:800;margin-left:auto;font-size:13px}
 .tag.sw{background:#7fe3ff;color:#0d2233}
+.inv-test{display:grid;grid-template-columns:1fr 1fr;gap:8px}.inv-test .btn{font-size:14px;padding:10px 8px}
 .inv-ladder{display:flex;flex-direction:column;gap:6px}
 .inv-step{display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.03);opacity:.7}
 .inv-step b{font-family:var(--display);font-size:20px;color:var(--muted);text-align:center}
@@ -642,6 +643,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
     <button class="btn primary" id="iShare" data-en="Share on Telegram">Compartir en Telegram</button>
     <p class="note win" id="iMsg" hidden></p>
     <button class="btn ad" id="iSim" hidden data-en='Simulate a friend <span class="tag test">TEST MODE</span>'>Simular amigo <span class="tag test">MODO PRUEBA</span></button>
+    <div class="inv-test" id="iTest" hidden><button class="btn sec" id="iSim10" data-en="+10 friends">+10 amigos</button><button class="btn sec" id="iReset" data-en="Reset invites">Reiniciar invitaciones</button></div>
     <p class="note" data-en="Your friend must open the game with your link and be a new player. There's no limit: every friend adds 2,000 coins.">Tu amigo tiene que abrir el juego con tu enlace y ser un jugador nuevo. No hay límite: cada amigo suma 2.000 monedas.</p>
     <button class="btn sec" id="iBack" style="min-height:48px" data-en="Back">Volver</button>
   </section>
@@ -2179,13 +2181,19 @@ function addFriend(){M.friends=(M.friends||0)+1;M.coins+=FRIEND_COINS;
   if(!invGrant())beep(990,.18,'square',.05,1760);save();renderInv()}
 function renderInv(){const f=M.friends||0;cloudInvClaim();
   invPaint();
-  $('iLink').value=inviteLink();$('iSim').hidden=!MODO_PRUEBA;$('iMsg').hidden=!invMsg;$('iMsg').textContent=invMsg}
+  $('iLink').value=inviteLink();$('iSim').hidden=$('iTest').hidden=!MODO_PRUEBA;$('iMsg').hidden=!invMsg;$('iMsg').textContent=invMsg}
 let invFrom='pMenu';
 const openInv=from=>()=>{unlock();invFrom=from;invMsg='';renderInv();show('pInv');$('pInv').scrollTop=0};
 $('iCopy').onclick=()=>{const v=inviteLink();
   const ok=()=>{invMsg=L('Enlace copiado. Pégalo en un chat para invitar.','Link copied. Paste it in a chat to invite.');renderInv()};
   try{navigator.clipboard.writeText(v).then(ok,()=>{$('iLink').select();ok()})}catch(e){$('iLink').select();ok()}};
 $('iSim').onclick=addFriend;
+$('iSim10').onclick=()=>{let ms='';for(let i=0;i<10;i++){M.friends=(M.friends||0)+1;M.coins+=FRIEND_COINS;const g=invGrant();if(g)ms=g}
+  invMsg=(ms?ms+' ':'')+L(`+10 amigos · +${fmt(FRIEND_COINS*10)} monedas.`,`+10 friends · +${fmt(FRIEND_COINS*10)} coins.`);if(!ms)beep(990,.18,'square',.05,1760);save();renderInv()};
+$('iReset').onclick=()=>{M.friends=0;M.confettiOwned=false;if(M.trail==='confetti')M.trail='skin';
+  M.owned=M.owned.filter(x=>!['vortice','enjambre','vortice_oro'].includes(x));if(!M.owned.includes(M.skin))M.skin='clasico';
+  M.frames=(M.frames||[]).filter(x=>x!=='embajador');if(M.frame==='embajador')M.frame='none';
+  invMsg=L('Invitaciones reiniciadas (solo prueba).','Invites reset (test only).');save();renderInv()};
 $('iShare').onclick=()=>{const u=inviteLink(),txt=L('¡Juega conmigo a Drone Rush! 🚁 Esquiva torres, molinos y pájaros y compite en Batallas PvP.','Play Drone Rush with me! 🚁 Dodge pylons, turbines and birds and race in PvP Battles.');
   const sh='https://t.me/share/url?url='+encodeURIComponent(u)+'&text='+encodeURIComponent(txt);
   try{const tg=window.Telegram&&Telegram.WebApp;if(tg&&tg.initData&&tg.openTelegramLink){tg.openTelegramLink(sh);return}}catch(e){}window.open(sh,'_blank','noopener')};
