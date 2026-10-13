@@ -838,6 +838,7 @@ function startGame(m){holeWindStop();unfreeze();
   shields=M.up.shield+(SK.shield||0);phases=SK.phase||0;crownNext=800;royal=0;royalFx=0;ghostNext=GHOST_EVERY;ghostT=0;lastGh='';holeNext=HOLE_EVERY;holeFx=0;holeLeft=0;holeOn=false;lastBh='';freezeT=0;nextFreeze=FREEZE_EVERY;lastFz='';portals=[];portalCount=0;nextPortal=100;portalRecharge=Infinity;flash=0;lastPo='';
   rubyT=0;rubyRush=0;turboEnd=TURBO_M[turboLv()];turboOn=turboEnd>0;if(turboOn){floatTxt(drone.x+40,drone.y-30,L('¡TURBO!','TURBO!'),'#ff8a3d');hintT=0}
   M.games++;M.uG=(M.uG||0)+1;misAdd('games',1);distBank=0;lifeStart=0;save();
+  if(M.games<=3&&!race){shields++;setTimeout(()=>floatTxt(drone.x+50,drone.y-50,L('¡Escudo de regalo!','Free shield!'),'#5ad1ff'),600)}
   const gm=m*(SK.coinX||1);
   show(null);$('hud').hidden=false;$('hudX2').hidden=gm===1;$('hudX2').textContent='x'+decs(gm);
   if(mythRun)floatTxt(drone.x+60,drone.y-40,L('¡SERAFÍN POR UNA PARTIDA!','SERAPH FOR ONE RUN!'),'#ff9cf8');
@@ -845,11 +846,14 @@ function startGame(m){holeWindStop();unfreeze();
 }
 
 /* ======================= SPAWN ======================= */
+// Dificultad por tramos: 0–1.500 m fácil · 1.500–3.000 m normal · 3.000 m+ difícil
+const tier=()=>{const m=dist/PXM;return m<1500?0:m<3000?1:2};
+const TIERS=[{pyl:.55,tur:.85,birds:2,bhit:5,amp:8},{pyl:.5,tur:.78,birds:3,bhit:7,amp:12},{pyl:.45,tur:.72,birds:3,bhit:9,amp:14}];
 function spawn(){
-  const m=dist/PXM,x=LW+60,r=crs();
-  let type=m<35?'pylon':r<.5?'pylon':r<.78?'turbine':'birds';
+  const m=dist/PXM,x=LW+60,r=crs(),T=TIERS[tier()];
+  let type=m<35?'pylon':r<T.pyl?'pylon':r<T.tur?'turbine':'birds';
   if(type==='pylon'){
-    const gap=Math.max(158,240-m*.06),gy=crsR(110+gap/2,GY-70-gap/2),w=44;
+    const gap=m<1500?Math.max(220,260-m*.027):m<3000?Math.max(190,225-(m-1500)*.02):Math.max(158,190-(m-3000)*.015),gy=crsR(110+gap/2,GY-70-gap/2),w=44;
     obs.push({type,x,w,top:gy-gap/2,bot:gy+gap/2});
     for(let i=0;i<4;i++)pick.push({k:'coin',x:x+w/2+(i-1.5)*32,y:gy,r:10});
   }else if(type==='turbine'){
@@ -857,17 +861,17 @@ function spawn(){
     obs.push({type,x,hub,L,a:crs()*6.28,sp:crsR(1.2,2)});
     for(let i=0;i<5;i++){const y=hub-L-44-(2-Math.abs(i-2))*14;if(y>40)pick.push({k:'coin',x:x+(i-2)*30,y,r:10})}
   }else{
-    obs.push({type,x,y0:crsR(120,GY-180),ph:crs()*6,n:3});
+    obs.push({type,x,y0:crsR(120,GY-180),ph:crs()*6,n:T.birds,hr:T.bhit,amp:T.amp});
   }
   const mid=x+spacing*.5;
-  if(battery<75&&Math.random()<.4)pick.push({k:'bat',x:mid,y:rnd(150,GY-150),r:14});
+  if(battery<(m<1500?85:75)&&Math.random()<(m<1500?.5:.4))pick.push({k:'bat',x:mid,y:rnd(150,GY-150),r:14});
   else if(Math.random()<.04)pick.push({k:'gold',x:mid,y:rnd(130,GY-160),r:15});
 }
 
 /* ======================= COLLISION ======================= */
 function hitRect(cx,cy,r,x,y,w,h){const nx=clamp(cx,x,x+w),ny=clamp(cy,y,y+h);return (cx-nx)**2+(cy-ny)**2<r*r}
 function segD(px,py,ax,ay,bx,by){const dx=bx-ax,dy=by-ay,l=dx*dx+dy*dy;let u=l?((px-ax)*dx+(py-ay)*dy)/l:0;u=clamp(u,0,1);return Math.hypot(px-(ax+u*dx),py-(ay+u*dy))}
-function birdPos(o,i){return {x:o.x+i*30,y:o.y0+(i%2)*22+Math.sin(t*3+o.ph+i)*14}}
+function birdPos(o,i){return {x:o.x+i*30,y:o.y0+(i%2)*22+Math.sin(t*3+o.ph+i)*(o.amp||14)}}
 function collides(o){
   const cx=drone.x,cy=drone.y,R=15;
   if(o.type==='pylon')return hitRect(cx,cy,R,o.x-4,o.bot,o.w+8,GY-o.bot)||hitRect(cx,cy,R,o.x+o.w*.3,0,o.w*.4,o.top-12)||hitRect(cx,cy,R,o.x-10,o.top-12,o.w+20,12);
@@ -876,7 +880,7 @@ function collides(o){
     for(let k=0;k<3;k++){const a=o.a+k*2.094;if(segD(cx,cy,o.x,o.hub,o.x+Math.cos(a)*o.L,o.hub+Math.sin(a)*o.L)<R+3)return true}
     return Math.hypot(cx-o.x,cy-o.hub)<R+8;
   }
-  for(let i=0;i<o.n;i++){const b=birdPos(o,i);if(Math.hypot(cx-b.x,cy-b.y)<R+9)return true}
+  for(let i=0;i<o.n;i++){const b=birdPos(o,i);if(Math.hypot(cx-b.x,cy-b.y)<R+(o.hr||9))return true}
   return false;
 }
 
@@ -926,8 +930,9 @@ function update(dt){
     if(SK.freeze){if(dist/PXM>=nextFreeze){freezeT=FREEZE_DUR;nextFreeze=Math.floor(dist/PXM)+FREEZE_EVERY;
         floatTxt(LW/2,150,L('¡CONGELACIÓN!','FREEZE!'),'#bfefff');beep(1500,.4,'sine',.05,600)}
       freezeT=Math.max(0,freezeT-dt)}
-    speed=(210+Math.min(260,t*5))*(freezeT>0?FREEZE_SLOW:1)*(turboOn?2.2:1);dist+=speed*dt;
-    if(!turboOn)battery=Math.max(0,battery-dt*3.3*(1-.08*M.up.bat)*(SK.drain||1));
+    {const mm=dist/PXM,base=mm<1500?200+mm*.053:mm<3000?280+(mm-1500)*.06:Math.min(470,370+(mm-3000)*.03);
+    speed=base*(freezeT>0?FREEZE_SLOW:1)*(turboOn?2.2:1);dist+=speed*dt}
+    if(!turboOn)battery=Math.max(0,battery-dt*3.3*(1-.08*M.up.bat)*(SK.drain||1)*(dist/PXM<1500?.8:1));
     const thrust=holding&&battery>0;
     if(turboOn){drone.vy=0;drone.y+=(LH*.45-drone.y)*Math.min(1,dt*3);
       for(let i=0;i<2;i++)parts.push({x:drone.x-22,y:drone.y+rnd(-5,5),vx:-rnd(300,500),vy:rnd(-30,30),gr:0,life:rnd(.2,.4),max:.4,c:['#ff8a3d','#ffd35a','#fff3b0'][i%3],r:rnd(2,4.5),add:true})}
@@ -939,7 +944,7 @@ function update(dt){
     if(!batsOn()&&!diamOn()&&SK.trail&&Math.random()<SK.tr)emitTrail(SK,speed);
     else if(!batsOn()&&!diamOn()&&thrust&&!SK.trail&&Math.random()<.5)parts.push({x:drone.x+rnd(-20,20),y:drone.y+8,vx:-speed*.3,vy:rnd(40,90),life:.3,max:.3,c:'rgba(255,246,234,.5)',r:1.5});
     ghRecTick(dt);raceUpdate(dt);
-    acc+=speed*dt;if(acc>=spacing){acc=0;spacing=crsR(270,350);spawn()}
+    acc+=speed*dt;if(acc>=spacing){acc=0;{const mm=dist/PXM;spacing=mm<1500?crsR(360,430):mm<3000?crsR(300,370):crsR(270,350)}spawn()}
     const rl=rubyLv();
     // cada 10 s se tira la probabilidad; si toca, lluvia de rubís durante 3 s
     if(rl>0){
@@ -1693,6 +1698,10 @@ function draw(){
     const u=o.suck,e=u*u*(3-2*u),[cx,cy]=obCenter(o),[hx,hy]=holePos(),sc=Math.max(.02,1-e);
     ctx.save();ctx.globalAlpha=Math.max(0,1-u*.6);ctx.translate(cx+(hx-cx)*e,cy+(hy-cy)*e);ctx.rotate(e*6);ctx.scale(sc,sc*(o.type==='pylon'?.6:1));ctx.translate(-cx,-cy);drawOb(o);ctx.restore()}
   for(const p of pick)drawPick(p);
+  // aviso de pájaros que vienen (tramos fácil y normal)
+  if(state==='play'&&tier()<2)for(const o of obs)if(o.type==='birds'&&o.x>LW-60){const y=clamp(o.y0+10,60,GY-60),a=.55+.45*Math.sin(t*14);
+    ctx.save();ctx.globalAlpha=a;ctx.fillStyle='#ffd35a';ctx.beginPath();ctx.moveTo(LW-6,y);ctx.lineTo(LW-24,y-12);ctx.lineTo(LW-24,y+12);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#1b1638';ctx.font='900 13px system-ui,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('!',LW-17,y+1);ctx.restore()}
   if(state==='play'&&turboOn){ctx.strokeStyle='rgba(255,246,234,.5)';ctx.lineWidth=1.5;ctx.beginPath();
     for(let i=0;i<14;i++){const y=(i*47+13)%GY,x=LW-((t*1400+i*173)%(LW+200));ctx.moveTo(x,y);ctx.lineTo(x+60+i%3*30,y)}ctx.stroke()}
   for(const p of parts){ctx.globalAlpha=Math.max(0,p.life/p.max);ctx.fillStyle=p.c;ctx.globalCompositeOperation=p.add?'lighter':'source-over';
@@ -2176,7 +2185,7 @@ const UNL=[
   {k:'pass',t:['Pase de temporada','Season pass'],d:['Sube 30 niveles y gana la skin de temporada. También hay misiones semanales.','Climb 30 levels and win the season skin. Weekly missions too.'],need:['Juega 5 partidas','Play 5 games'],ok:()=>M.uG>=5},
   {k:'inv',t:['Amigos','Friends'],d:['2.000 monedas por cada amigo que invites y la skin Vórtice con 10.','2,000 coins per invited friend and the Vortex skin at 10.'],need:['Juega 8 partidas o vuelve mañana','Play 8 games or come back tomorrow'],ok:()=>M.uG>=8||M.firstDay!==new Date().toDateString()},
   {k:'adv',t:['Mejoras avanzadas','Advanced upgrades'],d:['Escudo, arranque turbo y monedas rubí ya están en la Bolsa.','Shield, turbo start and ruby coins are now in the Shop.'],need:['Llega a 1.500 m o juega 10 partidas','Reach 1,500 m or play 10 games'],ok:()=>M.uB>=1500||M.uG>=10},
-  {k:'pvp',t:['Batallas PvP','PvP Battles'],d:['Compite contra otros pilotos por trofeos y sube de liga.','Race other pilots for trophies and climb the leagues.'],need:['Llega a 5.000 m','Reach 5,000 m'],ok:()=>M.uB>=5000}];
+  {k:'pvp',t:['Batallas PvP','PvP Battles'],d:['Compite contra otros pilotos por trofeos y sube de liga.','Race other pilots for trophies and climb the leagues.'],need:['Llega a 1.000 m o juega 10 partidas','Reach 1,000 m or play 10 games'],ok:()=>M.uB>=1000||M.uG>=10}];
 const UNL_KEYS=UNL.map(u=>u.k);
 if(!M.firstDay)M.firstDay=new Date().toDateString();
 if(!Array.isArray(M.unl)){M.unl=M.games>0?[...UNL_KEYS]:[];M.uG=M.games||0;M.uB=M.best||0}
