@@ -731,8 +731,8 @@ const SKINS=[
   {id:'vortice',rar:'epica',invite:10,kind:'vortex',en:["Vortex","A tamed black hole. Only for those who bring 10 friends.","x2 coins and a black hole every 500 m (swallows the next 12 obstacles, pulls in coins)"],
     name:'Vórtice',desc:'Un agujero negro domesticado. Solo para quien trae a 10 amigos.',perk:'x2 monedas y agujero negro cada 500 m (se traga los 12 siguientes obstáculos y atrae monedas)',
     coinX:2,hole:true,accent:'#ff8a3d',trail:['#ff8a3d','#ffd35a','#b45cff'],tr:.85,tsz:3,add:true},
-  {id:'enjambre',rar:'epica',invite:50,kind:'swarm',minis:4,en:["Swarm","A mothership escorted by its swarm. Only for those who bring 50 friends.","x2.2 coins, giant magnet and every 500 m 2 mini-drone shields (3 s of protection each)"],
-    name:'Enjambre',desc:'Una nave nodriza escoltada por su enjambre. Solo para quien trae a 50 amigos.',perk:'x2,2 monedas, imán gigante y cada 500 m 2 mini-drones escudo (3 s de protección cada uno)',
+  {id:'enjambre',rar:'epica',invite:50,kind:'swarm',minis:4,en:["Swarm","A mothership escorted by its swarm. Only for those who bring 50 friends.","x2.2 coins, its mini-drones fly out to fetch faraway coins and every 500 m 2 mini-drone shields (3 s each)"],
+    name:'Enjambre',desc:'Una nave nodriza escoltada por su enjambre. Solo para quien trae a 50 amigos.',perk:'x2,2 monedas, sus mini-drones salen a por las monedas lejanas y cada 500 m 2 mini-drones escudo (3 s cada uno)',
     coinX:2.2,mag:220,swarm:true,accent:'#7fe3ff',trail:['#7fe3ff','#d8f8ff','#3e5a8a'],tr:.8,tsz:2.6,add:true},
   {id:'vortice_oro',rar:'epica',invite:100,kind:'vortex',gold:true,en:["Golden Vortex","The Vortex bathed in gold. Only for the 100-friend legends.","x2.5 coins and a black hole every 500 m (swallows the next 12 obstacles, pulls in coins)"],
     name:'Vórtice Dorado',desc:'El Vórtice bañado en oro. Solo para las leyendas de los 100 amigos.',perk:'x2,5 monedas y agujero negro cada 500 m (se traga los 12 siguientes obstáculos y atrae monedas)',
@@ -839,7 +839,7 @@ window.addEventListener('resize',resize);
 /* ======================= STATE ======================= */
 let state='menu',t=0,dist=0,speed=0,coins=0,mult=1,battery=100,revives=3,invuln=0,shake=0,acc=0,spacing=300,hintT=0,whyDead='';
 let portals=[],portalCount=0,nextPortal=100,portalRecharge=Infinity,flash=0,lastPo='';const PORTAL_MAX=4,PORTAL_JUMP=500,PORTAL_RECHARGE=1100,PORTAL_SAFE=300;
-let swarmNext=500,swarmCh=0,swarmT=0,lastSw=-1,crownNext=800,ghostNext=500,ghostT=0,lastGh='';const GHOST_EVERY=500,GHOST_DUR=3;
+let minis=[];let swarmNext=500,swarmCh=0,swarmT=0,lastSw=-1,crownNext=800,ghostNext=500,ghostT=0,lastGh='';const GHOST_EVERY=500,GHOST_DUR=3;
 let lifeStart=0,distBank=0,holeNext=500,holeFx=0,holeLeft=0,holeOn=false,lastBh='';const HOLE_EVERY=500,HOLE_EAT=12;
 const obCenter=o=>o.type==='pylon'?[o.x+o.w/2,(o.top+o.bot)/2]:o.type==='turbine'?[o.x,o.hub]:[o.x+30,o.y0+10];
 const holePos=()=>[drone.x+90,drone.y];
@@ -857,7 +857,7 @@ function startGame(m){holeWindStop();unfreeze();
   if(raceNext){raceInit(raceNext);raceNext=null;ghSeed=race.seed}else{race=null;ghSeed='n'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);crsFn=seedRng(ghSeed)}
   SK=skin();mythRun=false;
   if(M.mythArmed&&(M.mythPass||0)>0){SK=skinById('serafin');M.mythPass--;M.mythArmed=false;mythRun=true}
-  shields=M.up.shield+(SK.shield||0);phases=SK.phase||0;crownNext=800;royal=0;royalFx=0;swarmNext=500;swarmCh=0;swarmT=0;ghostNext=GHOST_EVERY;ghostT=0;lastGh='';holeNext=HOLE_EVERY;holeFx=0;holeLeft=0;holeOn=false;lastBh='';freezeT=0;nextFreeze=FREEZE_EVERY;lastFz='';portals=[];portalCount=0;nextPortal=100;portalRecharge=Infinity;flash=0;lastPo='';
+  shields=M.up.shield+(SK.shield||0);phases=SK.phase||0;crownNext=800;royal=0;royalFx=0;swarmNext=500;swarmCh=0;swarmT=0;minis=SK.swarm?[0,1].map(i=>({x:drone.x,y:drone.y,st:'home',tg:null,i})):[];ghostNext=GHOST_EVERY;ghostT=0;lastGh='';holeNext=HOLE_EVERY;holeFx=0;holeLeft=0;holeOn=false;lastBh='';freezeT=0;nextFreeze=FREEZE_EVERY;lastFz='';portals=[];portalCount=0;nextPortal=100;portalRecharge=Infinity;flash=0;lastPo='';
   rubyT=0;rubyRush=0;turboEnd=TURBO_M[turboLv()];turboOn=turboEnd>0;if(turboOn){floatTxt(drone.x+40,drone.y-30,L('¡TURBO!','TURBO!'),'#ff8a3d');hintT=0}
   M.games++;M.uG=(M.uG||0)+1;misAdd('games',1);distBank=0;lifeStart=0;save();
   if(M.games<=3&&!race){shields++;setTimeout(()=>floatTxt(drone.x+50,drone.y-50,L('¡Escudo de regalo!','Free shield!'),'#5ad1ff'),600)}
@@ -869,6 +869,7 @@ function startGame(m){holeWindStop();unfreeze();
 
 /* ======================= SPAWN ======================= */
 // Dificultad por tramos: 0–1.000 m fácil · 1.000–3.000 m normal · 3.000 m+ difícil
+const MINI_R=460;
 const tier=()=>{const m=dist/PXM;return m<1000?0:m<3000?1:2};
 const TIERS=[{pyl:.55,tur:.85,birds:2,bhit:5,amp:8},{pyl:.5,tur:.78,birds:3,bhit:7,amp:12},{pyl:.45,tur:.72,birds:3,bhit:9,amp:14}];
 function spawn(){
@@ -1020,7 +1021,14 @@ function update(dt){
     const gm=mult*(SK.coinX||1);
     for(const p of pick){p.x-=speed*dt;
       if(p.suck){const dx=drone.x-p.x,dy=drone.y-p.y,d=Math.hypot(dx,dy)||1,v=Math.min(d,1100*dt);p.x+=dx/d*v+speed*dt;p.y+=dy/d*v}
-      else if(magR&&p.k==='coin'){const dx=drone.x-p.x,dy=drone.y-p.y,d=Math.hypot(dx,dy);if(d<magR&&d>1){const v=520*dt/d;p.x+=dx*v;p.y+=dy*v}}}
+      else if(magR&&p.k==='coin'&&!p.carry){const dx=drone.x-p.x,dy=drone.y-p.y,d=Math.hypot(dx,dy);if(d<magR&&d>1){const v=520*dt/d;p.x+=dx*v;p.y+=dy*v}}}
+    for(const m of minis){const hx=drone.x+Math.cos(t*2.1+m.i*3.14)*32,hy=drone.y+Math.sin(t*2.1+m.i*3.14)*13;
+      const mv=(tx,ty,v)=>{const dx=tx-m.x,dy=ty-m.y,d=Math.hypot(dx,dy)||1,st=Math.min(d,v*dt);m.x+=dx/d*st;m.y+=dy/d*st;return d};
+      if(m.st==='home'){m.x=hx;m.y=hy;let best=null,bd=MINI_R;
+        for(const p of pick)if(p.k==='coin'&&!p.claim&&!p.suck&&p.x>drone.x+40){const d=Math.hypot(p.x-drone.x,p.y-drone.y);if(d<bd){bd=d;best=p}}
+        if(best){best.claim=1;m.tg=best;m.st='go'}}
+      else if(m.st==='go'){if(!pick.includes(m.tg)){m.tg=null;m.st='back'}else if(mv(m.tg.x,m.tg.y,1000)<12){m.tg.carry=1;m.st='back';beep(1760,.04,'square',.025,2200)}}
+      else{if(m.tg&&pick.includes(m.tg)){m.tg.x=m.x;m.tg.y=m.y+6}if(mv(hx,hy,1150)<14){if(m.tg&&pick.includes(m.tg)){m.tg.x=drone.x;m.tg.y=drone.y}m.tg=null;m.st='home'}}}
     pick=pick.filter(p=>{
       if(p.x<-40)return false;
       if(Math.hypot(p.x-drone.x,p.y-drone.y)<p.r+16){
@@ -1720,6 +1728,12 @@ function drawPortal(q){
   g.fillStyle='#ffffff';for(let i=0;i<6;i++){const a=-q.a*.8+i*1.047;sparkle(g,Math.cos(a)*48,Math.sin(a)*48,2.6+Math.sin(t*6+i)*1.2)}
   g.restore();
 }
+function drawMinis(){for(const m of minis){if(m.st==='home')continue;
+  ctx.save();ctx.strokeStyle='rgba(127,227,255,.35)';ctx.lineWidth=1.2;ctx.setLineDash([3,5]);ctx.beginPath();ctx.moveTo(drone.x,drone.y);ctx.lineTo(m.x,m.y);ctx.stroke();ctx.setLineDash([]);
+  ctx.translate(m.x,m.y);ctx.scale(1.5,1.5);ctx.fillStyle='rgba(127,227,255,.25)';ctx.beginPath();ctx.arc(0,0,7,0,6.28);ctx.fill();
+  ctx.fillStyle='#1d2a44';rrg(ctx,-3.5,-2,7,4,1.6);ctx.fill();
+  ctx.strokeStyle='rgba(220,245,255,.8)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(-6,-3);ctx.lineTo(-1,-3);ctx.moveTo(1,-3);ctx.lineTo(6,-3);ctx.stroke();
+  ctx.shadowColor='#7fe3ff';ctx.shadowBlur=8*DPR*S;ctx.fillStyle='#7fe3ff';ctx.beginPath();ctx.arc(0,0,1.4,0,6.28);ctx.fill();ctx.restore()}}
 function drawDrone(){
   if(invuln>0&&Math.floor(t*12)%2)return;
   ctx.save();ctx.translate(drone.x,drone.y);
@@ -1776,7 +1790,7 @@ function draw(){
     ctx.lineWidth=6*(1-u)+1;ctx.strokeStyle=`rgba(255,138,61,${(1-u).toFixed(3)})`;ctx.beginPath();ctx.arc(drone.x,drone.y,30+u*LW,0,6.28);ctx.stroke();
     ctx.strokeStyle=`rgba(180,92,255,${(.8*(1-u)).toFixed(3)})`;ctx.lineWidth=3;ctx.beginPath();ctx.arc(drone.x,drone.y,20+u*LW*.7,0,6.28);ctx.stroke();ctx.restore()}
   raceDraw();
-  drawDrone();
+  drawMinis();drawDrone();
   if(state==='play'&&freezeT>0){ctx.fillStyle=`rgba(170,230,255,${(.12*Math.min(1,freezeT,FREEZE_DUR-freezeT+.3)).toFixed(3)})`;ctx.fillRect(0,0,LW,LH)}
   if(flash>0){ctx.fillStyle=`rgba(255,240,255,${Math.min(1,flash*1.3)})`;ctx.fillRect(0,0,LW,LH)}
   ctx.textAlign='center';ctx.font='16px "Russo One", sans-serif';
