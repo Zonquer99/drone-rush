@@ -205,6 +205,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
 .pause-tip span{font-family:var(--ui);font-weight:700;font-size:15px;color:var(--ink)}
 @keyframes pz{50%{transform:translate(-50%,-50%) scale(1.04)}}
 @media (prefers-reduced-motion:reduce){.pause-tip{animation:none}}
+.note.priv{text-align:center;font-size:12px}.note.priv a{color:var(--apricot)}
 .race-tag{background:#d6283f;color:#fff}
 .match-box{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;padding:8px 0}
 .match-box b{font-family:var(--ui);font-size:20px}
@@ -579,6 +580,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
       <button class="btn sec plain" id="setAll" data-en="Back to my test save">Volver a mi partida de prueba</button>
     </div>
     <p class="note" id="setId"></p>
+    <p class="note priv"><a href="#" class="privLink" data-en="Privacy policy">Política de privacidad</a></p>
     <button class="btn primary" id="setBack" data-en="Back">Volver</button>
   </section>
 
@@ -589,6 +591,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
     <input class="name-in" id="nameIn" maxlength="16" autocomplete="off" spellcheck="false" aria-label="Nombre de usuario">
     <p class="note" data-en="3 to 16 characters: letters, numbers, dots or underscores.">De 3 a 16 caracteres: letras, números, puntos o guion bajo.</p>
     <p class="note bad" id="nameMsg" hidden></p>
+    <p class="note priv"><span data-en="By playing you accept the">Al jugar aceptas la</span> <a href="#" class="privLink" data-en="privacy policy">política de privacidad</a>. <span data-en="The game shows ads.">El juego muestra anuncios.</span></p>
     <button class="btn primary" id="nameOk" data-en="Start flying">Empezar a volar</button>
     <div class="links"><button class="pill" id="bLang2">English</button></div>
   </section>
@@ -2573,6 +2576,10 @@ function applyLang(){
 $('bLang').onclick=()=>{LANG=LANG==='en'?'es':'en';M.lang=LANG;save();applyLang();refreshSet();fillMenu()};
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(b&&!b.disabled){unlock();beep(620,.05,'triangle',.05,900)}},true);
 document.addEventListener('pointerdown',()=>unlock(),{capture:true,passive:true});
+const PRIV_URL='https://zonquer99.github.io/drone-rush/privacidad.html';
+document.querySelectorAll('.privLink').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();
+  try{const tg=window.Telegram&&Telegram.WebApp;if(tg&&tg.openLink&&tg.initData){tg.openLink(PRIV_URL+(LANG==='en'?'#en':''));return}}catch(x){}
+  window.open(PRIV_URL+(LANG==='en'?'#en':''),'_blank','noopener')}));
 $('setNewbie').onclick=()=>{try{localStorage.setItem(KEY+'.prueba',JSON.stringify(M));
   localStorage.setItem(KEY,JSON.stringify({newbie:true,lang:M.lang,sound:M.sound,music:M.music}))}catch(e){}location.reload()};
 $('setAll').onclick=()=>{try{const b=localStorage.getItem(KEY+'.prueba');if(b){localStorage.setItem(KEY,b);localStorage.removeItem(KEY+'.prueba')}else localStorage.removeItem(KEY)}catch(e){}location.reload()};
