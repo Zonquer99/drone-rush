@@ -504,7 +504,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
       <div class="lg-cur"><div class="lg-top"><span id="pvpLeague"></span><small id="pvpNext"></small></div><div class="inv-bar lg-bar"><i id="pvpBar"></i></div></div>
       <div class="pvp-stats"><div class="chip"><small data-en="Trophies">Trofeos</small><b id="pvpTro">0</b></div><div class="chip"><small data-en="Wins / races">Victorias / carreras</small><b id="pvpWins">0 / 0</b></div></div>
       <div class="pvp-card live"><div class="pvp-n">1</div><div><b data-en="Ghost race">Carrera de fantasmas</b> <span class="tag rar-comun" style="background:var(--good)" data-en="PLAY NOW">YA DISPONIBLE</span>
-        <p data-en="You race the ghost of a real player with your level on the same course. Whoever flies further wins. Works at any time, even with few players online.">Compites contra el fantasma de un jugador real de tu nivel, en el mismo recorrido. Gana quien llegue más lejos. Funciona a cualquier hora, aunque haya pocos jugadores conectados.</p><p class="pvp-rw" data-en="Win: +1,500 coins and +25 trophies · You can revive 3 times with a video">Ganar: +1.500 monedas y +25 trofeos · Puedes revivir 3 veces con vídeo</p>
+        <p data-en="You race the ghost of a real player with your level on the same course. Whoever flies further wins. Works at any time, even with few players online.">Compites contra el fantasma de un jugador real de tu nivel, en el mismo recorrido. Gana quien llegue más lejos. Funciona a cualquier hora, aunque haya pocos jugadores conectados.</p><p class="pvp-rw" data-en="Win: +240 coins (up to 300 with league bonus) and +25 trophies · You can revive 3 times with a video">Ganar: +240 monedas (hasta 300 con el bonus de liga) y +25 trofeos · Puedes revivir 3 veces con vídeo</p>
         <button class="btn pvp go" id="bRace"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" y1="19" x2="19" y2="13"/><line x1="16" y1="16" x2="20" y2="20"/><line x1="19" y1="21" x2="21" y2="19"/><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" y1="14" x2="9" y2="18"/><line x1="7" y1="17" x2="4" y2="20"/><line x1="3" y1="19" x2="5" y2="21"/></svg><span data-en="Find rival">Buscar rival</span></button></div></div>
       <div class="pvp-card soon"><div class="pvp-n">2</div><div><span class="tag pvp-tag" data-en="COMING SOON">PRÓXIMAMENTE</span><br><b data-en="Live 1 vs 1 duel">Duelo 1 contra 1 en directo</b>
         <p data-en="Two players at the same time, seeing each other's drone. Both bet the same coins and the winner takes everything.">Dos jugadores a la vez, viendo el dron del otro. Los dos apuestan las mismas monedas y el ganador se lo lleva todo.</p></div></div>
@@ -846,14 +846,14 @@ function startGame(m){holeWindStop();unfreeze();
 }
 
 /* ======================= SPAWN ======================= */
-// Dificultad por tramos: 0–1.500 m fácil · 1.500–3.000 m normal · 3.000 m+ difícil
-const tier=()=>{const m=dist/PXM;return m<1500?0:m<3000?1:2};
+// Dificultad por tramos: 0–1.000 m fácil · 1.000–3.000 m normal · 3.000 m+ difícil
+const tier=()=>{const m=dist/PXM;return m<1000?0:m<3000?1:2};
 const TIERS=[{pyl:.55,tur:.85,birds:2,bhit:5,amp:8},{pyl:.5,tur:.78,birds:3,bhit:7,amp:12},{pyl:.45,tur:.72,birds:3,bhit:9,amp:14}];
 function spawn(){
   const m=dist/PXM,x=LW+60,r=crs(),T=TIERS[tier()];
   let type=m<35?'pylon':r<T.pyl?'pylon':r<T.tur?'turbine':'birds';
   if(type==='pylon'){
-    const gap=m<1500?Math.max(220,260-m*.027):m<3000?Math.max(190,225-(m-1500)*.02):Math.max(158,190-(m-3000)*.015),gy=crsR(110+gap/2,GY-70-gap/2),w=44;
+    const gap=m<1000?Math.max(220,260-m*.04):m<3000?Math.max(190,225-(m-1000)*.0175):Math.max(158,190-(m-3000)*.015),gy=crsR(110+gap/2,GY-70-gap/2),w=44;
     obs.push({type,x,w,top:gy-gap/2,bot:gy+gap/2});
     for(let i=0;i<4;i++)pick.push({k:'coin',x:x+w/2+(i-1.5)*32,y:gy,r:10});
   }else if(type==='turbine'){
@@ -864,7 +864,7 @@ function spawn(){
     obs.push({type,x,y0:crsR(120,GY-180),ph:crs()*6,n:T.birds,hr:T.bhit,amp:T.amp});
   }
   const mid=x+spacing*.5;
-  if(battery<(m<1500?85:75)&&Math.random()<(m<1500?.5:.4))pick.push({k:'bat',x:mid,y:rnd(150,GY-150),r:14});
+  if(battery<(m<1000?85:75)&&Math.random()<(m<1000?.5:.4))pick.push({k:'bat',x:mid,y:rnd(150,GY-150),r:14});
   else if(Math.random()<.04)pick.push({k:'gold',x:mid,y:rnd(130,GY-160),r:15});
 }
 
@@ -930,9 +930,9 @@ function update(dt){
     if(SK.freeze){if(dist/PXM>=nextFreeze){freezeT=FREEZE_DUR;nextFreeze=Math.floor(dist/PXM)+FREEZE_EVERY;
         floatTxt(LW/2,150,L('¡CONGELACIÓN!','FREEZE!'),'#bfefff');beep(1500,.4,'sine',.05,600)}
       freezeT=Math.max(0,freezeT-dt)}
-    {const mm=dist/PXM,base=mm<1500?200+mm*.053:mm<3000?280+(mm-1500)*.06:Math.min(470,370+(mm-3000)*.03);
+    {const mm=dist/PXM,base=mm<1000?200+mm*.08:mm<3000?280+(mm-1000)*.045:Math.min(470,370+(mm-3000)*.03);
     speed=base*(freezeT>0?FREEZE_SLOW:1)*(turboOn?2.2:1);dist+=speed*dt}
-    if(!turboOn)battery=Math.max(0,battery-dt*3.3*(1-.08*M.up.bat)*(SK.drain||1)*(dist/PXM<1500?.8:1));
+    if(!turboOn)battery=Math.max(0,battery-dt*3.3*(1-.08*M.up.bat)*(SK.drain||1)*(dist/PXM<1000?.8:1));
     const thrust=holding&&battery>0;
     if(turboOn){drone.vy=0;drone.y+=(LH*.45-drone.y)*Math.min(1,dt*3);
       for(let i=0;i<2;i++)parts.push({x:drone.x-22,y:drone.y+rnd(-5,5),vx:-rnd(300,500),vy:rnd(-30,30),gr:0,life:rnd(.2,.4),max:.4,c:['#ff8a3d','#ffd35a','#fff3b0'][i%3],r:rnd(2,4.5),add:true})}
@@ -944,7 +944,7 @@ function update(dt){
     if(!batsOn()&&!diamOn()&&SK.trail&&Math.random()<SK.tr)emitTrail(SK,speed);
     else if(!batsOn()&&!diamOn()&&thrust&&!SK.trail&&Math.random()<.5)parts.push({x:drone.x+rnd(-20,20),y:drone.y+8,vx:-speed*.3,vy:rnd(40,90),life:.3,max:.3,c:'rgba(255,246,234,.5)',r:1.5});
     ghRecTick(dt);raceUpdate(dt);
-    acc+=speed*dt;if(acc>=spacing){acc=0;{const mm=dist/PXM;spacing=mm<1500?crsR(360,430):mm<3000?crsR(300,370):crsR(270,350)}spawn()}
+    acc+=speed*dt;if(acc>=spacing){acc=0;{const mm=dist/PXM;spacing=mm<1000?crsR(360,430):mm<3000?crsR(300,370):crsR(270,350)}spawn()}
     const rl=rubyLv();
     // cada 10 s se tira la probabilidad; si toca, lluvia de rubís durante 3 s
     if(rl>0){
@@ -1849,7 +1849,7 @@ $('tEquip').onclick=()=>{M.skin='dragon';save();beep(990,.2,'square',.05,1760);r
 // el recorrido sale de una semilla: tú y el fantasma voláis exactamente los mismos obstáculos
 let race=null,raceNext=null,crsFn=Math.random;
 const crs=()=>crsFn(),crsR=(a,b)=>a+crsFn()*(b-a);
-const RACE_REVIVES=3,RACE_WIN=1500,TROPHY_WIN=25,TROPHY_LOSE=10;
+const RACE_REVIVES=3,RACE_WIN=240,TROPHY_WIN=25,TROPHY_LOSE=10;
 const LEAGUES=[
   {id:'bronce',n:['Bronce','Bronze'],min:0,c:'#c98a5a',bonus:0,lose:0,end:2000,perk:['Sin perder trofeos al perder','No trophies lost on defeat'],extra:['','']},
   {id:'plata',n:['Plata','Silver'],min:500,c:'#cfd6e6',bonus:.05,lose:10,end:5000,perk:['+5 % monedas al ganar','+5% coins per win'],extra:['','']},
