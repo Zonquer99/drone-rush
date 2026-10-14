@@ -2220,7 +2220,7 @@ function misBadge(){const n=misReady(),b=$('misBadge');b.hidden=!n;b.textContent
 /* ======================= AMIGOS ======================= */
 const FRIEND_COINS=2000,FRIEND_GOAL=10;
 if(!M.refId){M.refId=Math.random().toString(36).slice(2,8).toUpperCase();save()}
-const inviteLink=()=>`https://t.me/dronerushhbot?startapp=${M.refCode||M.refId}`;
+const inviteLink=()=>M.refCode?`https://t.me/dronerushhbot?startapp=${M.refCode}`:'';
 let invMsg='';
 const INV_MS=[{n:3,t:['Estela Confeti','Confetti trail']},{n:10,t:['Skin Vórtice','Vortex skin'],sk:'vortice'},{n:25,t:['Marco Embajador + 15.000 monedas','Ambassador frame + 15,000 coins']},
   {n:50,t:['Skin Colmena Real','Royal Hive skin'],sk:'enjambre'},{n:100,t:['Vórtice Dorado + insignia 👑','Golden Vortex + 👑 badge'],sk:'vortice_oro'}];
@@ -2246,10 +2246,10 @@ function addFriend(){M.friends=(M.friends||0)+1;M.coins+=FRIEND_COINS;
   if(!invGrant())beep(990,.18,'square',.05,1760);save();renderInv()}
 function renderInv(){const f=M.friends||0;cloudInvClaim();
   invPaint();
-  $('iLink').value=inviteLink();$('iSim').hidden=$('iTest').hidden=!MODO_PRUEBA;$('iMsg').hidden=!invMsg;$('iMsg').textContent=invMsg}
+  $('iLink').value=inviteLink()||L('Preparando enlace…','Preparing link…');if(!M.refCode)cloudRef();$('iSim').hidden=$('iTest').hidden=!MODO_PRUEBA;$('iMsg').hidden=!invMsg;$('iMsg').textContent=invMsg}
 let invFrom='pMenu';
 const openInv=from=>()=>{unlock();invFrom=from;invMsg='';renderInv();show('pInv');$('pInv').scrollTop=0};
-$('iCopy').onclick=()=>{const v=inviteLink();
+$('iCopy').onclick=()=>{const v=inviteLink();if(!v){cloudRef();invMsg=L('Preparando tu enlace… prueba en unos segundos.','Preparing your link… try again in a few seconds.');$('iMsg').hidden=false;$('iMsg').textContent=invMsg;return}
   const ok=()=>{invMsg=L('Enlace copiado. Pégalo en un chat para invitar.','Link copied. Paste it in a chat to invite.');renderInv()};
   try{navigator.clipboard.writeText(v).then(ok,()=>{$('iLink').select();ok()})}catch(e){$('iLink').select();ok()}};
 $('iSim').onclick=addFriend;
@@ -2259,7 +2259,7 @@ $('iReset').onclick=()=>{M.friends=0;M.confettiOwned=false;if(M.trail==='confett
   M.owned=M.owned.filter(x=>!['vortice','enjambre','vortice_oro'].includes(x));if(!M.owned.includes(M.skin))M.skin='clasico';
   M.frames=(M.frames||[]).filter(x=>x!=='embajador');if(M.frame==='embajador')M.frame='none';
   invMsg=L('Invitaciones reiniciadas (solo prueba).','Invites reset (test only).');save();renderInv()};
-$('iShare').onclick=()=>{const u=inviteLink(),txt=L('¡Juega conmigo a Drone Rush! 🚁 Esquiva torres, molinos y pájaros y compite en Batallas PvP.','Play Drone Rush with me! 🚁 Dodge pylons, turbines and birds and race in PvP Battles.');
+$('iShare').onclick=()=>{if(!inviteLink()){$('iCopy').onclick();return}const u=inviteLink(),txt=L('¡Juega conmigo a Drone Rush! 🚁 Esquiva torres, molinos y pájaros y compite en Batallas PvP.','Play Drone Rush with me! 🚁 Dodge pylons, turbines and birds and race in PvP Battles.');
   const sh='https://t.me/share/url?url='+encodeURIComponent(u)+'&text='+encodeURIComponent(txt);
   try{const tg=window.Telegram&&Telegram.WebApp;if(tg&&tg.initData&&tg.openTelegramLink){tg.openTelegramLink(sh);return}}catch(e){}window.open(sh,'_blank','noopener')};
 $('iBack').onclick=()=>{if(invFrom==='pShop'){renderShop();show('pShop')}else{state='menu';fillMenu();show('pMenu')}};
@@ -2451,10 +2451,10 @@ async function cloudTrophyBoard(){if(!cloudOk)return;try{const{data,error}=await
 var refBusy=false;
 async function cloudRef(){if(!cloudOk)return;try{const{data,error}=await sb.rpc('my_ref');if(!error&&data){M.refCode=data;save();if(!$('pInv').hidden)$('iLink').value=inviteLink()}}catch(e){}}
 function refRemember(){try{const tg=window.Telegram&&Telegram.WebApp;const sp=tg&&tg.initDataUnsafe&&tg.initDataUnsafe.start_param;
-  if(sp&&!M.refIn&&!M.refSent&&!M.newbie){M.refIn=String(sp).slice(0,16);save()}}catch(e){}}
+  if(sp&&!M.refSent&&!M.newbie&&M.refIn!==String(sp).slice(0,16)){M.refIn=String(sp).slice(0,16);save()}}catch(e){}}
 async function cloudRegisterRef(){try{refRemember();const sp=M.refIn;
   if(!cloudOk||!sp||M.refSent||M.newbie)return;const{data,error}=await sb.rpc('register_ref',{code:String(sp).slice(0,16)});
-  if(!error){M.refSent=true;save();stat('Invitación: '+data)}}catch(e){}}
+  if(!error){stat('Invitación: '+data);if(['ok','ya_invitado','no_nuevo','eres_tu'].includes(data))M.refSent=true;else if(data==='codigo_no_valido')M.refIn='';save()}}catch(e){}}
 async function cloudInvClaim(){if(!cloudOk||refBusy)return;refBusy=true;try{const{data,error}=await sb.rpc('claim_refs');if(error||!data||!data.length)return;
   const n=Number(data[0].nuevos)||0,tot=Number(data[0].total)||0;
   if(n>0){M.coins+=FRIEND_COINS*n;invMsg=L(`¡${n} amigo${n>1?'s':''} nuevo${n>1?'s':''}! +${fmt(FRIEND_COINS*n)} monedas.`,`${n} new friend${n>1?'s':''}! +${fmt(FRIEND_COINS*n)} coins.`);beep(990,.18,'square',.05,1760)}
