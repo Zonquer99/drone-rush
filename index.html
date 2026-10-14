@@ -878,13 +878,13 @@ function startGame(m){holeWindStop();unfreeze();
 /* ======================= SPAWN ======================= */
 // Dificultad por tramos: 0–1.000 m fácil · 1.000–3.000 m normal · 3.000 m+ difícil
 const MINI_R=460;
-const tier=()=>{const m=dist/PXM;return m<1000?0:m<3000?1:2};
+const tier=()=>{const m=dist/PXM;return m<700?0:m<2500?1:2};
 const TIERS=[{pyl:.55,tur:.85,birds:2,bhit:5,amp:8},{pyl:.5,tur:.78,birds:3,bhit:7,amp:12},{pyl:.45,tur:.72,birds:3,bhit:9,amp:14}];
 function spawn(){
   const m=dist/PXM,x=LW+60,r=crs(),T=TIERS[tier()];
   let type=m<35?'pylon':r<T.pyl?'pylon':r<T.tur?'turbine':'birds';
   if(type==='pylon'){
-    const gap=m<1000?Math.max(220,260-m*.04):m<3000?Math.max(190,225-(m-1000)*.0175):Math.max(158,190-(m-3000)*.015),gy=crsR(110+gap/2,GY-70-gap/2),w=44;
+    const gap=m<700?Math.max(220,260-m*.0571):m<2500?Math.max(190,225-(m-700)*.0194):Math.max(158,190-(m-2500)*.015),gy=crsR(110+gap/2,GY-70-gap/2),w=44;
     obs.push({type,x,w,top:gy-gap/2,bot:gy+gap/2});
     for(let i=0;i<4;i++)pick.push({k:'coin',x:x+w/2+(i-1.5)*32,y:gy,r:10});
   }else if(type==='turbine'){
@@ -895,7 +895,7 @@ function spawn(){
     obs.push({type,x,y0:crsR(120,GY-180),ph:crs()*6,n:T.birds,hr:T.bhit,amp:T.amp});
   }
   const mid=x+spacing*.5;
-  if(battery<(m<1000?85:75)&&Math.random()<(m<1000?.5:.4))pick.push({k:'bat',x:mid,y:rnd(150,GY-150),r:14});
+  if(battery<(m<700?85:75)&&Math.random()<(m<700?.5:.4))pick.push({k:'bat',x:mid,y:rnd(150,GY-150),r:14});
   else if(Math.random()<.04)pick.push({k:'gold',x:mid,y:rnd(130,GY-160),r:15});
 }
 
@@ -961,9 +961,9 @@ function update(dt){
     if(SK.freeze){if(dist/PXM>=nextFreeze){freezeT=FREEZE_DUR;nextFreeze=Math.floor(dist/PXM)+FREEZE_EVERY;
         floatTxt(LW/2,150,L('¡CONGELACIÓN!','FREEZE!'),'#bfefff');beep(1500,.4,'sine',.05,600)}
       freezeT=Math.max(0,freezeT-dt)}
-    {const mm=dist/PXM,base=mm<1000?200+mm*.08:mm<3000?280+(mm-1000)*.045:Math.min(470,370+(mm-3000)*.03);
+    {const mm=dist/PXM,base=mm<700?200+mm*.1143:mm<2500?280+(mm-700)*.05:Math.min(470,370+(mm-2500)*.03);
     speed=base*(freezeT>0?FREEZE_SLOW:1)*(turboOn?2.2:1);dist+=speed*dt}
-    if(!turboOn)battery=Math.max(0,battery-dt*3.3*(1-.08*M.up.bat)*(SK.drain||1)*(dist/PXM<1000?.8:1));
+    if(!turboOn)battery=Math.max(0,battery-dt*3.3*(1-.08*M.up.bat)*(SK.drain||1)*(dist/PXM<700?.8:1));
     const thrust=holding&&battery>0;
     if(turboOn){drone.vy=0;drone.y+=(LH*.45-drone.y)*Math.min(1,dt*3);
       for(let i=0;i<2;i++)parts.push({x:drone.x-22,y:drone.y+rnd(-5,5),vx:-rnd(300,500),vy:rnd(-30,30),gr:0,life:rnd(.2,.4),max:.4,c:['#ff8a3d','#ffd35a','#fff3b0'][i%3],r:rnd(2,4.5),add:true})}
@@ -976,7 +976,7 @@ function update(dt){
     if(!batsOn()&&!diamOn()&&!confOn()&&SK.trail&&Math.random()<SK.tr)emitTrail(SK,speed);
     else if(!batsOn()&&!diamOn()&&!confOn()&&thrust&&!SK.trail&&Math.random()<.5)parts.push({x:drone.x+rnd(-20,20),y:drone.y+8,vx:-speed*.3,vy:rnd(40,90),life:.3,max:.3,c:'rgba(255,246,234,.5)',r:1.5});
     ghRecTick(dt);raceUpdate(dt);
-    acc+=speed*dt;if(acc>=spacing){acc=0;{const mm=dist/PXM;spacing=mm<1000?crsR(360,430):mm<3000?crsR(300,370):crsR(270,350)}spawn()}
+    acc+=speed*dt;if(acc>=spacing){acc=0;{const mm=dist/PXM;spacing=mm<700?crsR(360,430):mm<2500?crsR(300,370):crsR(270,350)}spawn()}
     const rl=rubyLv();
     // cada 10 s se tira la probabilidad; si toca, lluvia de rubís durante 3 s
     if(rl>0){
