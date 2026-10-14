@@ -2277,7 +2277,7 @@ function setTgl(el,on){el.classList.toggle('on',on);el.textContent=on?L('Sí','O
 function refreshSet(){setTgl($('bSound'),!!M.sound);setTgl($('bMusic'),M.music!==false);
   $('bLang').textContent=LANG==='en'?'English':'Español';$('bLang2').textContent=LANG==='en'?'Español':'English';
   $('setTest').hidden=!MODO_PRUEBA_CFG;$('setNewbie').hidden=!!M.newbie;$('setAll').hidden=!M.newbie;$('setTestTxt').innerHTML=M.newbie?L('Estás jugando como un <b>jugador nuevo</b>: sin monedas infinitas ni skins de prueba. Tu partida de prueba está guardada aparte.','You are playing as a <b>new player</b>: no infinite coins or test skins. Your test save is kept aside.'):L('Prueba el juego como un jugador real desde cero: sin monedas, sin skins y con todo por desbloquear. Tu partida de prueba se guarda y puedes volver a ella.','Try the game as a real player from zero: no coins, no skins, everything locked. Your test save is kept and you can go back to it.');
-  $('setId').textContent=L('ID de jugador: ','Player ID: ')+(M.refId||'')+(MODO_PRUEBA&&netStat?' · '+netStat:'')}
+  $('setId').textContent=L('ID de jugador: ','Player ID: ')+(M.refId||'')+(MODO_PRUEBA?' · v14c':'')+(MODO_PRUEBA&&netStat?' · '+netStat:'')}
 /* nombres de usuario únicos */
 const RESERVED=['admin','administrador','moderador','mod','soporte','support','dronerush','drone_rush','sistema','system'];
 // mismo filtro que el servidor (bad_name)
@@ -2419,7 +2419,7 @@ async function cloudInit(){try{
   catch(e){stat('Nube: error '+(e&&e.message||e));console.warn('[nube] sin conexión, se juega en local',e)}}
 // Liga la partida a la cuenta de Telegram (verificado en el servidor) o la recupera si cambias de móvil
 var tgLinked=false,netStat='';
-function stat(x){netStat=x;try{if(MODO_PRUEBA&&$('pSet')&&!$('pSet').hidden)refreshSet()}catch(e){}}
+var netParts={};function stat(x){const k=String(x).split(':')[0];netParts[k]=x;netStat=Object.values(netParts).join(' · ');try{if(MODO_PRUEBA&&$('pSet')&&!$('pSet').hidden)refreshSet()}catch(e){}}
 async function tgLink(){try{
   const tg=window.Telegram&&Telegram.WebApp;if(!cloudOk||tgLinked||M.newbie)return;if(!tg||!tg.initData){stat('Telegram: no abierto desde Telegram');return}
   const{data,error}=await sb.functions.invoke('tg-auth',{body:{initData:tg.initData}});
@@ -2450,12 +2450,18 @@ async function cloudTrophyBoard(){if(!cloudOk)return;try{const{data,error}=await
 // ---- invitaciones reales ----
 var refBusy=false;
 async function cloudRef(){if(!cloudOk)return;try{const{data,error}=await sb.rpc('my_ref');if(!error&&data){M.refCode=data;save();if(!$('pInv').hidden)$('iLink').value=inviteLink()}}catch(e){}}
-function refRemember(){try{const tg=window.Telegram&&Telegram.WebApp;const sp=tg&&tg.initDataUnsafe&&tg.initDataUnsafe.start_param;
+function startParam(){try{const tg=window.Telegram&&Telegram.WebApp;let sp=tg&&tg.initDataUnsafe&&tg.initDataUnsafe.start_param;
+  if(!sp){const q=new URLSearchParams((location.hash||'').slice(1));sp=q.get('tgWebAppStartParam')||new URLSearchParams(location.search).get('tgWebAppStartParam')||new URLSearchParams(location.search).get('startapp')}
+  return sp||''}catch(e){return ''}}
+function refRemember(){try{const sp=startParam();
   if(M.refSent===true)M.refSent=false; // versiones viejas lo marcaban aunque fallase
   if(sp&&!M.refSent&&!M.newbie&&M.refIn!==String(sp).slice(0,16)){M.refIn=String(sp).slice(0,16);save()}}catch(e){}}
 async function cloudRegisterRef(){try{refRemember();const sp=M.refIn;
-  if(!cloudOk||!sp||M.refSent||M.newbie)return;const{data,error}=await sb.rpc('register_ref',{code:String(sp).slice(0,16)});
-  if(!error){stat('Invitación: '+data);if(['ok','ya_invitado','no_nuevo','eres_tu'].includes(data))M.refSent=data;else if(data==='codigo_no_valido')M.refIn='';save()}}catch(e){}}
+  if(M.refSent){stat('Invitación: '+M.refSent);return}
+  if(!sp){stat('Invitación: sin código');return}
+  if(!cloudOk||M.newbie)return;const{data,error}=await sb.rpc('register_ref',{code:String(sp).slice(0,16)});
+  if(error){stat('Invitación: error '+(error.code||'')+' '+(error.message||''));return}
+  {stat('Invitación: '+data);if(['ok','ya_invitado','no_nuevo','eres_tu'].includes(data))M.refSent=data;else if(data==='codigo_no_valido')M.refIn='';save()}}catch(e){}}
 async function cloudInvClaim(){if(!cloudOk||refBusy)return;refBusy=true;try{const{data,error}=await sb.rpc('claim_refs');if(error||!data||!data.length)return;
   const n=Number(data[0].nuevos)||0,tot=Number(data[0].total)||0;
   if(n>0){M.coins+=FRIEND_COINS*n;invMsg=L(`¡${n} amigo${n>1?'s':''} nuevo${n>1?'s':''}! +${fmt(FRIEND_COINS*n)} monedas.`,`${n} new friend${n>1?'s':''}! +${fmt(FRIEND_COINS*n)} coins.`);beep(990,.18,'square',.05,1760)}
