@@ -2415,7 +2415,7 @@ async function cloudInit(){try{
     // la nube tiene una partida más avanzada: la cargamos
     sessionStorage.setItem('dr.cloudload','1');try{localStorage.setItem(KEY,JSON.stringify(Object.assign({},data.save,{named:true,pilot:data.name})))}catch(e){}
     location.reload();return}
-  await tgLink();cloudPush();cloudCount();cloudTourFetch();cloudCups();cloudRef();cloudInvClaim()}
+  refRemember();await tgLink();cloudPush();cloudCount();cloudTourFetch();cloudCups();cloudRef();cloudInvClaim()}
   catch(e){stat('Nube: error '+(e&&e.message||e));console.warn('[nube] sin conexión, se juega en local',e)}}
 // Liga la partida a la cuenta de Telegram (verificado en el servidor) o la recupera si cambias de móvil
 var tgLinked=false,netStat='';
@@ -2450,7 +2450,9 @@ async function cloudTrophyBoard(){if(!cloudOk)return;try{const{data,error}=await
 // ---- invitaciones reales ----
 var refBusy=false;
 async function cloudRef(){if(!cloudOk)return;try{const{data,error}=await sb.rpc('my_ref');if(!error&&data){M.refCode=data;save();if(!$('pInv').hidden)$('iLink').value=inviteLink()}}catch(e){}}
-async function cloudRegisterRef(){try{const tg=window.Telegram&&Telegram.WebApp;const sp=tg&&tg.initDataUnsafe&&tg.initDataUnsafe.start_param;
+function refRemember(){try{const tg=window.Telegram&&Telegram.WebApp;const sp=tg&&tg.initDataUnsafe&&tg.initDataUnsafe.start_param;
+  if(sp&&!M.refIn&&!M.refSent&&!M.newbie){M.refIn=String(sp).slice(0,16);save()}}catch(e){}}
+async function cloudRegisterRef(){try{refRemember();const sp=M.refIn;
   if(!cloudOk||!sp||M.refSent||M.newbie)return;const{data,error}=await sb.rpc('register_ref',{code:String(sp).slice(0,16)});
   if(!error){M.refSent=true;save();stat('Invitación: '+data)}}catch(e){}}
 async function cloudInvClaim(){if(!cloudOk||refBusy)return;refBusy=true;try{const{data,error}=await sb.rpc('claim_refs');if(error||!data||!data.length)return;
