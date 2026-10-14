@@ -209,6 +209,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
 .note.priv{text-align:center;font-size:12px}.note.priv a{color:var(--apricot)}
 .cups{display:inline-flex;gap:3px;margin-left:5px;vertical-align:middle;font-size:.85em}.cups b{font-weight:800;color:var(--gold);white-space:nowrap}
 #iShare{width:100%}.inv-row em{font-style:normal;color:var(--good);font-weight:800;margin-left:auto;font-size:13px}
+.tag.zp{background:#7fe3ff;color:#0d2233}
 .tag.sw{background:#ffc21a;color:#2a1a00}
 .inv-test{display:grid;grid-template-columns:1fr 1fr;gap:8px}.inv-test .btn{font-size:14px;padding:10px 8px}
 .inv-ladder{display:flex;flex-direction:column;gap:6px}
@@ -412,7 +413,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
       <div class="hud-m" id="hudM">0 m</div>
       <div class="hud-c"><span id="hudRace" class="tag race-tag" hidden></span><span id="hudX2" class="tag" hidden>x2</span><span id="hudC">0</span><i class="coin spin"></i></div>
     </div>
-    <div class="bat"><span data-en="Battery">Batería</span> <div class="bat-shell"><div class="bat-fill" id="batFill"></div></div><span id="hudRoy" class="tag roy" hidden></span><span id="hudSw" class="tag sw" hidden></span><span id="hudSh" class="tag sh" hidden></span><span id="hudPh" class="tag ph" hidden></span><span id="hudPo" class="tag myth" hidden></span><span id="hudFz" class="tag sh" hidden></span><span id="hudBh" class="tag rar-epica" hidden></span><span id="hudGh" class="tag rar-temporada" hidden></span></div>
+    <div class="bat"><span data-en="Battery">Batería</span> <div class="bat-shell"><div class="bat-fill" id="batFill"></div></div><span id="hudRoy" class="tag roy" hidden></span><span id="hudZp" class="tag zp" hidden></span><span id="hudSw" class="tag sw" hidden></span><span id="hudSh" class="tag sh" hidden></span><span id="hudPh" class="tag ph" hidden></span><span id="hudPo" class="tag myth" hidden></span><span id="hudFz" class="tag sh" hidden></span><span id="hudBh" class="tag rar-epica" hidden></span><span id="hudGh" class="tag rar-temporada" hidden></span></div>
   </div>
   <div class="hint" id="hint" hidden data-en="Hold to fly up">Mantén pulsado para subir</div>
   <div class="pause-tip" id="pauseTip" hidden><b data-en="Paused">En pausa</b><span data-en="Tap to keep flying">Toca la pantalla para seguir volando</span></div>
@@ -711,7 +712,7 @@ const SKINS=[
     trail:['#ffd35a','#fff6ea','#ffe9a8'],tr:.5,sh:'star',add:true},
   {id:'solar',rar:'comun',en:["Solar", "Solar-panel wings that charge in the sunset.", "Battery lasts twice as long"],kind:'solar',name:'Solar',desc:'Alas de placas solares que se cargan con el atardecer.',perk:'La batería dura el doble',cost:3000,drain:.5,accent:'#ffb000',
     trail:['#ffe14d','#fff3b0'],tr:.3,add:true},
-  {id:'rayo',rar:'comun',en:["Thunder", "A stealth ship charged with electricity.", "Every 400 m an electric discharge pulls in every coin on screen for 2 s"],kind:'bolt',name:'Rayo',desc:'Nave furtiva cargada de electricidad.',perk:'Cada 400 m una descarga eléctrica atrae todas las monedas de la pantalla durante 2 s',cost:5000,zapper:true,accent:'#7fe3ff',
+  {id:'rayo',rar:'comun',en:["Thunder", "A stealth ship charged with electricity.", "Every 400 m an electric discharge pulls in every coin on screen for 15 s"],kind:'bolt',name:'Rayo',desc:'Nave furtiva cargada de electricidad.',perk:'Cada 400 m una descarga eléctrica atrae todas las monedas de la pantalla durante 15 s',cost:5000,zapper:true,accent:'#7fe3ff',
     trail:['#7fe3ff','#c9f4ff','#9b7bff'],tr:.65,add:true},
   {id:'fenix',rar:'rara',en:["Phoenix", "Reborn from its ashes. It burns as it flies.", "+1 shield every run"],kind:'phoenix',name:'Fénix',desc:'Renace de sus cenizas. Arde mientras vuela.',perk:'+1 escudo en cada partida',cost:35000,shield:1,accent:'#ff6a2b',
     trail:['#ff6a2b','#ffd35a','#e8453c','#ff9a3d'],tr:1,up:true,tsz:4.5,add:true},
@@ -847,7 +848,7 @@ window.addEventListener('resize',resize);
 /* ======================= STATE ======================= */
 let state='menu',t=0,dist=0,speed=0,coins=0,mult=1,battery=100,revives=3,invuln=0,shake=0,acc=0,spacing=300,hintT=0,whyDead='';
 let portals=[],portalCount=0,nextPortal=100,portalRecharge=Infinity,flash=0,lastPo='';const PORTAL_MAX=4,PORTAL_JUMP=500,PORTAL_RECHARGE=1100,PORTAL_SAFE=300;
-let minis=[],zapNext=400,zapT=0;let swarmNext=500,swarmCh=0,swarmT=0,lastSw=-1,crownNext=800,ghostNext=500,ghostT=0,lastGh='';const GHOST_EVERY=500,GHOST_DUR=3;
+let minis=[],zapNext=400,zapT=0,lastZp=-1;let swarmNext=500,swarmCh=0,swarmT=0,lastSw=-1,crownNext=800,ghostNext=500,ghostT=0,lastGh='';const GHOST_EVERY=500,GHOST_DUR=3;
 let lifeStart=0,distBank=0,holeNext=500,holeFx=0,holeLeft=0,holeOn=false,lastBh='';const HOLE_EVERY=500,HOLE_EAT=12;
 const obCenter=o=>o.type==='pylon'?[o.x+o.w/2,(o.top+o.bot)/2]:o.type==='turbine'?[o.x,o.hub]:[o.x+30,o.y0+10];
 const holePos=()=>[drone.x+90,drone.y];
@@ -865,7 +866,7 @@ function startGame(m){holeWindStop();unfreeze();
   if(raceNext){raceInit(raceNext);raceNext=null;ghSeed=race.seed}else{race=null;ghSeed='n'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);crsFn=seedRng(ghSeed)}
   SK=skin();mythRun=false;
   if(M.mythArmed&&(M.mythPass||0)>0){SK=skinById('serafin');M.mythPass--;M.mythArmed=false;mythRun=true}
-  shields=M.up.shield+(SK.shield||0);phases=SK.phase||0;crownNext=800;royal=0;royalFx=0;swarmNext=500;swarmCh=0;swarmT=0;zapNext=400;zapT=0;minis=SK.swarm?[0,1].map(i=>({x:drone.x,y:drone.y,st:'home',tg:null,i})):[];ghostNext=GHOST_EVERY;ghostT=0;lastGh='';holeNext=HOLE_EVERY;holeFx=0;holeLeft=0;holeOn=false;lastBh='';freezeT=0;nextFreeze=FREEZE_EVERY;lastFz='';portals=[];portalCount=0;nextPortal=100;portalRecharge=Infinity;flash=0;lastPo='';
+  shields=M.up.shield+(SK.shield||0);phases=SK.phase||0;crownNext=800;royal=0;royalFx=0;swarmNext=500;swarmCh=0;swarmT=0;zapNext=400;zapT=0;lastZp=-1;minis=SK.swarm?[0,1].map(i=>({x:drone.x,y:drone.y,st:'home',tg:null,i})):[];ghostNext=GHOST_EVERY;ghostT=0;lastGh='';holeNext=HOLE_EVERY;holeFx=0;holeLeft=0;holeOn=false;lastBh='';freezeT=0;nextFreeze=FREEZE_EVERY;lastFz='';portals=[];portalCount=0;nextPortal=100;portalRecharge=Infinity;flash=0;lastPo='';
   rubyT=0;rubyRush=0;turboEnd=TURBO_M[turboLv()];turboOn=turboEnd>0;if(turboOn){floatTxt(drone.x+40,drone.y-30,L('¡TURBO!','TURBO!'),'#ff8a3d');hintT=0}
   M.games++;M.uG=(M.uG||0)+1;misAdd('games',1);distBank=0;lifeStart=0;save();
   if(M.games<=3&&!race){shields++;setTimeout(()=>floatTxt(drone.x+50,drone.y-50,L('¡Escudo de regalo!','Free shield!'),'#5ad1ff'),600)}
@@ -877,7 +878,7 @@ function startGame(m){holeWindStop();unfreeze();
 
 /* ======================= SPAWN ======================= */
 // Dificultad por tramos: 0–1.000 m fácil · 1.000–3.000 m normal · 3.000 m+ difícil
-const MINI_R=460;
+const MINI_R=460,ZAP_DUR=15;
 const tier=()=>{const m=dist/PXM;return m<700?0:m<2500?1:2};
 const TIERS=[{pyl:.55,tur:.85,birds:2,bhit:5,amp:8},{pyl:.5,tur:.78,birds:3,bhit:7,amp:12},{pyl:.45,tur:.72,birds:3,bhit:9,amp:14}];
 function spawn(){
@@ -1004,7 +1005,7 @@ function update(dt){
       obs=obs.filter(o=>!o.dead);
     }
     holeFx=Math.max(0,holeFx-dt);
-    if(SK.zapper){zapT=Math.max(0,zapT-dt);if(dist/PXM>=zapNext){zapNext=Math.floor(dist/PXM)+400;zapT=2;flash=Math.max(flash,.25);shake=Math.max(shake,.08);
+    if(SK.zapper){zapT=Math.max(0,zapT-dt);if(dist/PXM>=zapNext){zapNext=Math.floor(dist/PXM)+400;zapT=ZAP_DUR;flash=Math.max(flash,.25);shake=Math.max(shake,.08);
         floatTxt(drone.x+30,drone.y-40,L('¡DESCARGA!','DISCHARGE!'),'#7fe3ff');beep(1200,.25,'sawtooth',.05,300);buzz(30)}
       if(zapT>0)for(const p of pick)if(p.k==='coin'&&!p.suck&&!p.carry&&p.x<LW+20&&p.x>-20){p.suck=1;p.zp=.35}}
     if(SK.swarm){swarmT=Math.max(0,swarmT-dt);if(dist/PXM>=swarmNext){swarmNext=Math.floor(dist/PXM)+500;if(swarmCh<2){swarmCh=2;floatTxt(drone.x+30,drone.y-40,L('¡ABEJAS LISTAS!','BEES READY!'),'#ffd35a');beep(880,.2,'triangle',.05,1320)}}}
@@ -1800,7 +1801,7 @@ function drawPortal(q){
 }
 function drawZaps(){if(!(zapT>0))return;ctx.save();ctx.shadowColor='#7fe3ff';ctx.shadowBlur=10*DPR*S;
   for(const p of pick)if(p.zp>0){p.zp-=1/60;zap(ctx,drone.x,drone.y,p.x,p.y,6,'rgba(127,227,255,.85)',2)}
-  ctx.globalAlpha=Math.min(1,zapT)*.5;ctx.strokeStyle='#bff3ff';ctx.lineWidth=2;ctx.beginPath();ctx.arc(drone.x,drone.y,30+Math.sin(t*30)*3,0,6.28);ctx.stroke();ctx.restore()}
+  ctx.globalAlpha=Math.min(1,zapT)*.6;ctx.strokeStyle='#bff3ff';ctx.lineWidth=2;ctx.beginPath();ctx.arc(drone.x,drone.y,30+Math.sin(t*30)*3,0,6.28);ctx.stroke();ctx.restore()}
 function drawMinis(){for(const m of minis){if(m.st==='home')continue;
   ctx.save();ctx.strokeStyle='rgba(255,211,90,.35)';ctx.lineWidth=1.2;ctx.setLineDash([3,5]);ctx.beginPath();ctx.moveTo(drone.x,drone.y);ctx.lineTo(m.x,m.y);ctx.stroke();ctx.setLineDash([]);
   ctx.translate(m.x,m.y);ctx.scale(1.6,1.6);ctx.fillStyle='rgba(255,211,90,.22)';ctx.beginPath();ctx.arc(0,0,7,0,6.28);ctx.fill();
@@ -1909,6 +1910,7 @@ function hud(){
   const cf=Math.floor(coins);if(cf!==lastC){$('hudC').textContent=fmt(cf);lastC=cf}
   const b=Math.ceil(battery);if(b!==lastB){const f=$('batFill');f.style.width=b+'%';f.className='bat-fill'+(b<=25?' low':b<=50?' mid':'');lastB=b}
   $('hint').hidden=!(hintT>0);
+  {const z=zapT>0?Math.ceil(zapT):0;if(z!==lastZp){$('hudZp').hidden=!z;$('hudZp').textContent=L('DESCARGA ','DISCHARGE ')+z+'s';lastZp=z}}
   if(swarmCh!==lastSw){$('hudSw').hidden=!SK.swarm||swarmCh<=0;$('hudSw').textContent=L('ABEJAS ×','BEES ×')+swarmCh;lastSw=swarmCh}
   if(royal!==lastRoy){$('hudRoy').hidden=royal<=0;$('hudRoy').textContent=L('ESCUDO REAL ×','ROYAL SHIELD ×')+royal;lastRoy=royal}
   if(shields!==lastSh){$('hudSh').hidden=shields<=0;$('hudSh').textContent=L('ESCUDO ×','SHIELD ×')+shields;lastSh=shields}
