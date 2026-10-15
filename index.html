@@ -673,10 +673,10 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
 (function(){
 /* ======================= CONFIG ======================= */
 // si hay una versión nueva publicada, recarga saltándose la caché del móvil
-const BUILD='20261015155008';
+const BUILD='20261015160108';
 (function(){try{if(BUILD.indexOf('__')===0)return;fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.text():'').then(v=>{v=(v||'').trim();
   if(v&&v!==BUILD&&sessionStorage.getItem('dr.vr')!==v){sessionStorage.setItem('dr.vr',v);location.replace(location.pathname+'?v='+v+location.hash)}}).catch(()=>{})}catch(e){}})();
-const MODO_PRUEBA_CFG=true; // modo prueba del desarrollador
+const MODO_PRUEBA_CFG=false; // modo prueba del desarrollador (apagado: juego publicado)
 const TORNEO_ACTIVO=false;var tourOn=TORNEO_ACTIVO;   // el torneo se activa cuando haya 500 jugadores: ponlo en true   // true = monedas infinitas y skin del torneo desbloqueada (ponlo en false para publicar)
 
 const $=id=>document.getElementById(id);
@@ -696,6 +696,10 @@ const DEF={games:0,offered:0,accepted:0,completed:0,revAds:0,x2Ads:0,shopAds:0,b
   skin:'clasico',owned:['clasico'],up:{},freeDay:'',freeCount:0,pilot:'',tourWeek:'',tourBest:0,tourMsg:''};
 let M=Object.assign({},DEF);
 try{Object.assign(M,JSON.parse(localStorage.getItem(KEY))||{})}catch(e){}
+// lanzamiento: las partidas de la época de pruebas se borran y todos empiezan de cero
+const SAVE_GEN=2;
+if((M.gen||1)<SAVE_GEN){const keep={lang:M.lang,sound:M.sound,music:M.music};M=Object.assign({},DEF,keep,{gen:SAVE_GEN});
+  try{localStorage.setItem(KEY,JSON.stringify(M));localStorage.removeItem(KEY+'.prueba');localStorage.removeItem('dronerush.auth.nuevo')}catch(e){}}
 // en la partida de "jugador nuevo" el modo prueba se apaga del todo
 const MODO_PRUEBA=MODO_PRUEBA_CFG&&!M.newbie;
 function save(){try{localStorage.setItem(KEY,JSON.stringify(M))}catch(e){}cloudQueue()}
@@ -2447,7 +2451,7 @@ async function tgLink(){try{
   if(error||!data){let msg=error&&error.message||'?';try{if(error&&error.context&&error.context.json){const j=await error.context.json();msg=(error.context.status||'')+' '+(j.error||j.message||JSON.stringify(j))}}catch(e){}
     stat('Telegram: error '+msg);console.warn('[telegram] no se pudo ligar',error);return}
   stat('Telegram: '+data.status);if(data.status==='linked'){tgLinked=true;cloudRegisterRef()}
-  else if(data.status==='restored'&&data.save&&!sessionStorage.getItem('dr.tgload')){
+  else if(data.status==='restored'&&data.save&&(data.save.gen||1)>=SAVE_GEN&&!sessionStorage.getItem('dr.tgload')){
     sessionStorage.setItem('dr.tgload','1');cloudHasRow=true;
     try{localStorage.setItem(KEY,JSON.stringify(Object.assign({},data.save,{named:true,pilot:data.name})))}catch(e){}
     location.reload()}
