@@ -673,7 +673,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
 (function(){
 /* ======================= CONFIG ======================= */
 // si hay una versión nueva publicada, recarga saltándose la caché del móvil
-const BUILD='20261015153750';
+const BUILD='20261015155008';
 (function(){try{if(BUILD.indexOf('__')===0)return;fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.text():'').then(v=>{v=(v||'').trim();
   if(v&&v!==BUILD&&sessionStorage.getItem('dr.vr')!==v){sessionStorage.setItem('dr.vr',v);location.replace(location.pathname+'?v='+v+location.hash)}}).catch(()=>{})}catch(e){}})();
 const MODO_PRUEBA_CFG=true; // modo prueba del desarrollador
@@ -1930,7 +1930,6 @@ function hud(){
   const gh=SK.ghost?(ghostT>0?L('FANTASMA ','GHOST ')+Math.ceil(ghostT)+' s':L('FANTASMA EN ','GHOST IN ')+fmt(Math.max(0,ghostNext-Math.floor(dist/PXM)))+' m'):'';if(gh!==lastGh){$('hudGh').hidden=!gh;$('hudGh').textContent=gh;lastGh=gh}
   const bh=SK.hole?(holeOn?L('AGUJERO ','HOLE ')+(HOLE_EAT-holeLeft-obs.filter(o=>o.suck).length)+'/'+HOLE_EAT:L('AGUJERO EN ','HOLE IN ')+fmt(Math.max(0,holeNext-Math.floor(dist/PXM)))+' m'):'';if(bh!==lastBh){$('hudBh').hidden=!bh;$('hudBh').textContent=bh;lastBh=bh}
   const fz=SK.freeze?(freezeT>0?L('HIELO ','FREEZE ')+Math.ceil(freezeT)+' s':''):'';if(fz!==lastFz){$('hudFz').hidden=!fz;$('hudFz').textContent=fz;lastFz=fz}
-  {const show=state==='play'&&!!SK.phase;const b=$('phBtn');if(b.hidden===show)b.hidden=!show;if(show){const k=phases+'|'+(phaseT>0);if(b.dataset.k!==k){b.dataset.k=k;$('phN').textContent='×'+phases;b.disabled=phases<=0&&!(phaseT>0);b.classList.toggle('on',phaseT>0)}}}
   if(phases!==lastPh){$('hudPh').hidden=phases<=0;$('hudPh').textContent=L('ATRAVIESA ×','PHASE ×')+phases;lastPh=phases}
 }
 
@@ -2809,6 +2808,7 @@ let last=performance.now();
 function frame(now){
   const dt=Math.min(.033,(now-last)/1000);last=now;
   update(dt);draw();hud();
+  {const show=state==='play'&&!!SK.phase&&!$('hud').hidden;const b=$('phBtn');if(b.hidden===show)b.hidden=!show;if(show){const k=phases+'|'+(phaseT>0);if(b.dataset.k!==k){b.dataset.k=k;$('phN').textContent='×'+phases;b.disabled=phases<=0&&!(phaseT>0);b.classList.toggle('on',phaseT>0)}}}
   if(!$('pShop').hidden&&shopTab==='skins')drawShowcase($('sShow'),skinById(sel),2.3);
   if(!$('pTour').hidden)drawShowcase($('tShow'),skinById('dragon'),2.1);
   if(!$('pInv').hidden)drawShowcase($('iShow'),skinById(invShowSkin()),2.1);
