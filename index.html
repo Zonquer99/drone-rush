@@ -725,8 +725,8 @@ const SKINS=[
   {id:'serafin',en:["Seraph", "A crystal angel with six wings of light. Almost no one has seen it fly.", "x3 coins, x3 battery, 8 shields, giant magnet and 4 portals of +500 m (recharge 1,100 m after the last one)"],kind:'seraph',name:'Serafín',myth:true,desc:'Un ángel de cristal con seis alas de luz. Casi nadie lo ha visto volar.',
     perk:'x3 monedas, batería x3, 8 escudos, imán gigante y 4 portales de +500 m (se recargan 1.100 m después del último)',cost:100000000,coinX:3,drain:.33,shield:8,portal:true,mag:200,accent:'#ff7af5',
     rainbow:true,trail:['#fff'],tr:1,tsz:3.6,sh:'star',add:true,locked:true},
-  {id:'calabaza',rar:'temporada',season:1,kind:'pumpkin',en:["Cursed Pumpkin","Season 1 only. It comes out on the Night of Souls and never returns.","x1.8 coins and ghost mode every 500 m (phases through everything for 3 s)"],
-    name:'Calabaza Maldita',desc:'Solo de la Temporada 1. Sale en la Noche de Ánimas y no vuelve nunca.',perk:'x1,8 monedas y modo fantasma cada 500 m (atraviesa todo durante 3 s)',
+  {id:'calabaza',rar:'temporada',season:1,kind:'pumpkin',en:["Cursed Pumpkin","Season 1 only. It comes out on the Night of Souls and never returns.","x1.8 coins and ghost mode every 400 m (phases through everything for 6 s)"],
+    name:'Calabaza Maldita',desc:'Solo de la Temporada 1. Sale en la Noche de Ánimas y no vuelve nunca.',perk:'x1,8 monedas y modo fantasma cada 400 m (atraviesa todo durante 6 s)',
     coinX:1.8,ghost:true,accent:'#ff8a1a',trail:['#f4f0ff','#c58bff','#ff8a1a'],tr:.7,tsz:3,add:true},
   {id:'emperador',rar:'leyenda',league:1,kind:'emperor',en:["Emperor","The crown of the Legend league. Gold wings, ruby heart.","x2.5 coins and a royal shield every 800 m (up to 3)"],
     name:'Emperador',desc:'La corona de la liga Leyenda. Alas de oro y corazón de rubí.',perk:'x2,5 monedas y un escudo real cada 800 m (hasta 3)',
@@ -848,7 +848,7 @@ window.addEventListener('resize',resize);
 /* ======================= STATE ======================= */
 let state='menu',t=0,dist=0,speed=0,coins=0,mult=1,battery=100,revives=3,invuln=0,shake=0,acc=0,spacing=300,hintT=0,whyDead='';
 let portals=[],portalCount=0,nextPortal=100,portalRecharge=Infinity,flash=0,lastPo='';const PORTAL_MAX=4,PORTAL_JUMP=500,PORTAL_RECHARGE=1100,PORTAL_SAFE=300;
-let minis=[],zapNext=400,zapT=0,lastZp=-1;let swarmNext=500,swarmCh=0,swarmT=0,lastSw=-1,crownNext=800,ghostNext=500,ghostT=0,lastGh='';const GHOST_EVERY=500,GHOST_DUR=3;
+let minis=[],zapNext=400,zapT=0,lastZp=-1;let swarmNext=500,swarmCh=0,swarmT=0,lastSw=-1,crownNext=800,ghostNext=400,ghostT=0,lastGh='';const GHOST_EVERY=400,GHOST_DUR=6;
 let lifeStart=0,distBank=0,holeNext=500,holeFx=0,holeLeft=0,holeOn=false,lastBh='';const HOLE_EVERY=500,HOLE_EAT=12;
 const obCenter=o=>o.type==='pylon'?[o.x+o.w/2,(o.top+o.bot)/2]:o.type==='turbine'?[o.x,o.hub]:[o.x+30,o.y0+10];
 const holePos=()=>[drone.x+90,drone.y];
