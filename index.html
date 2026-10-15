@@ -728,8 +728,8 @@ const SKINS=[
   {id:'calabaza',rar:'temporada',season:1,kind:'pumpkin',en:["Cursed Pumpkin","Season 1 only. It comes out on the Night of Souls and never returns.","x1.8 coins and ghost mode every 400 m (phases through everything for 6 s)"],
     name:'Calabaza Maldita',desc:'Solo de la Temporada 1. Sale en la Noche de Ánimas y no vuelve nunca.',perk:'x1,8 monedas y modo fantasma cada 400 m (atraviesa todo durante 6 s)',
     coinX:1.8,ghost:true,accent:'#ff8a1a',trail:['#f4f0ff','#c58bff','#ff8a1a'],tr:.7,tsz:3,add:true},
-  {id:'emperador',rar:'leyenda',league:1,kind:'emperor',en:["Emperor","The crown of the Legend league. Gold wings, ruby heart.","x2.5 coins and a royal shield every 800 m (up to 3)"],
-    name:'Emperador',desc:'La corona de la liga Leyenda. Alas de oro y corazón de rubí.',perk:'x2,5 monedas y un escudo real cada 800 m (hasta 3)',
+  {id:'emperador',rar:'leyenda',league:1,kind:'emperor',en:["Emperor","The crown of the Legend league. Gold wings, ruby heart.","x2.5 coins and a royal shield every 600 m (up to 3)"],
+    name:'Emperador',desc:'La corona de la liga Leyenda. Alas de oro y corazón de rubí.',perk:'x2,5 monedas y un escudo real cada 600 m (hasta 3)',
     coinX:2.5,crown:true,accent:'#ffd35a',trail:['#ffd35a','#fff1a8','#b45cff','#ffe27a'],tr:.9,sh:'star',tsz:3.2,add:true},
   {id:'vortice',rar:'epica',invite:10,kind:'vortex',en:["Vortex","A tamed black hole. Only for those who bring 10 friends.","x2 coins and a black hole every 500 m (swallows the next 12 obstacles, pulls in coins)"],
     name:'Vórtice',desc:'Un agujero negro domesticado. Solo para quien trae a 10 amigos.',perk:'x2 monedas y agujero negro cada 500 m (se traga los 12 siguientes obstáculos y atrae monedas)',
@@ -848,7 +848,7 @@ window.addEventListener('resize',resize);
 /* ======================= STATE ======================= */
 let state='menu',t=0,dist=0,speed=0,coins=0,mult=1,battery=100,revives=3,invuln=0,shake=0,acc=0,spacing=300,hintT=0,whyDead='';
 let portals=[],portalCount=0,nextPortal=100,portalRecharge=Infinity,flash=0,lastPo='';const PORTAL_MAX=4,PORTAL_JUMP=500,PORTAL_RECHARGE=1100,PORTAL_SAFE=300;
-let minis=[],zapNext=400,zapT=0,lastZp=-1;let swarmNext=500,swarmCh=0,swarmT=0,lastSw=-1,crownNext=800,ghostNext=400,ghostT=0,lastGh='';const GHOST_EVERY=400,GHOST_DUR=6;
+let minis=[],zapNext=400,zapT=0,lastZp=-1;let swarmNext=500,swarmCh=0,swarmT=0,lastSw=-1,crownNext=600,ghostNext=400,ghostT=0,lastGh='';const GHOST_EVERY=400,GHOST_DUR=6;
 let lifeStart=0,distBank=0,holeNext=500,holeFx=0,holeLeft=0,holeOn=false,lastBh='';const HOLE_EVERY=500,HOLE_EAT=12;
 const obCenter=o=>o.type==='pylon'?[o.x+o.w/2,(o.top+o.bot)/2]:o.type==='turbine'?[o.x,o.hub]:[o.x+30,o.y0+10];
 const holePos=()=>[drone.x+90,drone.y];
@@ -866,7 +866,7 @@ function startGame(m){holeWindStop();unfreeze();
   if(raceNext){raceInit(raceNext);raceNext=null;ghSeed=race.seed}else{race=null;ghSeed='n'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);crsFn=seedRng(ghSeed)}
   SK=skin();mythRun=false;
   if(M.mythArmed&&(M.mythPass||0)>0){SK=skinById('serafin');M.mythPass--;M.mythArmed=false;mythRun=true}
-  shields=M.up.shield+(SK.shield||0);phases=SK.phase||0;crownNext=800;royal=0;royalFx=0;swarmNext=500;swarmCh=0;swarmT=0;zapNext=400;zapT=0;lastZp=-1;minis=SK.swarm?[0,1].map(i=>({x:drone.x,y:drone.y,st:'home',tg:null,i})):[];ghostNext=GHOST_EVERY;ghostT=0;lastGh='';holeNext=HOLE_EVERY;holeFx=0;holeLeft=0;holeOn=false;lastBh='';freezeT=0;nextFreeze=FREEZE_EVERY;lastFz='';portals=[];portalCount=0;nextPortal=100;portalRecharge=Infinity;flash=0;lastPo='';
+  shields=M.up.shield+(SK.shield||0);phases=SK.phase||0;crownNext=600;royal=0;royalFx=0;swarmNext=500;swarmCh=0;swarmT=0;zapNext=400;zapT=0;lastZp=-1;minis=SK.swarm?[0,1].map(i=>({x:drone.x,y:drone.y,st:'home',tg:null,i})):[];ghostNext=GHOST_EVERY;ghostT=0;lastGh='';holeNext=HOLE_EVERY;holeFx=0;holeLeft=0;holeOn=false;lastBh='';freezeT=0;nextFreeze=FREEZE_EVERY;lastFz='';portals=[];portalCount=0;nextPortal=100;portalRecharge=Infinity;flash=0;lastPo='';
   rubyT=0;rubyRush=0;turboEnd=TURBO_M[turboLv()];turboOn=turboEnd>0;if(turboOn){floatTxt(drone.x+40,drone.y-30,L('¡TURBO!','TURBO!'),'#ff8a3d');hintT=0}
   M.games++;M.uG=(M.uG||0)+1;misAdd('games',1);distBank=0;lifeStart=0;save();
   if(M.games<=3&&!race){shields++;setTimeout(()=>floatTxt(drone.x+50,drone.y-50,L('¡Escudo de regalo!','Free shield!'),'#5ad1ff'),600)}
@@ -1009,7 +1009,7 @@ function update(dt){
         floatTxt(drone.x+30,drone.y-40,L('¡DESCARGA!','DISCHARGE!'),'#7fe3ff');beep(1200,.25,'sawtooth',.05,300);buzz(30)}
       if(zapT>0)for(const p of pick)if(p.k==='coin'&&!p.suck&&!p.carry&&p.x<LW+20&&p.x>-20){p.suck=1;p.zp=.35}}
     if(SK.swarm){swarmT=Math.max(0,swarmT-dt);if(dist/PXM>=swarmNext){swarmNext=Math.floor(dist/PXM)+500;if(swarmCh<2){swarmCh=2;floatTxt(drone.x+30,drone.y-40,L('¡ABEJAS LISTAS!','BEES READY!'),'#ffd35a');beep(880,.2,'triangle',.05,1320)}}}
-    if(SK.crown&&dist/PXM>=crownNext){crownNext=Math.floor(dist/PXM)+800;if(royal<3){royal++;floatTxt(drone.x+30,drone.y-40,L('¡ESCUDO REAL!','ROYAL SHIELD!'),'#ffd35a');beep(990,.25,'triangle',.06,1480);burst(drone.x,drone.y,'#ffd35a',14,140,true)}}
+    if(SK.crown&&dist/PXM>=crownNext){crownNext=Math.floor(dist/PXM)+600;if(royal<3){royal++;floatTxt(drone.x+30,drone.y-40,L('¡ESCUDO REAL!','ROYAL SHIELD!'),'#ffd35a');beep(990,.25,'triangle',.06,1480);burst(drone.x,drone.y,'#ffd35a',14,140,true)}}
     if(SK.ghost){if(dist/PXM>=ghostNext){ghostNext=Math.floor(dist/PXM)+GHOST_EVERY;ghostT=GHOST_DUR;
       floatTxt(LW/2,150,L('¡MODO FANTASMA!','GHOST MODE!'),'#d9c2ff');beep(700,.5,'sine',.05,300)}ghostT=Math.max(0,ghostT-dt)}
     if(SK.portal){
