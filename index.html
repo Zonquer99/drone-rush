@@ -722,8 +722,8 @@ const SKINS=[
     trail:['#7dffb0','#b6ffd6'],tr:.6,add:true},
   {id:'dragon',rar:'epica',en:["Royal Dragon", "Only for the top 3 pilots of the weekly tournament.", "x2.2 coins and phases through 4 obstacles"],kind:'dragon',name:'Dragón Real',desc:'Solo para los 3 mejores pilotos del torneo semanal.',perk:'x2,2 monedas y atraviesa 4 obstáculos',excl:true,coinX:2.2,phase:4,accent:'#b45cff',
     trail:['#b45cff','#ffcf4d','#ff4df5','#7a3cff'],tr:1,up:true,tsz:4,add:true},
-  {id:'serafin',en:["Seraph", "A crystal angel with six wings of light. Almost no one has seen it fly.", "x3 coins, x3 battery, 8 shields, giant magnet and 4 portals of +500 m (recharge 1,100 m after the last one)"],kind:'seraph',name:'Serafín',myth:true,desc:'Un ángel de cristal con seis alas de luz. Casi nadie lo ha visto volar.',
-    perk:'x3 monedas, batería x3, 8 escudos, imán gigante y 4 portales de +500 m (se recargan 1.100 m después del último)',cost:100000000,coinX:3,drain:.33,shield:8,portal:true,mag:200,accent:'#ff7af5',
+  {id:'serafin',en:["Seraph", "A crystal angel with six wings of light. Almost no one has seen it fly.", "x3 coins, x3 battery, 8 shields, giant magnet and 4 portals of +500 m (recharge 700 m after the last one)"],kind:'seraph',name:'Serafín',myth:true,desc:'Un ángel de cristal con seis alas de luz. Casi nadie lo ha visto volar.',
+    perk:'x3 monedas, batería x3, 8 escudos, imán gigante y 4 portales de +500 m (se recargan 700 m después del último)',cost:100000000,coinX:3,drain:.33,shield:8,portal:true,mag:200,accent:'#ff7af5',
     rainbow:true,trail:['#fff'],tr:1,tsz:3.6,sh:'star',add:true,locked:true},
   {id:'calabaza',rar:'temporada',season:1,kind:'pumpkin',en:["Cursed Pumpkin","Season 1 only. It comes out on the Night of Souls and never returns.","x1.8 coins and ghost mode every 400 m (phases through everything for 6 s)"],
     name:'Calabaza Maldita',desc:'Solo de la Temporada 1. Sale en la Noche de Ánimas y no vuelve nunca.',perk:'x1,8 monedas y modo fantasma cada 400 m (atraviesa todo durante 6 s)',
@@ -847,7 +847,7 @@ window.addEventListener('resize',resize);
 
 /* ======================= STATE ======================= */
 let state='menu',t=0,dist=0,speed=0,coins=0,mult=1,battery=100,revives=3,invuln=0,shake=0,acc=0,spacing=300,hintT=0,whyDead='';
-let portals=[],portalCount=0,nextPortal=100,portalRecharge=Infinity,flash=0,lastPo='';const PORTAL_MAX=4,PORTAL_JUMP=500,PORTAL_RECHARGE=1100,PORTAL_SAFE=300;
+let portals=[],portalCount=0,nextPortal=100,portalRecharge=Infinity,flash=0,lastPo='';const PORTAL_MAX=4,PORTAL_JUMP=500,PORTAL_RECHARGE=700,PORTAL_SAFE=300;
 let minis=[],zapNext=400,zapT=0,lastZp=-1;let swarmNext=500,swarmCh=0,swarmT=0,lastSw=-1,crownNext=600,ghostNext=400,ghostT=0,lastGh='';const GHOST_EVERY=400,GHOST_DUR=6;
 let lifeStart=0,distBank=0,holeNext=500,holeFx=0,holeLeft=0,holeOn=false,lastBh='';const HOLE_EVERY=500,HOLE_EAT=12;
 const obCenter=o=>o.type==='pylon'?[o.x+o.w/2,(o.top+o.bot)/2]:o.type==='turbine'?[o.x,o.hub]:[o.x+30,o.y0+10];
@@ -1013,7 +1013,7 @@ function update(dt){
     if(SK.ghost){if(dist/PXM>=ghostNext){ghostNext=Math.floor(dist/PXM)+GHOST_EVERY;ghostT=GHOST_DUR;
       floatTxt(LW/2,150,L('¡MODO FANTASMA!','GHOST MODE!'),'#d9c2ff');beep(700,.5,'sine',.05,300)}ghostT=Math.max(0,ghostT-dt)}
     if(SK.portal){
-      // 1.100 m de vuelo después de salir el 4.º portal se recargan (los saltos no cuentan)
+      // 700 m de vuelo después de salir el 4.º portal se recargan (los saltos no cuentan)
       if(dist/PXM>=portalRecharge){portalRecharge=Infinity;
         portalCount=0;nextPortal=Math.max(nextPortal,Math.floor(dist/PXM)+100);
         floatTxt(LW/2,150,L('¡PORTALES RECARGADOS!','PORTALS RECHARGED!'),'#ff9cf8');beep(990,.3,'sine',.06,1980)}
