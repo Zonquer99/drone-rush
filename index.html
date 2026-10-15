@@ -33,6 +33,11 @@ html,body{height:100%}
 body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);overflow:hidden}
 #wrap{position:relative;height:100%;max-width:480px;margin:0 auto;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
 #cv{position:absolute;inset:0;width:100%;height:100%;display:block}
+.ph-btn{position:absolute;right:16px;bottom:120px;z-index:5;width:76px;height:76px;border-radius:50%;border:2px solid #c58bff;background:radial-gradient(circle at 40% 35%,#6b3fa8,#2a1450);color:#fff;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--display);box-shadow:0 0 18px rgba(180,92,255,.6);touch-action:manipulation;cursor:pointer}
+.ph-btn b{font-size:26px;line-height:1}.ph-btn span{font-size:16px;font-weight:800}
+.ph-btn.on{background:radial-gradient(circle at 40% 35%,#d9a4ff,#8a3fd6);box-shadow:0 0 30px rgba(220,160,255,.95)}
+.ph-btn:disabled{opacity:.4;filter:grayscale(.6)}
 .hud{position:absolute;top:0;left:0;right:0;padding:12px 16px 0;display:flex;flex-direction:column;gap:8px;pointer-events:none}
 .hud-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
 .hud-m{font-family:var(--display);font-size:28px;letter-spacing:.02em;font-variant-numeric:tabular-nums;text-shadow:0 2px 0 rgba(0,0,0,.35)}
@@ -408,6 +413,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
 <div id="wrap">
   <canvas id="cv"></canvas>
 
+  <button class="ph-btn" id="phBtn" hidden aria-label="Atravesar"><b>🐉</b><span id="phN">8</span></button>
   <div class="hud" id="hud" hidden>
     <div class="hud-row">
       <div class="hud-m" id="hudM">0 m</div>
@@ -497,7 +503,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
       <div class="prize-info">
         <p class="eyebrow" data-en="Prize for the top 3">Premio para el top 3</p>
         <h3 data-en="Royal Dragon · exclusive skin">Dragón Real · skin exclusiva</h3>
-        <p class="show-perk" data-en="x2.2 coins and phases through 4 obstacles per run">x2,2 monedas y atraviesa 4 obstáculos por partida</p>
+        <p class="show-perk" data-en="x2.2 coins and 8 phase-throughs per run, whenever you want">x2,2 monedas y 8 atravesadas por partida, cuando tú quieras</p>
         <p class="note win" data-en="+ 10,000 coins for each of the top 3">+ 10.000 monedas para cada uno del top 3</p>
         <p class="note" data-en="4th to 10th place: 5,000 coins and 1 name change. Your best distance of the week counts.">Del 4.º al 10.º puesto: 5.000 monedas y 1 cambio de nombre. Cuenta tu mejor distancia de la semana.</p>
       </div>
@@ -666,6 +672,10 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
 <script>
 (function(){
 /* ======================= CONFIG ======================= */
+// si hay una versión nueva publicada, recarga saltándose la caché del móvil
+const BUILD='20261015153750';
+(function(){try{if(BUILD.indexOf('__')===0)return;fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.text():'').then(v=>{v=(v||'').trim();
+  if(v&&v!==BUILD&&sessionStorage.getItem('dr.vr')!==v){sessionStorage.setItem('dr.vr',v);location.replace(location.pathname+'?v='+v+location.hash)}}).catch(()=>{})}catch(e){}})();
 const MODO_PRUEBA_CFG=true; // modo prueba del desarrollador
 const TORNEO_ACTIVO=false;var tourOn=TORNEO_ACTIVO;   // el torneo se activa cuando haya 500 jugadores: ponlo en true   // true = monedas infinitas y skin del torneo desbloqueada (ponlo en false para publicar)
 
@@ -720,7 +730,7 @@ const SKINS=[
     trail:['#ffffff','#bfefff','#e6fbff'],tr:.55,sh:'star'},
   {id:'ovni',rar:'rara',en:["UFO", "Nobody knows where it comes from. Its pilot won't say.", "x1.6 coins and +50% battery"],kind:'ufo',name:'OVNI',desc:'Nadie sabe de dónde viene. Su piloto tampoco lo dice.',perk:'x1,6 monedas y +50 % de batería',cost:95000,coinX:1.6,drain:.67,accent:'#7dffb0',
     trail:['#7dffb0','#b6ffd6'],tr:.6,add:true},
-  {id:'dragon',rar:'epica',en:["Royal Dragon", "Only for the top 3 pilots of the weekly tournament.", "x2.2 coins and phases through 4 obstacles"],kind:'dragon',name:'Dragón Real',desc:'Solo para los 3 mejores pilotos del torneo semanal.',perk:'x2,2 monedas y atraviesa 4 obstáculos',excl:true,coinX:2.2,phase:4,accent:'#b45cff',
+  {id:'dragon',rar:'epica',en:["Royal Dragon", "Only for the top 3 pilots of the weekly tournament.", "x2.2 coins and 8 phase-throughs you trigger whenever you want (button)"],kind:'dragon',name:'Dragón Real',desc:'Solo para los 3 mejores pilotos del torneo semanal.',perk:'x2,2 monedas y 8 atravesadas que activas cuando quieras (botón)',excl:true,coinX:2.2,phase:8,accent:'#b45cff',
     trail:['#b45cff','#ffcf4d','#ff4df5','#7a3cff'],tr:1,up:true,tsz:4,add:true},
   {id:'serafin',en:["Seraph", "A crystal angel with six wings of light. Almost no one has seen it fly.", "x3 coins, x3 battery, 8 shields, giant magnet and 4 portals of +500 m (recharge 700 m after the last one)"],kind:'seraph',name:'Serafín',myth:true,desc:'Un ángel de cristal con seis alas de luz. Casi nadie lo ha visto volar.',
     perk:'x3 monedas, batería x3, 8 escudos, imán gigante y 4 portales de +500 m (se recargan 700 m después del último)',cost:100000000,coinX:3,drain:.33,shield:8,portal:true,mag:200,accent:'#ff7af5',
@@ -853,7 +863,7 @@ let lifeStart=0,distBank=0,holeNext=500,holeFx=0,holeLeft=0,holeOn=false,lastBh=
 const obCenter=o=>o.type==='pylon'?[o.x+o.w/2,(o.top+o.bot)/2]:o.type==='turbine'?[o.x,o.hub]:[o.x+30,o.y0+10];
 const holePos=()=>[drone.x+90,drone.y];
 let freezeT=0,nextFreeze=500,lastFz='';const FREEZE_EVERY=500,FREEZE_DUR=15,FREEZE_SLOW=.65;
-let mythRun=false,royal=0,royalFx=0,shields=0,phases=0,SK=SKINS[0],banked=0,turboEnd=0,turboOn=false,rubyT=0,rubyRush=0,rubyGap=0,rubyPh=0,rubyY=300;
+let phaseT=0;const PHASE_DUR=1.6;let mythRun=false,royal=0,royalFx=0,shields=0,phases=0,SK=SKINS[0],banked=0,turboEnd=0,turboOn=false,rubyT=0,rubyRush=0,rubyGap=0,rubyPh=0,rubyY=300;
 const TURBO_M=[0,50,100,200];
 const drone={x:100,y:300,vy:0,tilt:0};
 let holding=false,obs=[],pick=[],parts=[],floats=[];
@@ -866,7 +876,7 @@ function startGame(m){holeWindStop();unfreeze();
   if(raceNext){raceInit(raceNext);raceNext=null;ghSeed=race.seed}else{race=null;ghSeed='n'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);crsFn=seedRng(ghSeed)}
   SK=skin();mythRun=false;
   if(M.mythArmed&&(M.mythPass||0)>0){SK=skinById('serafin');M.mythPass--;M.mythArmed=false;mythRun=true}
-  shields=M.up.shield+(SK.shield||0);phases=SK.phase||0;crownNext=600;royal=0;royalFx=0;swarmNext=500;swarmCh=0;swarmT=0;zapNext=400;zapT=0;lastZp=-1;minis=SK.swarm?[0,1].map(i=>({x:drone.x,y:drone.y,st:'home',tg:null,i})):[];ghostNext=GHOST_EVERY;ghostT=0;lastGh='';holeNext=HOLE_EVERY;holeFx=0;holeLeft=0;holeOn=false;lastBh='';freezeT=0;nextFreeze=FREEZE_EVERY;lastFz='';portals=[];portalCount=0;nextPortal=100;portalRecharge=Infinity;flash=0;lastPo='';
+  shields=M.up.shield+(SK.shield||0);phases=SK.phase||0;phaseT=0;crownNext=600;royal=0;royalFx=0;swarmNext=500;swarmCh=0;swarmT=0;zapNext=400;zapT=0;lastZp=-1;minis=SK.swarm?[0,1].map(i=>({x:drone.x,y:drone.y,st:'home',tg:null,i})):[];ghostNext=GHOST_EVERY;ghostT=0;lastGh='';holeNext=HOLE_EVERY;holeFx=0;holeLeft=0;holeOn=false;lastBh='';freezeT=0;nextFreeze=FREEZE_EVERY;lastFz='';portals=[];portalCount=0;nextPortal=100;portalRecharge=Infinity;flash=0;lastPo='';
   rubyT=0;rubyRush=0;turboEnd=TURBO_M[turboLv()];turboOn=turboEnd>0;if(turboOn){floatTxt(drone.x+40,drone.y-30,L('¡TURBO!','TURBO!'),'#ff8a3d');hintT=0}
   M.games++;M.uG=(M.uG||0)+1;misAdd('games',1);distBank=0;lifeStart=0;save();
   if(M.games<=3&&!race){shields++;setTimeout(()=>floatTxt(drone.x+50,drone.y-50,L('¡Escudo de regalo!','Free shield!'),'#5ad1ff'),600)}
@@ -1051,10 +1061,9 @@ function update(dt){
         else{const g=Math.round(25*gm);coins+=g;beep(880,.3,'square',.06,1760);buzz(30);burst(p.x,p.y,'#ffd35a',24,220,true);floatTxt(p.x,p.y-18,L('¡Dron dorado! +','Golden drone! +')+g,'#ffd35a')}
         return false}
       return true});
-    invuln=Math.max(0,invuln-dt);royalFx=Math.max(0,royalFx-dt);hintT=Math.max(0,hintT-dt);
+    invuln=Math.max(0,invuln-dt);phaseT=Math.max(0,phaseT-dt);royalFx=Math.max(0,royalFx-dt);hintT=Math.max(0,hintT-dt);
     if(drone.y>GY-14)crash(battery<=0?L('Sin batería','Out of battery'):L('Has tocado el suelo','You hit the ground'));
-    else if(!invuln&&!turboOn&&!(ghostT>0))for(const o of obs)if(!o.suck&&collides(o)){
-      if(phases>0){phases--;invuln=1.1;beep(220,.35,'sine',.08,880);burst(drone.x,drone.y,'#b45cff',26,200,true);floatTxt(drone.x,drone.y-30,L('¡Atravesado!','Phased through!'),'#c58bff');break}
+    else if(!invuln&&!turboOn&&!(ghostT>0)&&!(phaseT>0))for(const o of obs)if(!o.suck&&collides(o)){
       if(royal>0){royal--;royalBlast();break}
       if(swarmCh>0){swarmCh--;swarmT=3;invuln=3;shake=.12;buzz(40);beep(520,.25,'triangle',.06,1040);burst(drone.x,drone.y,'#ffd35a',24,220,true);floatTxt(drone.x,drone.y-30,L('¡Abeja escudo!','Bee shield!'),'#ffd35a');break}
       if(shields>0){shields--;invuln=1.5;shake=.15;buzz(40);beep(300,.25,'triangle',.08,900);burst(drone.x,drone.y,'#5ad1ff',22,200,true);floatTxt(drone.x,drone.y-30,L('¡Escudo!','Shield!'),'#5ad1ff');break}
@@ -1812,6 +1821,7 @@ function drawDrone(){
   if(invuln>0&&Math.floor(t*12)%2)return;
   ctx.save();ctx.translate(drone.x,drone.y);
   if(state==='play'){
+    if(phaseT>0){ctx.save();ctx.globalAlpha=.9;ctx.fillStyle='rgba(197,139,255,.18)';ctx.strokeStyle='#e0b8ff';ctx.lineWidth=3;ctx.shadowColor='#b45cff';ctx.shadowBlur=16*DPR*S;ctx.beginPath();ctx.arc(0,0,38+Math.sin(t*20)*2,0,6.28);ctx.fill();ctx.stroke();ctx.restore()}
     if(phases>0){ctx.strokeStyle=`rgba(197,139,255,${.35+.2*Math.sin(t*4)})`;ctx.lineWidth=1.5;ctx.setLineDash([4,5]);ctx.beginPath();ctx.arc(0,0,36,t,t+6.28);ctx.stroke();ctx.setLineDash([])}
     if(swarmT>0){ctx.save();ctx.globalAlpha=Math.min(1,swarmT);ctx.strokeStyle=`rgba(255,211,90,${.6+.3*Math.sin(t*10)})`;ctx.lineWidth=2.5;ctx.shadowColor='#ffd35a';ctx.shadowBlur=14*DPR*S;
       ctx.beginPath();ctx.arc(0,0,34,0,6.28);ctx.stroke();ctx.fillStyle='rgba(255,211,90,.12)';ctx.fill();
@@ -1920,6 +1930,7 @@ function hud(){
   const gh=SK.ghost?(ghostT>0?L('FANTASMA ','GHOST ')+Math.ceil(ghostT)+' s':L('FANTASMA EN ','GHOST IN ')+fmt(Math.max(0,ghostNext-Math.floor(dist/PXM)))+' m'):'';if(gh!==lastGh){$('hudGh').hidden=!gh;$('hudGh').textContent=gh;lastGh=gh}
   const bh=SK.hole?(holeOn?L('AGUJERO ','HOLE ')+(HOLE_EAT-holeLeft-obs.filter(o=>o.suck).length)+'/'+HOLE_EAT:L('AGUJERO EN ','HOLE IN ')+fmt(Math.max(0,holeNext-Math.floor(dist/PXM)))+' m'):'';if(bh!==lastBh){$('hudBh').hidden=!bh;$('hudBh').textContent=bh;lastBh=bh}
   const fz=SK.freeze?(freezeT>0?L('HIELO ','FREEZE ')+Math.ceil(freezeT)+' s':''):'';if(fz!==lastFz){$('hudFz').hidden=!fz;$('hudFz').textContent=fz;lastFz=fz}
+  {const show=state==='play'&&!!SK.phase;const b=$('phBtn');if(b.hidden===show)b.hidden=!show;if(show){const k=phases+'|'+(phaseT>0);if(b.dataset.k!==k){b.dataset.k=k;$('phN').textContent='×'+phases;b.disabled=phases<=0&&!(phaseT>0);b.classList.toggle('on',phaseT>0)}}}
   if(phases!==lastPh){$('hudPh').hidden=phases<=0;$('hudPh').textContent=L('ATRAVIESA ×','PHASE ×')+phases;lastPh=phases}
 }
 
@@ -2261,6 +2272,9 @@ $('iCopy').onclick=()=>{const v=inviteLink();if(!v){cloudRef();invMsg=L('Prepara
   const ok=()=>{invMsg=L('Enlace copiado. Pégalo en un chat para invitar.','Link copied. Paste it in a chat to invite.');renderInv()};
   try{navigator.clipboard.writeText(v).then(ok,()=>{$('iLink').select();ok()})}catch(e){$('iLink').select();ok()}};
 $('iSim').onclick=addFriend;
+function usePhase(){if(state!=='play'||!SK.phase||phases<=0||phaseT>0||frozen)return;phases--;phaseT=PHASE_DUR;beep(220,.35,'sine',.08,880);buzz(25);
+  burst(drone.x,drone.y,'#b45cff',26,200,true);floatTxt(drone.x,drone.y-34,L('¡ATRAVESAR!','PHASE!'),'#c58bff')}
+$('phBtn').addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();unlock();usePhase()});
 $('iSim10').onclick=()=>{let ms='';for(let i=0;i<10;i++){M.friends=(M.friends||0)+1;M.coins+=FRIEND_COINS;const g=invGrant();if(g)ms=g}
   invMsg=(ms?ms+' ':'')+L(`+10 amigos · +${fmt(FRIEND_COINS*10)} monedas.`,`+10 friends · +${fmt(FRIEND_COINS*10)} coins.`);if(!ms)beep(990,.18,'square',.05,1760);save();renderInv()};
 $('iReset').onclick=()=>{M.friends=0;M.confettiOwned=false;if(M.trail==='confetti')M.trail='skin';
@@ -2786,7 +2800,7 @@ wrap.addEventListener('pointerdown',e=>{if(e.target.closest('button,input,.panel
 document.addEventListener('visibilitychange',()=>{if(document.hidden)freeze()});
 const up=()=>{holding=false};
 window.addEventListener('pointerup',up);window.addEventListener('pointercancel',up);window.addEventListener('blur',up);
-window.addEventListener('keydown',e=>{if((e.code==='Space'||e.code==='ArrowUp')&&state==='play'){e.preventDefault();unlock();if(frozen){unfreeze();return}holding=true}});
+window.addEventListener('keydown',e=>{if(e.code==='KeyX'||e.code==='ShiftLeft'){usePhase();return}if((e.code==='Space'||e.code==='ArrowUp')&&state==='play'){e.preventDefault();unlock();if(frozen){unfreeze();return}holding=true}});
 window.addEventListener('keyup',e=>{if(e.code==='Space'||e.code==='ArrowUp')holding=false});
 wrap.addEventListener('contextmenu',e=>e.preventDefault());
 
