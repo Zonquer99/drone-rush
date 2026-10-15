@@ -716,7 +716,7 @@ const SKINS=[
     trail:['#7fe3ff','#c9f4ff','#9b7bff'],tr:.65,add:true},
   {id:'fenix',rar:'rara',en:["Phoenix", "Reborn from its ashes. It burns as it flies.", "+1 shield every run"],kind:'phoenix',name:'Fénix',desc:'Renace de sus cenizas. Arde mientras vuela.',perk:'+1 escudo en cada partida',cost:35000,shield:1,accent:'#ff6a2b',
     trail:['#ff6a2b','#ffd35a','#e8453c','#ff9a3d'],tr:1,up:true,tsz:4.5,add:true},
-  {id:'glaciar',rar:'rara',en:["Glacier", "An eternal-ice fighter with crystal wings and a frost engine.", "Every 600 m: everything slows 10% for 10 s"],kind:'ice',name:'Glaciar',desc:'Caza de hielo eterno con alas de cristal y motor de escarcha.',perk:'Cada 600 m: todo va un 10 % más lento durante 10 s',cost:55000,freeze:true,accent:'#9fe8ff',
+  {id:'glaciar',rar:'rara',en:["Glacier", "An eternal-ice fighter with crystal wings and a frost engine.", "Every 500 m: everything slows 35% for 15 s"],kind:'ice',name:'Glaciar',desc:'Caza de hielo eterno con alas de cristal y motor de escarcha.',perk:'Cada 500 m: todo va un 35 % más lento durante 15 s',cost:55000,freeze:true,accent:'#9fe8ff',
     trail:['#ffffff','#bfefff','#e6fbff'],tr:.55,sh:'star'},
   {id:'ovni',rar:'rara',en:["UFO", "Nobody knows where it comes from. Its pilot won't say.", "x1.6 coins and +50% battery"],kind:'ufo',name:'OVNI',desc:'Nadie sabe de dónde viene. Su piloto tampoco lo dice.',perk:'x1,6 monedas y +50 % de batería',cost:95000,coinX:1.6,drain:.67,accent:'#7dffb0',
     trail:['#7dffb0','#b6ffd6'],tr:.6,add:true},
@@ -852,7 +852,7 @@ let minis=[],zapNext=400,zapT=0,lastZp=-1;let swarmNext=500,swarmCh=0,swarmT=0,l
 let lifeStart=0,distBank=0,holeNext=500,holeFx=0,holeLeft=0,holeOn=false,lastBh='';const HOLE_EVERY=500,HOLE_EAT=12;
 const obCenter=o=>o.type==='pylon'?[o.x+o.w/2,(o.top+o.bot)/2]:o.type==='turbine'?[o.x,o.hub]:[o.x+30,o.y0+10];
 const holePos=()=>[drone.x+90,drone.y];
-let freezeT=0,nextFreeze=600,lastFz='';const FREEZE_EVERY=600,FREEZE_DUR=10,FREEZE_SLOW=.90;
+let freezeT=0,nextFreeze=500,lastFz='';const FREEZE_EVERY=500,FREEZE_DUR=15,FREEZE_SLOW=.65;
 let mythRun=false,royal=0,royalFx=0,shields=0,phases=0,SK=SKINS[0],banked=0,turboEnd=0,turboOn=false,rubyT=0,rubyRush=0,rubyGap=0,rubyPh=0,rubyY=300;
 const TURBO_M=[0,50,100,200];
 const drone={x:100,y:300,vy:0,tilt:0};
