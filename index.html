@@ -673,7 +673,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
 (function(){
 /* ======================= CONFIG ======================= */
 // si hay una versión nueva publicada, recarga saltándose la caché del móvil
-const BUILD='20261015160108';
+const BUILD='20261016184549';
 (function(){try{if(BUILD.indexOf('__')===0)return;fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.text():'').then(v=>{v=(v||'').trim();
   if(v&&v!==BUILD&&sessionStorage.getItem('dr.vr')!==v){sessionStorage.setItem('dr.vr',v);location.replace(location.pathname+'?v='+v+location.hash)}}).catch(()=>{})}catch(e){}})();
 const MODO_PRUEBA_CFG=false; // modo prueba del desarrollador (apagado: juego publicado)
@@ -887,7 +887,7 @@ function startGame(m){holeWindStop();unfreeze();
   const gm=m*(SK.coinX||1);
   show(null);$('hud').hidden=false;$('hudX2').hidden=gm===1;$('hudX2').textContent='x'+decs(gm);
   if(mythRun)floatTxt(drone.x+60,drone.y-40,L('¡SERAFÍN POR UNA PARTIDA!','SERAPH FOR ONE RUN!'),'#ff9cf8');
-  lastM=lastC=lastB=lastSh=lastPh=lastRoy=lastSw=-1;
+  lastM=lastC=lastB=lastSh=lastPh=lastRoy=lastSw=-1;lastFz=lastBh=lastGh=lastPo=null;lastZp=-1;document.querySelectorAll('#hud .tag').forEach(e=>e.hidden=true);
 }
 
 /* ======================= SPAWN ======================= */
