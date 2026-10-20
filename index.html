@@ -38,6 +38,9 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
 .ph-btn b{font-size:26px;line-height:1}.ph-btn span{font-size:16px;font-weight:800}
 .ph-btn.on{background:radial-gradient(circle at 40% 35%,#d9a4ff,#8a3fd6);box-shadow:0 0 30px rgba(220,160,255,.95)}
 .ph-btn:disabled{opacity:.4;filter:grayscale(.6)}
+.comm-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:2px}
+.comm{font-family:var(--ui);font-weight:800;font-size:13px;color:#cfe9ff;text-decoration:none;padding:7px 12px;border-radius:999px;background:rgba(42,163,224,.16);border:1px solid rgba(42,163,224,.45)}
+.comm-in{color:#7fd0ff;font-weight:800;text-decoration:none}
 .hud{position:absolute;top:0;left:0;right:0;padding:12px 16px 0;display:flex;flex-direction:column;gap:8px;pointer-events:none}
 .hud-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
 .hud-m{font-family:var(--display);font-size:28px;letter-spacing:.02em;font-variant-numeric:tabular-nums;text-shadow:0 2px 0 rgba(0,0,0,.35)}
@@ -446,6 +449,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
       <button class="btn sec inv" id="bInv" data-en="Friends<small>invite &amp; win</small>">Amigos<small>invita y gana</small></button>
     </div>
     <button class="btn pvp" id="bPvp"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" y1="19" x2="19" y2="13"/><line x1="16" y1="16" x2="20" y2="20"/><line x1="19" y1="21" x2="21" y2="19"/><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" y1="14" x2="9" y2="18"/><line x1="7" y1="17" x2="4" y2="20"/><line x1="3" y1="19" x2="5" y2="21"/></svg><span data-en="PvP Battles">Batallas PvP</span></button>
+    <div class="comm-row"><a href="#" class="comm" data-url="https://t.me/dronerushgame" data-en="📣 News channel">📣 Canal de noticias</a><a href="#" class="comm" data-url="https://t.me/dronerushchat" data-en="💬 Community">💬 Comunidad</a></div>
     <p class="note who" id="mWho"></p>
   </section>
 
@@ -457,7 +461,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
       <div class="chip"><small data-en="Coins">Monedas</small><b><span id="oC">0</span> <i class="coin"></i></b></div>
       <div class="chip"><small data-en="Best">Récord</small><b id="oBest">0 m</b></div>
     </div>
-    <p class="note new" id="oNew" hidden data-en="New best!">¡Nuevo récord!</p>
+    <p class="note new" id="oNew" hidden data-en="New best!">¡Nuevo récord!</p><p class="note" id="oShare" hidden><a href="#" class="comm-in" data-url="https://t.me/dronerushchat" data-en="💬 Show it off in the community">💬 Presúmelo en la comunidad</a></p>
     <p class="note" id="oTour"></p>
     <div class="unl-card" id="oUnl" hidden></div>
     <button class="btn revive" id="bRevive" data-en='<span class="adtag">▶ VIDEO</span> Revive <span id="oRev">(3)</span>'><span class="adtag">▶ VÍDEO</span> Revivir <span id="oRev">(3)</span></button>
@@ -598,6 +602,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
       <button class="btn sec plain" id="setNewbie" data-en="Play as a new player">Jugar como jugador nuevo</button>
       <button class="btn sec plain" id="setAll" data-en="Back to my test save">Volver a mi partida de prueba</button>
     </div>
+    <div class="comm-row"><a href="#" class="comm" data-url="https://t.me/dronerushgame" data-en="📣 News channel">📣 Canal de noticias</a><a href="#" class="comm" data-url="https://t.me/dronerushchat" data-en="💬 Community">💬 Comunidad</a></div>
     <p class="note" id="setId"></p>
     <p class="note priv"><a href="#" class="privLink" data-en="Privacy policy">Política de privacidad</a></p>
     <button class="btn primary" id="setBack" data-en="Back">Volver</button>
@@ -673,7 +678,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
 (function(){
 /* ======================= CONFIG ======================= */
 // si hay una versión nueva publicada, recarga saltándose la caché del móvil
-const BUILD='20261016184549';
+const BUILD='20261020101342';
 (function(){try{if(BUILD.indexOf('__')===0)return;fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.text():'').then(v=>{v=(v||'').trim();
   if(v&&v!==BUILD&&sessionStorage.getItem('dr.vr')!==v){sessionStorage.setItem('dr.vr',v);location.replace(location.pathname+'?v='+v+location.hash)}}).catch(()=>{})}catch(e){}})();
 const MODO_PRUEBA_CFG=false; // modo prueba del desarrollador (apagado: juego publicado)
@@ -2359,7 +2364,7 @@ function showMenu(){holeWindStop();unfreeze();ghFlush();state='menu';obs=[];pick
 function showOver(m,rec){
   state='over';$('hud').hidden=true;
   $('oWhy').textContent=whyDead;$('oM').textContent=fmt(m);$('oC').textContent=fmt(coins);
-  $('oBest').textContent=fmt(M.best)+' m';$('oNew').hidden=!rec;
+  $('oBest').textContent=fmt(M.best)+' m';$('oNew').hidden=!rec;$('oShare').hidden=!rec;
   const w=weekInfo(),rk=myRank(board(w.key,w.prog,M.tourBest));
   $('oTour').innerHTML='';$('oTour').hidden=!tourOn;const s=document.createElement('span');
   s.textContent=rk<=3?L(`Torneo: vas ${rk}.º. ¡Ahora mismo ganarías el Dragón Real!`,`Tournament: you're #${rk}. Right now you'd win the Royal Dragon!`):L(`Torneo: vas ${rk}.º. Top 3 gana el Dragón Real.`,`Tournament: you're #${rk}. Top 3 win the Royal Dragon.`);
@@ -2789,6 +2794,9 @@ $('bLang').onclick=()=>{LANG=LANG==='en'?'es':'en';M.lang=LANG;save();applyLang(
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(b&&!b.disabled){unlock();beep(620,.05,'triangle',.05,900)}},true);
 document.addEventListener('pointerdown',()=>unlock(),{capture:true,passive:true});
 const PRIV_URL='https://zonquer99.github.io/drone-rush/privacidad.html';
+document.querySelectorAll('.comm,.comm-in').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();unlock();const u=a.dataset.url;
+  try{const tg=window.Telegram&&Telegram.WebApp;if(tg&&tg.openTelegramLink&&tg.initData){tg.openTelegramLink(u);return}}catch(x){}
+  window.open(u,'_blank','noopener')}));
 document.querySelectorAll('.privLink').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();
   try{const tg=window.Telegram&&Telegram.WebApp;if(tg&&tg.openLink&&tg.initData){tg.openLink(PRIV_URL+(LANG==='en'?'#en':''));return}}catch(x){}
   window.open(PRIV_URL+(LANG==='en'?'#en':''),'_blank','noopener')}));
