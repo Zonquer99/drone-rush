@@ -691,7 +691,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
 (function(){
 /* ======================= CONFIG ======================= */
 // si hay una versión nueva publicada, recarga saltándose la caché del móvil
-const BUILD='20261020112509';
+const BUILD='20261021195847';
 (function(){try{if(BUILD.indexOf('__')===0)return;fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.text():'').then(v=>{v=(v||'').trim();
   if(v&&v!==BUILD&&sessionStorage.getItem('dr.vr')!==v){sessionStorage.setItem('dr.vr',v);location.replace(location.pathname+'?v='+v+location.hash)}}).catch(()=>{})}catch(e){}})();
 const MODO_PRUEBA_CFG=false; // modo prueba del desarrollador (apagado: juego publicado)
@@ -885,6 +885,10 @@ let lifeStart=0,distBank=0,holeNext=500,holeFx=0,holeLeft=0,holeOn=false,lastBh=
 const obCenter=o=>o.type==='pylon'?[o.x+o.w/2,(o.top+o.bot)/2]:o.type==='turbine'?[o.x,o.hub]:[o.x+30,o.y0+10];
 const holePos=()=>[drone.x+90,drone.y];
 let freezeT=0,nextFreeze=500,lastFz='';const FREEZE_EVERY=500,FREEZE_DUR=15,FREEZE_SLOW=.65;
+// velocidad por tramos: 0-700 fácil · 700-2000 normal · 2000-3000 mucho más rápido · 3000+ a tope
+const speedAt=mm=>mm<700?200+mm*.1143:mm<2000?280+(mm-700)*.05:mm<3000?345+(mm-2000)*.115:Math.min(600,460+(mm-3000)*.07);
+// a partir de 3.000 m: lluvia de monedas cada 200 m (3 s)
+const RAIN_FROM=3000,RAIN_EVERY=200;let rainNext=RAIN_FROM,rainT=0,rainGap=0,rainPh=0,rainY=300;
 let phaseT=0;const PHASE_DUR=1.6;let mythRun=false,royal=0,royalFx=0,shields=0,phases=0,SK=SKINS[0],banked=0,turboEnd=0,turboOn=false,rubyT=0,rubyRush=0,rubyGap=0,rubyPh=0,rubyY=300;
 const TURBO_M=[0,50,100,200];
 const drone={x:100,y:300,vy:0,tilt:0};
@@ -899,7 +903,7 @@ function startGame(m){holeWindStop();unfreeze();
   SK=skin();mythRun=false;
   if(M.mythArmed&&(M.mythPass||0)>0){SK=skinById('serafin');M.mythPass--;M.mythArmed=false;mythRun=true}
   shields=M.up.shield+(SK.shield||0);phases=SK.phase||0;phaseT=0;crownNext=600;royal=0;royalFx=0;swarmNext=500;swarmCh=0;swarmT=0;zapNext=400;zapT=0;lastZp=-1;minis=SK.swarm?[0,1].map(i=>({x:drone.x,y:drone.y,st:'home',tg:null,i})):[];ghostNext=GHOST_EVERY;ghostT=0;lastGh='';holeNext=HOLE_EVERY;holeFx=0;holeLeft=0;holeOn=false;lastBh='';freezeT=0;nextFreeze=FREEZE_EVERY;lastFz='';portals=[];portalCount=0;nextPortal=100;portalRecharge=Infinity;flash=0;lastPo='';
-  rubyT=0;rubyRush=0;turboEnd=TURBO_M[turboLv()];turboOn=turboEnd>0;if(turboOn){floatTxt(drone.x+40,drone.y-30,L('¡TURBO!','TURBO!'),'#ff8a3d');hintT=0}
+  rainNext=RAIN_FROM;rainT=0;rubyT=0;rubyRush=0;turboEnd=TURBO_M[turboLv()];turboOn=turboEnd>0;if(turboOn){floatTxt(drone.x+40,drone.y-30,L('¡TURBO!','TURBO!'),'#ff8a3d');hintT=0}
   M.games++;M.uG=(M.uG||0)+1;misAdd('games',1);distBank=0;lifeStart=0;save();
   if(M.games<=3&&!race){shields++;setTimeout(()=>floatTxt(drone.x+50,drone.y-50,L('¡Escudo de regalo!','Free shield!'),'#5ad1ff'),600)}
   const gm=m*(SK.coinX||1);
@@ -994,7 +998,7 @@ function update(dt){
     if(SK.freeze){if(dist/PXM>=nextFreeze){freezeT=FREEZE_DUR;nextFreeze=Math.floor(dist/PXM)+FREEZE_EVERY;
         floatTxt(LW/2,150,L('¡CONGELACIÓN!','FREEZE!'),'#bfefff');beep(1500,.4,'sine',.05,600)}
       freezeT=Math.max(0,freezeT-dt)}
-    {const mm=dist/PXM,base=mm<700?200+mm*.1143:mm<2500?280+(mm-700)*.05:Math.min(470,370+(mm-2500)*.03);
+    {const mm=dist/PXM,base=speedAt(mm);
     speed=base*(freezeT>0?FREEZE_SLOW:1)*(turboOn?2.2:1);dist+=speed*dt}
     if(!turboOn)battery=Math.max(0,battery-dt*3.3*(1-.08*M.up.bat)*(SK.drain||1)*(dist/PXM<700?.8:1));
     const thrust=holding&&battery>0;
@@ -1009,7 +1013,13 @@ function update(dt){
     if(!batsOn()&&!diamOn()&&!confOn()&&SK.trail&&Math.random()<SK.tr)emitTrail(SK,speed);
     else if(!batsOn()&&!diamOn()&&!confOn()&&thrust&&!SK.trail&&Math.random()<.5)parts.push({x:drone.x+rnd(-20,20),y:drone.y+8,vx:-speed*.3,vy:rnd(40,90),life:.3,max:.3,c:'rgba(255,246,234,.5)',r:1.5});
     ghRecTick(dt);raceUpdate(dt);
-    acc+=speed*dt;if(acc>=spacing){acc=0;{const mm=dist/PXM;spacing=mm<700?crsR(360,430):mm<2500?crsR(300,370):crsR(270,350)}spawn()}
+    acc+=speed*dt;if(acc>=spacing){acc=0;{const mm=dist/PXM;spacing=(mm<700?crsR(360,430):mm<2500?crsR(300,370):crsR(270,350))*Math.max(1,speedAt(mm)/400)}spawn()}
+    {const mm=dist/PXM;if(mm>=rainNext){while(rainNext<=mm)rainNext+=RAIN_EVERY;rainT=3;rainGap=0;rainPh=0;rainY=clamp(drone.y,140,GY-160);
+        floatTxt(LW/2,140,L('¡LLUVIA DE MONEDAS!','COIN RAIN!'),'#ffd35a');beep(1180,.12,'square',.05,1760);buzz(25)}
+      if(rainT>0){rainT-=dt;rainGap-=dt;if(rainGap<=0){rainGap=.12;rainPh+=.42;
+        for(let k=-1;k<=1;k++){let ry=clamp(rainY+Math.sin(rainPh)*60+k*30,60,GY-60);
+          for(const o of obs)if(o.type==='pylon'&&Math.abs(o.x-(LW+40))<70)ry=(o.top+o.bot)/2+k*26;
+          pick.push({k:'coin',x:LW+40,y:ry,r:10})}}}}
     const rl=rubyLv();
     // cada 10 s se tira la probabilidad; si toca, lluvia de rubís durante 3 s
     if(rl>0){
