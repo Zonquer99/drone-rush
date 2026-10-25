@@ -791,7 +791,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
 (function(){
 /* ======================= CONFIG ======================= */
 // si hay una versión nueva publicada, recarga saltándose la caché del móvil
-const BUILD='20261025090951';
+const BUILD='20261025110658';
 (function(){try{if(BUILD.indexOf('__')===0)return;fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.text():'').then(v=>{v=(v||'').trim();
   if(v&&v!==BUILD&&sessionStorage.getItem('dr.vr')!==v){sessionStorage.setItem('dr.vr',v);location.replace(location.pathname+'?v='+v+location.hash)}}).catch(()=>{})}catch(e){}})();
 const MODO_PRUEBA_CFG=false; // modo prueba del desarrollador (apagado: juego publicado)
@@ -1234,7 +1234,7 @@ function drawPw(p){const b=Math.sin(t*4+p.x*.02)*4,pw=PW[p.pw];ctx.save();ctx.tr
   ctx.strokeStyle='#ffffff';ctx.lineWidth=2;ctx.fillStyle='rgba(20,12,40,.75)';ctx.beginPath();ctx.arc(0,0,16,0,6.28);ctx.fill();ctx.stroke();
   ctx.save();ctx.rotate(t*2);ctx.strokeStyle=pw.c;ctx.setLineDash([5,6]);ctx.beginPath();ctx.arc(0,0,20,0,6.28);ctx.stroke();ctx.restore();
   ctx.font='17px system-ui,"Apple Color Emoji","Segoe UI Emoji",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(pw.ic,0,1);ctx.restore()}
-function smash(o){o.dead=true;const[cx,cy]=obCenter(o);burst(cx,cy,'#ff8a3d',22,280,true);burst(cx,cy,'#fff3c4',12,200,true);shake=Math.max(shake,.22);beep(110,.3,'sawtooth',.07,50);buzz(30);
+function smash(o){o.dead=true;let[cx,cy]=obCenter(o);if(o.type==='pylon'){cy=drone.y;cx=o.x+o.w/2;for(let k=0;k<16;k++)parts.push({x:cx,y:cy+rnd(-70,70),vx:rnd(80,420),vy:rnd(-340,120),gr:800,life:rnd(.7,1.2),max:1.2,c:['#9a92b8','#d7d0ea','#3a3450'][k%3],r:rnd(3,6.5),sh:'conf',ph:Math.random()*6})}flash=Math.max(flash,.12);slowMo(.45,.09);burst(cx,cy,'#ff8a3d',22,280,true);burst(cx,cy,'#fff3c4',12,200,true);shake=Math.max(shake,.22);beep(110,.3,'sawtooth',.07,50);buzz(30);
   const v=Math.round(3*gmNow());coins+=v;floatTxt(cx,cy-20,L('¡CRASH! +','SMASH! +')+v,'#ff8a3d')}
 const gmNow=()=>mult*(SK.coinX||1)*(pwOn('x3')?3:1);
 
