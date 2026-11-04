@@ -49,6 +49,9 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
 .rc-b:disabled{opacity:.55}
 .rc-msg{flex-basis:100%;margin:0;font-family:var(--ui);font-weight:700;font-size:13px;color:#cfe9ff;text-align:center;max-width:300px}
 .rc-msg a{color:#7fd0ff}
+.cg #bInv,.cg .comm-row,.cg #oShare,.cg #qShare,.cg #iShare{display:none!important}
+.cg #wrap{max-width:1100px}
+@media (min-aspect-ratio:1/1){.cg .panel{left:50%;right:auto;width:440px;transform:translateX(-50%)}.cg .hud{max-width:520px}}
 .qrow{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 .qemo{font-size:22px;width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.04);cursor:pointer}
 .qemo.on{border-color:var(--apricot);background:rgba(255,179,107,.15)}
@@ -791,7 +794,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
 (function(){
 /* ======================= CONFIG ======================= */
 // si hay una versión nueva publicada, recarga saltándose la caché del móvil
-const BUILD='20261104180854';
+const BUILD='20261104201548';
 (function(){try{if(BUILD.indexOf('__')===0)return;fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.text():'').then(v=>{v=(v||'').trim();
   if(v&&v!==BUILD&&sessionStorage.getItem('dr.vr')!==v){sessionStorage.setItem('dr.vr',v);location.replace(location.pathname+'?v='+v+location.hash)}}).catch(()=>{})}catch(e){}})();
 const MODO_PRUEBA_CFG=false; // modo prueba del desarrollador (apagado: juego publicado)
@@ -1005,7 +1008,7 @@ function startGame(m){holeWindStop();unfreeze();
   if(M.mythArmed&&(M.mythPass||0)>0){SK=skinById('serafin');M.mythPass--;M.mythArmed=false;mythRun=true}
   shields=M.up.shield+(SK.shield||0);phases=SK.phase||0;phaseT=0;crownNext=600;royal=0;royalFx=0;swarmNext=500;swarmCh=0;swarmT=0;zapNext=400;zapT=0;lastZp=-1;minis=SK.swarm?[0,1].map(i=>({x:drone.x,y:drone.y,st:'home',tg:null,i})):[];ghostNext=GHOST_EVERY;ghostT=0;lastGh='';holeNext=HOLE_EVERY;holeFx=0;holeLeft=0;holeOn=false;lastBh='';freezeT=0;nextFreeze=FREEZE_EVERY;lastFz='';portals=[];portalCount=0;nextPortal=100;portalRecharge=Infinity;flash=0;lastPo='';
   v3Reset();sqBank=0;dailyStartHook();if(!dailyRun)applyNextBoosts();rainNext=RAIN_FROM;rainT=0;rubyT=0;rubyRush=0;turboEnd=TURBO_M[turboLv()];turboOn=turboEnd>0;if(turboOn){floatTxt(drone.x+40,drone.y-30,L('¡TURBO!','TURBO!'),'#ff8a3d');hintT=0}
-  M.games++;M.uG=(M.uG||0)+1;misAdd('games',1);distBank=0;lifeStart=0;save();
+  cgEv('gameplayStart');M.games++;M.uG=(M.uG||0)+1;misAdd('games',1);distBank=0;lifeStart=0;save();
   if(M.games<=3&&!race){shields++;setTimeout(()=>floatTxt(drone.x+50,drone.y-50,L('¡Escudo de regalo!','Free shield!'),'#5ad1ff'),600)}
   const gm=m*(SK.coinX||1);
   show(null);$('hud').hidden=false;$('hudX2').hidden=gm===1;$('hudX2').textContent='x'+decs(gm);
@@ -1075,7 +1078,7 @@ function burst(x,y,c,n,sp,add){for(let i=0;i<n;i++){const a=Math.random()*6.28,v
 function floatTxt(x,y,txt,c){floats.push({x,y,txt,c,life:1})}
 
 function crash(why){holeWindStop();
-  if(state!=='play')return;
+  if(state!=='play')return;cgEv('gameplayStop');
   state='dead';whyDead=why;shake=.55;flash=Math.max(flash,.22);slowMo(.3,.6);buzz([60,40,90]);beep(180,.5,'sawtooth',.08,40);beep(70,.7,'sine',.1,30);
   burst(drone.x,drone.y,'#ff6a2b',34,260);burst(drone.x,drone.y,'#fff6ea',16,180);burst(drone.x,drone.y,'#ffd35a',14,300,true);
   for(let i=0;i<10;i++)parts.push({x:drone.x,y:drone.y,vx:rnd(-220,220),vy:rnd(-320,-60),gr:700,life:rnd(.8,1.4),max:1.4,c:['#3a3450','#5a5470','#9a92b8'][i%3],r:rnd(2.5,4.5),sh:'conf',ph:Math.random()*6});
@@ -3330,6 +3333,18 @@ const realAds=()=>typeof window[MONETAG_FN]==='function';
 let adBusy=false;
 function adFail(msg){clearInterval(adTimer);adBusy=false;$('adCount').textContent='✕';$('adMsg').textContent=msg;$('adProg').style.width='0%';
   $('bAdOk').hidden=true;$('bAdSkip').textContent=L('Volver','Back');$('bAdSkip').hidden=false}
+/* ---- versión para portales web (CrazyGames): anuncios del SDK, sin Telegram ---- */
+const IS_CG=!!window.CG_BUILD;let cgReady=false;
+function cgSdk(){try{return cgReady&&window.CrazyGames&&window.CrazyGames.SDK}catch(e){return null}}
+function cgEv(name){const k=cgSdk();if(!k)return;try{k.game[name]()}catch(e){}}
+function showCgAd(label,onReward,back){
+  const prev=state;adPrev=prev;adBusy=true;M.accepted++;save();
+  let fin=false;const done=()=>{if(fin)return;fin=true;adBusy=false;try{AC&&AC.resume()}catch(e){}state=prev;M.completed++;misAdd('ads',1);save();onReward()};
+  const k=cgSdk();if(!k){done();return}  // sin anuncios disponibles: el premio se da igualmente
+  state='ad';
+  try{k.ad.requestAd('rewarded',{adStarted:()=>{try{AC&&AC.suspend()}catch(e){}},adFinished:done,adError:done})}catch(e){done()}}
+if(IS_CG){document.documentElement.classList.add('cg');
+  try{window.CrazyGames.SDK.init().then(()=>{cgReady=true;try{window.CrazyGames.SDK.game.loadingStop()}catch(e){}}).catch(()=>{})}catch(e){}}
 /* ---- app de Android (Google Play): anuncios AdMob ---- */
 const IS_APP=(()=>{try{return !!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform())}catch(e){return false}})();
 // IDs de AdMob: los de prueba de Google hasta tener la cuenta propia
@@ -3372,6 +3387,7 @@ function showAd(label,onReward,back){
   if(adBusy)return;
   $('bAdOk').hidden=false;$('bAdSkip').hidden=false;$('bAdSkip').textContent=L('Saltar sin recompensa','Skip without reward');
   $('adMsg').textContent=L('Aquí se mostrará el anuncio real de la red de anuncios.','The real ad from the ad network will show here.');
+  if(IS_CG)return showCgAd(label,onReward,back);
   if(IS_APP)return showAppAd(label,onReward,back);
   if(realAds())return showRealAd(label,onReward,back);
   const prev=state;adPrev=prev;state='ad';adReward=onReward;adBack=()=>{state=prev;back()};
@@ -3385,7 +3401,7 @@ function showAd(label,onReward,back){
 }
 $('bAdOk').onclick=()=>{M.completed++;misAdd('ads',1);save();clearInterval(adTimer);const f=adReward;adReward=null;f()};
 $('bAdSkip').onclick=()=>{clearInterval(adTimer);adBack()};
-function revive(){misAdd('revive',1);setTimeout(()=>{if(holeOn)holeWindStart()},50);
+function revive(){misAdd('revive',1);cgEv('gameplayStart');setTimeout(()=>{if(holeOn)holeWindStart()},50);
   M.revAds++;revives--;save();
   obs=obs.filter(o=>o.x>drone.x+420||o.x<drone.x-200);pick=pick.filter(p=>p.x>drone.x+60);
   drone.y=LH*.42;drone.vy=-150;drone.tilt=0;battery=Math.max(battery,60);invuln=2;acc=-120;
@@ -3552,6 +3568,7 @@ guardBtn('bShop','shop');guardBtn('bMis','mis');guardBtn('bInv','inv');guardBtn(
 // Telegram Mini App: pantalla completa y sin cerrar al deslizar
 try{const tg=window.Telegram&&Telegram.WebApp;if(tg&&tg.initData!==undefined){tg.ready();tg.expand();
   if(tg.disableVerticalSwipes)tg.disableVerticalSwipes();if(tg.setHeaderColor)tg.setHeaderColor('#1b1638');if(tg.setBackgroundColor)tg.setBackgroundColor('#1b1638')}}catch(e){}
+if(IS_CG&&!M.named){M.pilot='Pilot'+Math.floor(1000+Math.random()*9000);M.named=true;M.nameChanges=(M.nameChanges||0)+1;save()}
 resize();applyLang();if(M.named)showMenu();else showName();cloudInit();requestAnimationFrame(frame);
 })();
 </script>
