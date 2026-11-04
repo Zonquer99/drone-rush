@@ -791,7 +791,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
 (function(){
 /* ======================= CONFIG ======================= */
 // si hay una versión nueva publicada, recarga saltándose la caché del móvil
-const BUILD='20261025110658';
+const BUILD='20261104180854';
 (function(){try{if(BUILD.indexOf('__')===0)return;fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.text():'').then(v=>{v=(v||'').trim();
   if(v&&v!==BUILD&&sessionStorage.getItem('dr.vr')!==v){sessionStorage.setItem('dr.vr',v);location.replace(location.pathname+'?v='+v+location.hash)}}).catch(()=>{})}catch(e){}})();
 const MODO_PRUEBA_CFG=false; // modo prueba del desarrollador (apagado: juego publicado)
@@ -1534,7 +1534,7 @@ async function sqJoin(){const v=$('qJoinCode').value.trim().toUpperCase();if(v.l
 async function sqLeave(){if(sqLeaveArm<Date.now()){sqLeaveArm=Date.now()+4000;renderSquad();setTimeout(()=>{if(!$('pSquad').hidden)renderSquad()},4100);return}
   sqLeaveArm=0;try{await sb.rpc('squad_leave')}catch(e){}sqData=null;M.sqName='';save();sqMsg(L('Has salido del escuadrón.','You left the squad.'),'');await sqFetch()}
 function sqShare(){if(!sqData)return;const u=inviteLink()||'https://t.me/dronerushhbot',txt=L(`¡Únete a mi escuadrón «${sqData.name}» en Drone Rush! 🚁 Código: ${sqData.code}`,`Join my squad "${sqData.name}" in Drone Rush! 🚁 Code: ${sqData.code}`);
-  const sh='https://t.me/share/url?url='+encodeURIComponent(u)+'&text='+encodeURIComponent(txt);try{const tg=window.Telegram&&Telegram.WebApp;if(tg&&tg.initData&&tg.openTelegramLink){tg.openTelegramLink(sh);return}}catch(e){}window.open(sh,'_blank','noopener')}
+  const sh='https://t.me/share/url?url='+encodeURIComponent(u)+'&text='+encodeURIComponent(txt);if(openExt(sh))return;try{const tg=window.Telegram&&Telegram.WebApp;if(tg&&tg.initData&&tg.openTelegramLink){tg.openTelegramLink(sh);return}}catch(e){}window.open(sh,'_blank','noopener')}
 
 /* ======================= UPDATE ======================= */
 let frozen=false;
@@ -2885,6 +2885,7 @@ $('iReset').onclick=()=>{M.friends=0;M.confettiOwned=false;if(M.trail==='confett
   invMsg=L('Invitaciones reiniciadas (solo prueba).','Invites reset (test only).');save();renderInv()};
 $('iShare').onclick=()=>{if(!inviteLink()){$('iCopy').onclick();return}const u=inviteLink(),txt=L('¡Juega conmigo a Drone Rush! 🚁 Esquiva torres, molinos y pájaros y compite en Batallas PvP.','Play Drone Rush with me! 🚁 Dodge pylons, turbines and birds and race in PvP Battles.');
   const sh='https://t.me/share/url?url='+encodeURIComponent(u)+'&text='+encodeURIComponent(txt);
+  if(openExt(sh))return;
   try{const tg=window.Telegram&&Telegram.WebApp;if(tg&&tg.initData&&tg.openTelegramLink){tg.openTelegramLink(sh);return}}catch(e){}window.open(sh,'_blank','noopener')};
 $('iBack').onclick=()=>{if(invFrom==='pShop'){renderShop();show('pShop')}else{state='menu';fillMenu();show('pMenu')}};
 $('bInv').onclick=openInv('pMenu');
@@ -2966,7 +2967,7 @@ function showOver(m,rec){
   $('bRevive').hidden=revives<=0;$('oRev').textContent='('+revives+L(' de 3)',' of 3)');
   {const ex=[];if(lastDaily){const md=dailyRun||dailyMod();ex.push('🎯 '+L('Reto del día: ','Daily challenge: ')+fmt(lastDaily.m)+' m'+(lastDaily.rec?L(' · ¡tu mejor de hoy!',' · your best today!'):'')+(lastDaily.m>=md.goal?' ✅':' · '+L('objetivo ','goal ')+fmt(md.goal)+' m'))}
     for(const a of lastAch)ex.push('🏅 '+L('Logro conseguido: ','Badge unlocked: ')+L(a.n[0],a.n[1]));
-    $('oExtra').hidden=!ex.length;$('oExtra').innerHTML=ex.map(esc).join('<br>');$('bDailyAgain').hidden=!dailyRun;if(dailyRun){$('oShare').hidden=true}}
+    $('oExtra').hidden=!ex.length;$('oExtra').innerHTML=ex.map(esc).join('<br>');$('bDailyAgain').hidden=!dailyRun;if(dailyRun||IS_APP){$('oShare').hidden=true}}
   checkUnl();unlCard($('oUnl'));
   M.offered+=(revives>0?1:0)+1;save();show('pOver');
 }
@@ -3329,6 +3330,30 @@ const realAds=()=>typeof window[MONETAG_FN]==='function';
 let adBusy=false;
 function adFail(msg){clearInterval(adTimer);adBusy=false;$('adCount').textContent='✕';$('adMsg').textContent=msg;$('adProg').style.width='0%';
   $('bAdOk').hidden=true;$('bAdSkip').textContent=L('Volver','Back');$('bAdSkip').hidden=false}
+/* ---- app de Android (Google Play): anuncios AdMob ---- */
+const IS_APP=(()=>{try{return !!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform())}catch(e){return false}})();
+// IDs de AdMob: los de prueba de Google hasta tener la cuenta propia
+const ADMOB_REWARDED='ca-app-pub-3940256099942544/5224354917',ADMOB_TEST=true;
+let admobReady=false;
+function showAppAd(label,onReward,back){
+  const A=window.Capacitor.Plugins.AdMob;const prev=state;adPrev=prev;state='ad';adReward=onReward;adBack=()=>{state=prev;back()};
+  M.accepted++;save();adBusy=true;
+  $('adReward').textContent=L('Recompensa: ','Reward: ')+label;$('adCount').textContent='…';
+  $('adMsg').textContent=L('Cargando anuncio…','Loading ad…');$('adProg').style.width='0%';
+  $('bAdOk').hidden=true;$('bAdSkip').hidden=true;show('pAd');
+  try{AC&&AC.suspend()}catch(e){}
+  let done=false,got=false;const hs=[];const fin=()=>{done=true;adBusy=false;hs.forEach(h=>{try{h.remove()}catch(e){}});try{AC&&AC.resume()}catch(e){}};
+  const ok=()=>{if(done)return;fin();M.completed++;misAdd('ads',1);save();const f=adReward;adReward=null;f()};
+  const bad=m=>{if(done)return;fin();adFail(m)};
+  const to=setTimeout(()=>bad(L('El anuncio no ha cargado. Prueba otra vez en un momento.','The ad did not load. Try again in a moment.')),45000);
+  (async()=>{try{
+    if(!admobReady){await A.initialize({initializeForTesting:ADMOB_TEST});admobReady=true}
+    hs.push(await A.addListener('onRewardedVideoAdReward',()=>{got=true}));
+    hs.push(await A.addListener('onRewardedVideoAdDismissed',()=>{clearTimeout(to);got?ok():bad(L('Tienes que ver el anuncio completo para conseguir la recompensa.','You have to watch the whole ad to get the reward.'))}));
+    await A.prepareRewardVideoAd({adId:ADMOB_REWARDED,isTesting:ADMOB_TEST});
+    const r=await A.showRewardVideoAd();if(r&&r.amount!=null)got=true;
+  }catch(e){clearTimeout(to);bad(L('Ahora mismo no hay anuncios disponibles. Prueba otra vez en un momento.','No ads available right now. Try again in a moment.'))}})()}
+function openExt(u){try{if(IS_APP&&window.Capacitor.Plugins.Browser){window.Capacitor.Plugins.Browser.open({url:u});return true}}catch(e){}return false}
 function showRealAd(label,onReward,back){
   const prev=state;adPrev=prev;state='ad';adReward=onReward;adBack=()=>{state=prev;back()};
   M.accepted++;save();adBusy=true;
@@ -3347,6 +3372,7 @@ function showAd(label,onReward,back){
   if(adBusy)return;
   $('bAdOk').hidden=false;$('bAdSkip').hidden=false;$('bAdSkip').textContent=L('Saltar sin recompensa','Skip without reward');
   $('adMsg').textContent=L('Aquí se mostrará el anuncio real de la red de anuncios.','The real ad from the ad network will show here.');
+  if(IS_APP)return showAppAd(label,onReward,back);
   if(realAds())return showRealAd(label,onReward,back);
   const prev=state;adPrev=prev;state='ad';adReward=onReward;adBack=()=>{state=prev;back()};
   M.accepted++;save();
@@ -3400,6 +3426,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(b&&!
 document.addEventListener('pointerdown',()=>unlock(),{capture:true,passive:true});
 const PRIV_URL='https://zonquer99.github.io/drone-rush/privacidad.html';
 function openTgLink(u){
+  if(openExt(u))return;
   let tg=null;try{tg=window.Telegram&&Telegram.WebApp}catch(x){}
   if(tg&&tg.initData){
     try{tg.openTelegramLink(u)}catch(x){}
@@ -3484,7 +3511,7 @@ async function shareRecord(mode){
   catch(e){rcMsg(L('No se ha podido compartir. Prueba otra vez.','Could not share. Try again.'));stat('Compartir: '+(e&&e.message||e))}
   finally{rcBusy=false;btn.disabled=false;btn.innerHTML=old}}
 $('rcPub').onclick=()=>{unlock();shareRecord('group')};$('rcDare').onclick=()=>{unlock();shareRecord('friend')};
-document.querySelectorAll('.privLink').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();
+document.querySelectorAll('.privLink').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();if(openExt(PRIV_URL+(LANG==='en'?'#en':'')))return;
   try{const tg=window.Telegram&&Telegram.WebApp;if(tg&&tg.openLink&&tg.initData){tg.openLink(PRIV_URL+(LANG==='en'?'#en':''));return}}catch(x){}
   window.open(PRIV_URL+(LANG==='en'?'#en':''),'_blank','noopener')}));
 $('setNewbie').onclick=()=>{try{localStorage.setItem(KEY+'.prueba',JSON.stringify(M));

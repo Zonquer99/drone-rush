@@ -1,0 +1,17 @@
+{
+  "appId": "com.zonquer.dronerush",
+  "appName": "Drone Rush",
+  "webDir": "www",
+  "server": {
+    "url": "https://zonquer99.github.io/drone-rush/?app=android",
+    "androidScheme": "https",
+    "allowNavigation": ["zonquer99.github.io", "*.supabase.co"]
+  },
+  "android": {
+    "backgroundColor": "#1b1638"
+  },
+  "plugins": {
+    "SplashScreen": { "launchShowDuration": 1200, "backgroundColor": "#1b1638", "showSpinner": false },
+    "StatusBar": { "overlaysWebView": false, "style": "DARK", "backgroundColor": "#1b1638" }
+  }
+}
