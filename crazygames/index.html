@@ -794,7 +794,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
 (function(){
 /* ======================= CONFIG ======================= */
 // si hay una versión nueva publicada, recarga saltándose la caché del móvil
-const BUILD='20261105155439';
+const BUILD='20261105160219';
 (function(){try{if(BUILD.indexOf('__')===0)return;fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.text():'').then(v=>{v=(v||'').trim();
   if(v&&v!==BUILD&&sessionStorage.getItem('dr.vr')!==v){sessionStorage.setItem('dr.vr',v);location.replace(location.pathname+'?v='+v+location.hash)}}).catch(()=>{})}catch(e){}})();
 const MODO_PRUEBA_CFG=false; // modo prueba del desarrollador (apagado: juego publicado)
@@ -3334,7 +3334,7 @@ let adBusy=false;
 function adFail(msg){clearInterval(adTimer);adBusy=false;$('adCount').textContent='✕';$('adMsg').textContent=msg;$('adProg').style.width='0%';
   $('bAdOk').hidden=true;$('bAdSkip').textContent=L('Volver','Back');$('bAdSkip').hidden=false}
 /* ---- versión para portales web (CrazyGames): anuncios del SDK, sin Telegram ---- */
-const IS_CG=!!window.CG_BUILD;let cgReady=false;
+const IS_CG=!!(window.CG_BUILD||window.CrazyGames||/crazygames/i.test((location.hostname||'')+' '+(document.referrer||'')));try{console.log('[DroneRush] CG mode',IS_CG,!!window.CrazyGames)}catch(e){}let cgReady=false;
 function cgSdk(){try{return cgReady&&window.CrazyGames&&window.CrazyGames.SDK}catch(e){return null}}
 function cgEv(name){const k=cgSdk();if(!k)return;try{k.game[name]()}catch(e){}}
 function showCgAd(label,onReward,back){
