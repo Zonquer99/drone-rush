@@ -794,8 +794,8 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
 (function(){
 /* ======================= CONFIG ======================= */
 // si hay una versión nueva publicada, recarga saltándose la caché del móvil
-const BUILD='20261105162000';
-(function(){try{if(BUILD.indexOf('__')===0||window.CG_BUILD)return;fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.text():'').then(v=>{v=(v||'').trim();
+const BUILD='20261105171644';
+(function(){try{if(BUILD.indexOf('__')===0||window.CG_BUILD||window.POKI_BUILD)return;fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.text():'').then(v=>{v=(v||'').trim();
   if(v&&v!==BUILD&&sessionStorage.getItem('dr.vr')!==v){sessionStorage.setItem('dr.vr',v);location.replace(location.pathname+'?v='+v+location.hash)}}).catch(()=>{})}catch(e){}})();
 const MODO_PRUEBA_CFG=false; // modo prueba del desarrollador (apagado: juego publicado)
 const TORNEO_ACTIVO=false;var tourOn=TORNEO_ACTIVO;   // el torneo se activa cuando haya 500 jugadores: ponlo en true   // true = monedas infinitas y skin del torneo desbloqueada (ponlo en false para publicar)
@@ -998,7 +998,7 @@ const TURBO_M=[0,50,100,200];
 const drone={x:100,y:300,vy:0,tilt:0};
 let holding=false,obs=[],pick=[],parts=[],floats=[];
 
-function startGame(m){holeWindStop();unfreeze();
+function startGame(m){if(window.POKI_BUILD&&window.__pkPlayed&&!window.__pkSkip&&window.PokiSDK&&window.__pkReady){pkBreak(()=>startGame(m));return}window.__pkSkip=false;window.__pkPlayed=true;holeWindStop();unfreeze();
   state='play';mult=m;t=0;dist=0;speed=210;coins=0;battery=100;revives=3;invuln=0;banked=0;
   drone.x=Math.min(110,LW*.28);drone.y=300;drone.vy=-120;drone.tilt=0;
   obs=[];pick=[];parts=[];floats=[];acc=-LW*.35;spacing=300;hintT=2.2;holding=false;
@@ -3336,7 +3336,27 @@ function adFail(msg){clearInterval(adTimer);adBusy=false;$('adCount').textConten
 /* ---- versión para portales web (CrazyGames): anuncios del SDK, sin Telegram ---- */
 const IS_CG=!!(window.CG_BUILD||window.CrazyGames||/crazygames/i.test((location.hostname||'')+' '+(document.referrer||'')));try{console.log('[DroneRush] CG mode',IS_CG,!!window.CrazyGames)}catch(e){}let cgReady=false;
 function cgSdk(){try{return cgReady&&window.CrazyGames&&window.CrazyGames.SDK}catch(e){return null}}
-function cgEv(name){const k=cgSdk();if(!k)return;try{k.game[name]()}catch(e){}}
+function cgEv(name){if(IS_POKI){try{if(window.__pkReady)window.PokiSDK[name]()}catch(e){}return}const k=cgSdk();if(!k)return;try{k.game[name]()}catch(e){}}
+/* ---- versión para Poki: PokiSDK (anuncios con recompensa + pausas entre partidas) ---- */
+const IS_POKI=!!window.POKI_BUILD;
+let pkBusy=false;
+function pkBreak(next){if(pkBusy)return;pkBusy=true;const prev=state;state='ad';
+  const end=()=>{pkBusy=false;try{AC&&AC.resume()}catch(e){}state=prev;window.__pkSkip=true;next()};
+  try{window.PokiSDK.commercialBreak(()=>{try{AC&&AC.suspend()}catch(e){}}).then(end).catch(end)}catch(e){end()}}
+function showPokiAd(label,onReward,back){
+  const prev=state;adPrev=prev;state='ad';adReward=onReward;adBack=()=>{state=prev;back()};
+  M.accepted++;save();adBusy=true;
+  $('adReward').textContent=L('Recompensa: ','Reward: ')+label;$('adCount').textContent='…';
+  $('adMsg').textContent=L('Cargando anuncio…','Loading ad…');$('adProg').style.width='0%';
+  $('bAdOk').hidden=true;$('bAdSkip').hidden=true;show('pAd');
+  const fail=()=>{try{AC&&AC.resume()}catch(e){}adFail(L('Ahora mismo no hay anuncios disponibles. Prueba otra vez en un momento.','No ads available right now. Try again in a moment.'))};
+  if(!window.__pkReady||!window.PokiSDK){fail();return}
+  try{window.PokiSDK.rewardedBreak({size:'medium',onStart:()=>{try{AC&&AC.suspend()}catch(e){}}}).then(ok=>{
+    try{AC&&AC.resume()}catch(e){}
+    if(ok){adBusy=false;state=prev;M.completed++;misAdd('ads',1);save();window.__pkSkip=true;onReward()}else fail()}).catch(fail)}catch(e){fail()}}
+if(IS_POKI){document.documentElement.classList.add('cg');
+  try{window.PokiSDK.init().then(()=>{window.__pkReady=true;try{window.PokiSDK.gameLoadingFinished()}catch(e){}}).catch(()=>{try{window.PokiSDK.gameLoadingFinished()}catch(e){}})}catch(e){}
+  window.addEventListener('keydown',e=>{if(['ArrowUp','ArrowDown','Space'].includes(e.code)&&!(e.target&&/INPUT|TEXTAREA/.test(e.target.tagName)))e.preventDefault()})}
 function showCgAd(label,onReward,back){
   const prev=state;adPrev=prev;adBusy=true;M.accepted++;save();
   let fin=false;const done=()=>{if(fin)return;fin=true;adBusy=false;try{AC&&AC.resume()}catch(e){}state=prev;M.completed++;misAdd('ads',1);save();onReward()};
@@ -3394,6 +3414,7 @@ function showAd(label,onReward,back){
   if(adBusy)return;
   $('bAdOk').hidden=false;$('bAdSkip').hidden=false;$('bAdSkip').textContent=L('Saltar sin recompensa','Skip without reward');
   $('adMsg').textContent=L('Aquí se mostrará el anuncio real de la red de anuncios.','The real ad from the ad network will show here.');
+  if(IS_POKI)return showPokiAd(label,onReward,back);
   if(IS_CG)return showCgAd(label,onReward,back);
   if(IS_APP)return showAppAd(label,onReward,back);
   if(realAds())return showRealAd(label,onReward,back);
@@ -3575,7 +3596,7 @@ guardBtn('bShop','shop');guardBtn('bMis','mis');guardBtn('bInv','inv');guardBtn(
 // Telegram Mini App: pantalla completa y sin cerrar al deslizar
 try{const tg=window.Telegram&&Telegram.WebApp;if(tg&&tg.initData!==undefined){tg.ready();tg.expand();
   if(tg.disableVerticalSwipes)tg.disableVerticalSwipes();if(tg.setHeaderColor)tg.setHeaderColor('#1b1638');if(tg.setBackgroundColor)tg.setBackgroundColor('#1b1638')}}catch(e){}
-if(IS_CG&&!M.named){M.pilot='Pilot'+Math.floor(1000+Math.random()*9000);M.named=true;M.nameChanges=(M.nameChanges||0)+1;save()}
+if((IS_CG||IS_POKI)&&!M.named){M.pilot='Pilot'+Math.floor(1000+Math.random()*9000);M.named=true;M.nameChanges=(M.nameChanges||0)+1;save()}
 resize();applyLang();if(M.named)showMenu();else showName();cloudInit();requestAnimationFrame(frame);
 })();
 </script>
