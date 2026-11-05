@@ -794,7 +794,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
 (function(){
 /* ======================= CONFIG ======================= */
 // si hay una versión nueva publicada, recarga saltándose la caché del móvil
-const BUILD='20261104201548';
+const BUILD='20261105155439';
 (function(){try{if(BUILD.indexOf('__')===0)return;fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.text():'').then(v=>{v=(v||'').trim();
   if(v&&v!==BUILD&&sessionStorage.getItem('dr.vr')!==v){sessionStorage.setItem('dr.vr',v);location.replace(location.pathname+'?v='+v+location.hash)}}).catch(()=>{})}catch(e){}})();
 const MODO_PRUEBA_CFG=false; // modo prueba del desarrollador (apagado: juego publicado)
@@ -824,7 +824,7 @@ if((M.gen||1)<SAVE_GEN){const keep={lang:M.lang,sound:M.sound,music:M.music};M=O
   try{localStorage.setItem(KEY,JSON.stringify(M));localStorage.removeItem(KEY+'.prueba');localStorage.removeItem('dronerush.auth.nuevo')}catch(e){}}
 // en la partida de "jugador nuevo" el modo prueba se apaga del todo
 const MODO_PRUEBA=MODO_PRUEBA_CFG&&!M.newbie;
-function save(){try{localStorage.setItem(KEY,JSON.stringify(M))}catch(e){}cloudQueue()}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(M))}catch(e){}try{if(window.__cgOk)window.CrazyGames.SDK.data.setItem(KEY,JSON.stringify(M))}catch(e){}cloudQueue()}
 if(!Array.isArray(M.owned))M.owned=['clasico'];
 M.up=Object.assign({bat:0,mag:0,pila:0,shield:0,turbo:0},M.up||{});
 M.up.turbo=Math.min(2,M.up.turbo);delete M.up.ruby;
@@ -909,7 +909,7 @@ let AC=null,SFX=null,MUS=null,SILENT=null;
 // desbloquea el audio en el primer toque (en iPhone también con el botón de silencio puesto)
 function unlock(){
   if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();
-    SFX=AC.createGain();SFX.gain.value=1;SFX.connect(AC.destination);MUS=AC.createGain();MUS.gain.value=.55;MUS.connect(AC.destination)}catch(e){}}
+    SFX=AC.createGain();SFX.gain.value=1;SFX.connect(AC.destination);MUS=AC.createGain();MUS.gain.value=.55;MUS.connect(AC.destination);if(window.__cgMute){SFX.gain.value=0;MUS.gain.value=0}}catch(e){}}
   try{if(navigator.audioSession)navigator.audioSession.type='playback'}catch(e){}
   if(!SILENT){try{SILENT=new Audio('data:audio/wav;base64,UklGRkQDAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YSADAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==');SILENT.loop=true;SILENT.setAttribute('playsinline','');SILENT.play().catch(()=>{SILENT=null})}catch(e){SILENT=null}}
   if(AC&&AC.state!=='running')AC.resume().catch(()=>{});
@@ -3344,7 +3344,14 @@ function showCgAd(label,onReward,back){
   state='ad';
   try{k.ad.requestAd('rewarded',{adStarted:()=>{try{AC&&AC.suspend()}catch(e){}},adFinished:done,adError:done})}catch(e){done()}}
 if(IS_CG){document.documentElement.classList.add('cg');
-  try{window.CrazyGames.SDK.init().then(()=>{cgReady=true;try{window.CrazyGames.SDK.game.loadingStop()}catch(e){}}).catch(()=>{})}catch(e){}}
+  try{window.CrazyGames.SDK.init().then(()=>{cgReady=true;const S=window.CrazyGames.SDK;
+    // progreso guardado en la cuenta de CrazyGames (módulo de datos)
+    try{const d=S.data.getItem(KEY);if(d){const c=JSON.parse(d);if((c.games||0)>(M.games||0)||((c.games||0)===(M.games||0)&&(c.best||0)>(M.best||0))){localStorage.setItem(KEY,d);location.reload();return}}}catch(e){}
+    window.__cgOk=true;try{S.data.setItem(KEY,JSON.stringify(M))}catch(e){}
+    // silenciar el audio cuando CrazyGames lo pida
+    const mu=st=>{const m=!!(st&&st.muteAudio);window.__cgMute=m;try{if(SFX)SFX.gain.value=m?0:1;if(MUS)MUS.gain.value=m?0:.55}catch(e){}};
+    try{mu(S.game.settings);S.game.addSettingsChangeListener(mu)}catch(e){}
+    try{S.game.loadingStop()}catch(e){}}).catch(()=>{})}catch(e){}}
 /* ---- app de Android (Google Play): anuncios AdMob ---- */
 const IS_APP=(()=>{try{return !!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform())}catch(e){return false}})();
 // IDs de AdMob: los de prueba de Google hasta tener la cuenta propia
