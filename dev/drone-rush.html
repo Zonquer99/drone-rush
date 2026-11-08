@@ -994,7 +994,7 @@ const obCenter=o=>o.type==='pylon'?[o.x+o.w/2,(o.top+o.bot)/2]:o.type==='turbine
 const holePos=()=>[drone.x+90,drone.y];
 let freezeT=0,nextFreeze=500,lastFz='';const FREEZE_EVERY=500,FREEZE_DUR=15,FREEZE_SLOW=.65;
 // velocidad por tramos: 0-700 fácil · 700-2000 normal · 2000-3000 mucho más rápido · 3000+ a tope
-const speedAt=mm=>mm<700?200+mm*.1143:mm<2000?280+(mm-700)*.05:mm<3000?345+(mm-2000)*.115:Math.min(600,460+(mm-3000)*.07);
+const speedAt=mm=>mm<700?(PORTAL?235+mm*.0643:200+mm*.1143):mm<2000?280+(mm-700)*.05:mm<3000?345+(mm-2000)*.115:Math.min(600,460+(mm-3000)*.07);
 // a partir de 3.000 m: lluvia de monedas cada 200 m (3 s)
 const RAIN_FROM=3000,RAIN_EVERY=200;let rainNext=RAIN_FROM,rainT=0,rainGap=0,rainPh=0,rainY=300;
 let phaseT=0;const PHASE_DUR=1.6;let mythRun=false,royal=0,royalFx=0,shields=0,phases=0,SK=SKINS[0],banked=0,turboEnd=0,turboOn=false,rubyT=0,rubyRush=0,rubyGap=0,rubyPh=0,rubyY=300;
@@ -1030,7 +1030,7 @@ const TIERS=[{pyl:.55,tur:.85,birds:2,bhit:5,amp:8},{pyl:.5,tur:.78,birds:3,bhit
 function spawn(){
   if(boss)return;
   const m=dist/PXM,x=(firstSpawn?Math.min(LW+60,520):LW+60),r=crs(),T=TIERS[tier()];firstSpawn=false;
-  let type=m<35?'pylon':r<T.pyl?'pylon':r<T.tur?'turbine':'birds';
+  let type=m<(PORTAL?20:35)?'pylon':r<T.pyl?'pylon':r<T.tur?'turbine':'birds';
   const spc=m>=35?pickSpecial(m):null;
   if(inSpace()&&!spc)type='pylon';
   if(spc){spawnSpecial(spc,x,m)}
@@ -1230,6 +1230,7 @@ function spawnSpecial(type,x,m){
   else if(type==='meteor'){const n=m>5600?2:1;for(let k=0;k<n;k++)obs.push({type,x:x+k*120,y:crsR(0,GY-300),vx:-crsR(40,150),vy:crsR(40,120),r:crsR(15,28),rot:0,sp:crsR(-2,2),seed:crs()*9})}}
 function pickSpecial(m){if(battleOn()||race)return null;const wi=wIdx(m),w=WORLDS[wi],r=Math.random();
   if(w.space)return r<.42?null:r<.86?'meteor':'enemy';
+  if(PORTAL&&wi<1&&m>=100){if(r<.14)return 'balloon';if(r<.28&&m>=250)return 'enemy';return null} // portales: algo de variedad desde el primer mundo
   if(wi<1||r>.34)return null;const opts=['enemy','balloon','heli','storm'].slice(0,wi);return opts[Math.floor(Math.random()*opts.length)]}
 
 /* ----- objetos especiales (power-ups) ----- */
@@ -1266,10 +1267,16 @@ function drawEvents(){if(!evK)return;const a=evFade();if(a<=0)return;ctx.save();
 let comboN=0,comboT=0,lastCombo='',nearRun=0;
 function nearMiss(){comboN=comboT>0?comboN+1:1;comboT=3.5;nearRun++;const v=Math.round(2*comboN*gmNow());coins+=v;
   floatTxt(drone.x+16,drone.y-36,(comboN>1?L('¡POR LOS PELOS! ×','CLOSE CALL! ×')+comboN:L('¡POR LOS PELOS!','CLOSE CALL!'))+' +'+v,comboN>=5?'#ff7af5':comboN>=3?'#ffd35a':'#7dffb0');
-  beep(1300+comboN*80,.09,'triangle',.05,2200);burst(drone.x+10,drone.y,'#ffffff',8,140,true);slowMo(.35,.12);if(comboN>=5)shake=Math.max(shake,.1);M.stats=M.stats||{};M.stats.near=(M.stats.near||0)+1;M.stats.combo=Math.max(M.stats.combo||0,comboN)}
+  beep(1300+comboN*80,.09,'triangle',.05,2200);burst(drone.x+10,drone.y,'#ffffff',8,140,true);slowMo(.35,.12);if(comboN>=5)shake=Math.max(shake,.1);if(PORTAL)nearFx();M.stats=M.stats||{};M.stats.near=(M.stats.near||0)+1;M.stats.combo=Math.max(M.stats.combo||0,comboN)}
+// efecto extra en portales: estela de chispas, destello, vibración y sonido que sube de tono con el combo
+function nearFx(){const n=Math.min(comboN,8),c=comboN>=5?'#ff7af5':comboN>=3?'#ffd35a':'#7dffb0';
+  burst(drone.x+6,drone.y,c,10+n*4,200+n*25,true);burst(drone.x-8,drone.y,'#ffffff',8,120,true);
+  flash=Math.max(flash,.06+.015*n);if(comboN>=3)shake=Math.max(shake,.06+.01*Math.min(n,6));slowMo(.3,.14);
+  buzz(comboN>=5?[18,20,26]:18);beep(900,.14,'sawtooth',.03,220);
+  setTimeout(()=>beep(1700+n*90,.12,'triangle',.05,2600+n*90),55);if(comboN>=3)setTimeout(()=>beep(2200+n*80,.14,'sine',.045,3200),120)}
 function nearTick(dt){comboT=Math.max(0,comboT-dt);const bad=invuln>0||turboOn||ghostT>0||phaseT>0||pwOn('ghost')||pwOn('giant');
   for(const o of obs){if(o.suck||o.nmDone)continue;const[x0,x1]=obXR(o),R=droneR();
-    if(x1<drone.x-R){o.nmDone=1;if(!o.nmBad&&o.nmMin!=null&&o.nmMin<13&&o.nmMin>-1)nearMiss();continue}
+    if(x1<drone.x-R){o.nmDone=1;if(!o.nmBad&&o.nmMin!=null&&o.nmMin<(PORTAL?19:13)&&o.nmMin>-1)nearMiss();continue}
     if(x0<drone.x+R){if(bad)o.nmBad=1;const c=clearance(o);if(o.nmMin==null||c<o.nmMin)o.nmMin=c}}}
 
 /* ----- jefes cada 1.000 m (1.500, 2.500, 3.500…) ----- */
@@ -1577,7 +1584,7 @@ function update(dt){
     if(!batsOn()&&!diamOn()&&!confOn()&&SK.trail&&Math.random()<SK.tr)emitTrail(SK,speed);
     else if(!batsOn()&&!diamOn()&&!confOn()&&thrust&&!SK.trail&&Math.random()<.5)parts.push({x:drone.x+rnd(-20,20),y:drone.y+8,vx:-speed*.3,vy:rnd(40,90),life:.3,max:.3,c:'rgba(255,246,234,.5)',r:1.5});
     ghRecTick(dt);raceUpdate(dt);
-    acc+=speed*dt;if(acc>=spacing){acc=0;{const mm=dist/PXM;spacing=(mm<700?crsR(360,430):mm<2500?crsR(300,370):crsR(270,350))*Math.max(1,speedAt(mm)/400)}spawn()}
+    acc+=speed*dt;if(acc>=spacing){acc=0;{const mm=dist/PXM;spacing=(mm<700?(PORTAL?crsR(310,380):crsR(360,430)):mm<2500?crsR(300,370):crsR(270,350))*Math.max(1,speedAt(mm)/400)}spawn()}
     {const mm=dist/PXM;if(mm>=rainNext){while(rainNext<=mm)rainNext+=RAIN_EVERY;rainT=3;rainGap=0;rainPh=0;rainY=clamp(drone.y,140,GY-160);
         floatTxt(LW/2,140,L('¡LLUVIA DE MONEDAS!','COIN RAIN!'),'#ffd35a');beep(1180,.12,'square',.05,1760);buzz(25)}
       if(rainT>0){rainT-=dt;rainGap-=dt;if(rainGap<=0){rainGap=.12;rainPh+=.42;
