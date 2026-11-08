@@ -99,6 +99,8 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
 .bat-fill.mid{background:var(--apricot)}
 .bat-fill.low{background:var(--bad);animation:blink .5s steps(2) infinite}
 @keyframes blink{50%{opacity:.25}}
+.cg .hud{opacity:.72;padding-top:8px;gap:4px}.cg .hud-m{font-size:22px}
+.noads #bPlayX2,.noads #bRevive,.noads #bAgainX2{display:none!important}
 .hint{position:absolute;left:0;right:0;top:44%;text-align:center;font-family:var(--display);font-size:18px;color:var(--ink);text-shadow:0 2px 0 rgba(0,0,0,.4);pointer-events:none}
 .panel{position:absolute;left:16px;right:16px;bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px 18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 18px 40px rgba(0,0,0,.45);max-height:calc(100% - 40px);overflow-y:auto;box-sizing:border-box}
 .panel>*{flex-shrink:0}
@@ -467,6 +469,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
     <div class="bat"><span data-en="Battery">Batería</span> <div class="bat-shell"><div class="bat-fill" id="batFill"></div></div><span id="hudRoy" class="tag roy" hidden></span><span id="hudZp" class="tag zp" hidden></span><span id="hudSw" class="tag sw" hidden></span><span id="hudSh" class="tag sh" hidden></span><span id="hudPh" class="tag ph" hidden></span><span id="hudPo" class="tag myth" hidden></span><span id="hudFz" class="tag sh" hidden></span><span id="hudBh" class="tag rar-epica" hidden></span><span id="hudGh" class="tag rar-temporada" hidden></span><span id="hudPw" class="tag" hidden></span><span id="hudEv" class="tag sh" hidden></span><span id="hudCb" class="tag rar-leyenda" hidden></span></div>
   </div>
   <div class="hint" id="hint" hidden data-en="Hold to fly up">Mantén pulsado para subir</div>
+  <div class="pause-tip" id="readyTip" hidden><b data-en="Get ready!">¡Prepárate!</b><span data-en="Press and hold to take off">Mantén pulsado para despegar</span></div>
   <div class="pause-tip" id="pauseTip" hidden><b data-en="Paused">En pausa</b><span data-en="Tap to keep flying">Toca la pantalla para seguir volando</span></div>
 
   <!-- Menú -->
@@ -802,7 +805,8 @@ const TORNEO_ACTIVO=false;var tourOn=TORNEO_ACTIVO;   // el torneo se activa cua
 const $=id=>document.getElementById(id);
 const wrap=$('wrap'),cvs=$('cv'),ctx=cvs.getContext('2d');
 const LH=640,GY=590,PXM=20;
-let ZOOM=1.18,TOPX=0,VBOT=640; // cámara un poco más alejada
+const PORTAL=!!(window.CG_BUILD||window.POKI_BUILD); // versiones para portales web (CrazyGames / Poki)
+let ZOOM=PORTAL?1.0:1.18,TOPX=0,VBOT=640; // cámara un poco más alejada (en portales, más cerca: el dron se ve más grande)
 let LW=360,S=1,DPR=1,sky=null,stars=[],clouds=[];
 const rnd=(a,b)=>a+Math.random()*(b-a);
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
@@ -981,6 +985,7 @@ function resize(){
 window.addEventListener('resize',resize);
 
 /* ======================= STATE ======================= */
+let firstSpawn=false,readyMode=false;
 let state='menu',t=0,dist=0,speed=0,coins=0,mult=1,battery=100,revives=3,invuln=0,shake=0,acc=0,spacing=300,hintT=0,whyDead='';
 let portals=[],portalCount=0,nextPortal=100,portalRecharge=Infinity,flash=0,lastPo='';const PORTAL_MAX=4,PORTAL_JUMP=500,PORTAL_RECHARGE=700,PORTAL_SAFE=300;
 let minis=[],zapNext=400,zapT=0,lastZp=-1;let swarmNext=500,swarmCh=0,swarmT=0,lastSw=-1,crownNext=600,ghostNext=400,ghostT=0,lastGh='';const GHOST_EVERY=400,GHOST_DUR=10;
@@ -1000,7 +1005,7 @@ let holding=false,obs=[],pick=[],parts=[],floats=[];
 function startGame(m){if(window.POKI_BUILD&&window.__pkPlayed&&!window.__pkSkip&&window.PokiSDK&&window.__pkReady){pkBreak(()=>startGame(m));return}window.__pkSkip=false;window.__pkPlayed=true;holeWindStop();unfreeze();
   state='play';mult=m;t=0;dist=0;speed=210;coins=0;battery=100;revives=3;invuln=0;banked=0;
   drone.x=Math.min(110,LW*.28);drone.y=300;drone.vy=-120;drone.tilt=0;
-  obs=[];pick=[];parts=[];floats=[];acc=-LW*.35;spacing=300;hintT=2.2;holding=false;
+  obs=[];pick=[];parts=[];floats=[];spacing=300;acc=PORTAL?spacing-140:-LW*.35;firstSpawn=PORTAL;readyMode=false;hintT=2.2;holding=false;
   battleBg=false;ghFlush();runClock=0;ghRec=[];ghAcc=0;
   if(raceNext){raceInit(raceNext);raceNext=null;ghSeed=race.seed}else{race=null;ghSeed='n'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);crsFn=seedRng(ghSeed)}
   SK=skin();mythRun=false;
@@ -1013,6 +1018,8 @@ function startGame(m){if(window.POKI_BUILD&&window.__pkPlayed&&!window.__pkSkip&
   show(null);$('hud').hidden=false;$('hudX2').hidden=gm===1;$('hudX2').textContent='x'+decs(gm);
   if(mythRun)floatTxt(drone.x+60,drone.y-40,L('¡SERAFÍN POR UNA PARTIDA!','SERAPH FOR ONE RUN!'),'#ff9cf8');
   lastM=lastC=lastB=lastSh=lastPh=lastRoy=lastSw=-1;lastFz=lastBh=lastGh=lastPo=null;lastZp=-1;lastPw=lastEv=lastCombo='';document.querySelectorAll('#hud .tag').forEach(e=>e.hidden=true);
+  // portales: en las 3 primeras partidas el dron espera en el aire hasta la primera pulsación
+  if(PORTAL&&M.games<=3&&!race&&!dailyRun){readyMode=true;drone.y=LH*.45;drone.vy=0;drone.tilt=0;freeze()}
 }
 
 /* ======================= SPAWN ======================= */
@@ -1022,7 +1029,7 @@ const tier=()=>{const m=dist/PXM;return m<700?0:m<2500?1:2};
 const TIERS=[{pyl:.55,tur:.85,birds:2,bhit:5,amp:8},{pyl:.5,tur:.78,birds:3,bhit:7,amp:12},{pyl:.45,tur:.72,birds:3,bhit:9,amp:14}];
 function spawn(){
   if(boss)return;
-  const m=dist/PXM,x=LW+60,r=crs(),T=TIERS[tier()];
+  const m=dist/PXM,x=(firstSpawn?Math.min(LW+60,520):LW+60),r=crs(),T=TIERS[tier()];firstSpawn=false;
   let type=m<35?'pylon':r<T.pyl?'pylon':r<T.tur?'turbine':'birds';
   const spc=m>=35?pickSpecial(m):null;
   if(inSpace()&&!spc)type='pylon';
@@ -1540,8 +1547,8 @@ function sqShare(){if(!sqData)return;const u=inviteLink()||'https://t.me/droneru
 
 /* ======================= UPDATE ======================= */
 let frozen=false;
-function freeze(){if(state!=='play')return;frozen=true;holding=false;hintT=0;$('hint').hidden=true;$('pauseTip').hidden=false}
-function unfreeze(){if(!frozen)return;frozen=false;$('pauseTip').hidden=true}
+function freeze(){if(state!=='play')return;frozen=true;holding=false;hintT=0;$('hint').hidden=true;if(readyMode)$('readyTip').hidden=false;else $('pauseTip').hidden=false}
+function unfreeze(){if(!frozen)return;frozen=false;$('pauseTip').hidden=true;$('readyTip').hidden=true;if(readyMode){readyMode=false;holding=true;drone.vy=-140;hintT=2.2}}
 function update(dt){
   t+=dt;
   if(frozen&&state==='play')return;
@@ -3363,6 +3370,8 @@ function showCgAd(label,onReward,back){
   state='ad';
   try{k.ad.requestAd('rewarded',{adStarted:()=>{try{AC&&AC.suspend()}catch(e){}},adFinished:done,adError:done})}catch(e){done()}}
 if(IS_CG){document.documentElement.classList.add('cg');
+  // Basic Launch: no hay anuncios, así que se ocultan los botones de vídeo. Pon CG_ADS=true cuando pasemos a Full Launch.
+  const CG_ADS=false;if(!CG_ADS){document.documentElement.classList.add('noads');const a=$('bAgain');if(a)a.className='btn primary'}
   try{window.CrazyGames.SDK.init().then(()=>{cgReady=true;const S=window.CrazyGames.SDK;
     // progreso guardado en la cuenta de CrazyGames (módulo de datos)
     try{const d=S.data.getItem(KEY);if(d){const c=JSON.parse(d);if((c.games||0)>(M.games||0)||((c.games||0)===(M.games||0)&&(c.best||0)>(M.best||0))){localStorage.setItem(KEY,d);location.reload();return}}}catch(e){}
