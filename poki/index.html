@@ -811,7 +811,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
 (function(){
 /* ======================= CONFIG ======================= */
 // si hay una versión nueva publicada, recarga saltándose la caché del móvil
-const BUILD='20261108164208';
+const BUILD='20261108182749';
 (function(){try{if(BUILD.indexOf('__')===0||window.CG_BUILD||window.POKI_BUILD)return;fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.text():'').then(v=>{v=(v||'').trim();
   if(v&&v!==BUILD&&sessionStorage.getItem('dr.vr')!==v){sessionStorage.setItem('dr.vr',v);location.replace(location.pathname+'?v='+v+location.hash)}}).catch(()=>{})}catch(e){}})();
 const MODO_PRUEBA_CFG=false; // modo prueba del desarrollador (apagado: juego publicado)
@@ -1338,7 +1338,7 @@ const BOSSES=[{n:['Dron Centinela','Sentinel Drone'],c:'#ff2e4a',b:'#2a1c34',tip
   {n:['Nave Nodriza','Mothership'],c:'#7dffb0',b:'#10302a',tip:['¡Enjambre! No pares de moverte','Swarm incoming! Keep moving'],rw:{s:3,pw:'x3'}},
   {n:['Fénix de Ceniza','Ash Phoenix'],c:'#ff7a2a',b:'#3a0a14',tip:['¡Zigzaguea entre las llamas!','Weave through the flames!'],rw:{s:3,pw:'x3'}},
   {n:['Titán de Acero','Steel Titan'],c:'#ffe14d',b:'#2a3040',tip:['¡Vuela alto cuando tiemble!','Fly high when the ground shakes!'],rw:{s:3,pw:'giant'}},
-  {n:['Ojo del Vacío','Void Eye'],c:'#b9a8ff',b:'#1a0f4a',tip:['¡No te dejes arrastrar!','Do not get pulled in!'],rw:{s:5,pw:'ghost'},dur:60}];
+  {n:['Ojo del Vacío','Void Eye'],c:'#b9a8ff',b:'#1a0f4a',tip:['¡No te dejes arrastrar!','Do not get pulled in!'],rw:{s:5,pw:'ghost'},dur:60,rage:30}];
 const EASYB={n:['Dron Aprendiz','Rookie Drone'],c:'#ffd35a',b:'#2a1c34',tip:['¡Arrastra o usa flechas para esquivar!','Drag or use arrows to dodge!']},BDIFF=[1,1,1,1.1,1.1,1.12,1.14,1.16];
 const BOSS_FROM=1100,BOSS_EVERY=1000,BOSS_DUR=15;
 let boss=null,bossNext=BOSS_FROM;
@@ -1354,7 +1354,7 @@ function bossMove(dt,fc){
 }
 let runBossN=0,lastDaily=null,lastAch=[];
 function bossStart(m){const easy=!dMod('boss')&&bossNext<BOSS_FROM,idx=dMod('boss')?runBossN:Math.max(0,Math.round((bossNext-BOSS_FROM)/BOSS_EVERY)),k=easy?0:idx%BOSSES.length,cyc=easy?0:Math.floor(idx/BOSSES.length),B=easy?EASYB:BOSSES[k],lv=easy?1:Math.min(5,k+1);runBossN++;
-  boss={k,cyc,lv,easy,dur:easy?10:(B.dur||BOSS_DUR),n:B.n,c:B.c,b:B.b,at:bossNext,x:LW+110,y:260,ph:'in',t:0,a:{s:1.2,l:3.4,m:2.2,r:3,q:5,g:7,w:2.5,e:2,x:1},q:[],warn:[],pull:0,cnt:0,hit:0};evK='';evT=0;
+  boss={k,cyc,lv,easy,dur:easy?10:(B.dur||BOSS_DUR),rage:B.rage||10,n:B.n,c:B.c,b:B.b,at:bossNext,x:LW+110,y:260,ph:'in',t:0,a:{s:1.2,l:3.4,m:2.2,r:3,q:5,g:7,w:2.5,e:2,x:1},q:[],warn:[],pull:0,cnt:0,hit:0};evK='';evT=0;
   bigMsg('⚠️ '+L('¡JEFE!','BOSS!'),L(B.n[0],B.n[1])+' · '+L(B.tip[0],B.tip[1]),B.c,2.6);
   for(let i=0;i<3;i++)setTimeout(()=>beep(440,.18,'square',.06,220),i*260);buzz([80,60,80])}
 // ataques de cada jefe: cada uno tiene su propio patrón
@@ -1410,7 +1410,7 @@ function bossTick(dt){const m=dist/PXM;
   // pelea
   const big=b.k>=5,ty=clamp(drone.y+Math.sin(b.t*1.3)*140,big?115:90,big?GY-175:GY-150);const en=b.enr?1.6:1;b.y+=(ty-b.y)*dt*(0.8+b.lv*.15)*en;
   const xr=LW-72,xl=b.k>=2?Math.max(drone.x+215,LW*.5):xr;b.x=xl>=xr-24?xr+Math.sin(b.t*2)*10:(xl+xr)/2+(xr-xl)/2*Math.cos(b.pw=(b.pw||0)+dt*(.5+.07*(b.k%4))*en);
-  if(!b.easy&&!b.enr&&b.t>=b.dur-10){b.enr=1;bigMsg('🔥 '+L('¡FURIA!','RAGE!'),L('Aguanta 10 s más','Hold on for 10 more seconds'),'#ff4a3a',2.2);flash=Math.max(flash,.4);shake=.4;beep(120,.6,'sawtooth',.07,60);buzz([80,40,80])}
+  if(!b.easy&&!b.enr&&b.t>=b.dur-b.rage){b.enr=1;bigMsg('🔥 '+L('¡FURIA!','RAGE!'),L('Aguanta '+b.rage+' s más','Hold on for '+b.rage+' more seconds'),'#ff4a3a',2.2);flash=Math.max(flash,.4);shake=.4;beep(120,.6,'sawtooth',.07,60);buzz([80,40,80])}
   bossAtk(b,dt);
   if(b.t>=b.dur){b.ph='out';b.t=0;obs=obs.filter(o=>o.type!=='shot'&&o.type!=='laser'&&o.type!=='mine');
     const RW=b.easy?{s:1}:BOSSES[b.k].rw,v=Math.round((60+(b.k+1)*60)*gmNow());coins+=v;const rsh=RW.s;shields=Math.min(9,shields+rsh);bossNext=b.easy?BOSS_FROM:b.at+BOSS_EVERY;if(bossNext-m<500)bossNext=Math.floor(m)+500;if(dMod('boss'))bossNext=Math.floor(m)+400;
