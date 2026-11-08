@@ -82,6 +82,27 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
 .cust-opt small{font-size:11px;color:var(--muted)}
 .mis.ach .mis-t small{display:block;font-weight:600;font-size:13px;color:var(--muted);margin-top:2px}
 .ach-ic{font-size:20px;margin-right:2px}
+.rec-banner{position:relative;overflow:hidden;text-align:center;padding:14px 12px 12px;margin:2px 0;border-radius:18px;background:linear-gradient(160deg,#6a4300,#2a1a50 62%,#1a0f3a);border:2px solid #ffd35a;box-shadow:0 0 28px rgba(255,211,90,.5),inset 0 0 24px rgba(255,211,90,.2);font-family:var(--ui);animation:recin .6s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes recin{from{transform:scale(.7);opacity:0}to{transform:none;opacity:1}}
+.rec-banner .tr{display:block;font-size:42px;line-height:1.1;animation:trb 1.5s ease-in-out infinite;filter:drop-shadow(0 0 12px rgba(255,211,90,.95))}
+@keyframes trb{0%,100%{transform:translateY(0) rotate(-7deg)}50%{transform:translateY(-6px) rotate(7deg)}}
+.rec-banner h3{margin:2px 0 0;font-family:var(--display);font-size:24px;letter-spacing:.05em;background:linear-gradient(180deg,#fff9cf,#ffc93a 58%,#ff9a1a);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 0 rgba(60,30,0,.6))}
+.rec-banner .rv{font-weight:800;font-size:13px;color:#ffe9a8;margin-top:5px}.rec-banner .rv b{color:#7dffb0}
+.rec-banner::after{content:'';position:absolute;top:0;bottom:0;left:-60%;width:36%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.38),transparent);transform:skewX(-20deg);animation:recsh 2.8s ease-in-out infinite;pointer-events:none}
+@keyframes recsh{0%{left:-60%}55%,100%{left:130%}}
+.rec-banner .sp{position:absolute;font-size:15px;opacity:0;animation:tw 1.8s ease-in-out infinite}
+@keyframes tw{0%,100%{opacity:0;transform:scale(.3) rotate(0)}50%{opacity:1;transform:scale(1.15) rotate(25deg)}}
+.ach-list{display:flex;flex-direction:column;gap:8px}
+.ach-card{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:16px;background:linear-gradient(135deg,rgba(255,179,107,.22),rgba(122,60,255,.2));border:1.5px solid rgba(255,211,90,.75);box-shadow:0 0 18px rgba(255,211,90,.28);font-family:var(--ui);text-align:left;animation:achin .55s cubic-bezier(.2,1.3,.4,1) both}
+@keyframes achin{from{transform:translateY(12px) scale(.94);opacity:0}to{transform:none;opacity:1}}
+.ach-card .ic{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;font-size:25px;background:radial-gradient(circle at 35% 30%,#fff3b0,#ffb300 55%,#9a5a00);box-shadow:0 0 16px rgba(255,200,60,.75);flex:none}
+.ach-card small{display:block;font-size:10px;letter-spacing:.14em;font-weight:900;color:#ffd35a}
+.ach-card b{display:block;font-size:16px;color:#fff;line-height:1.2}.ach-card .d{display:block;font-size:12px;color:var(--muted);font-weight:700}
+.ach-card .rw{margin-left:auto;border:0;border-radius:999px;padding:9px 13px;font-weight:900;font-family:var(--ui);font-size:12px;color:#3a2400;background:linear-gradient(180deg,#ffe27a,#ffb300);box-shadow:0 3px 0 #a06a00,0 0 14px rgba(255,200,60,.5);cursor:pointer;white-space:nowrap;flex:none}
+.ach-card .rw.got{background:rgba(125,255,176,.18);color:#7dffb0;box-shadow:none;cursor:default}
+.ach-card>div{min-width:0}
+@media (max-width:430px){.ach-card{gap:9px;padding:9px 10px}.ach-card .ic{width:42px;height:42px;font-size:22px}.ach-card small{font-size:9px;letter-spacing:.05em}.ach-card b{font-size:15px}.ach-card .rw{padding:8px 10px;font-size:11px}}
+
 .comm-in{display:inline-block;font-family:var(--ui);font-weight:800;font-size:14px;color:#cfe9ff;text-decoration:none;padding:9px 16px;border-radius:999px;background:rgba(42,163,224,.2);border:1px solid rgba(42,163,224,.55)}
 .hud{position:absolute;top:0;left:0;right:0;padding:12px 16px 0;display:flex;flex-direction:column;gap:8px;pointer-events:none}
 .hud-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
@@ -534,12 +555,12 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
       <div class="chip"><small data-en="Coins">Monedas</small><b><span id="oC">0</span> <i class="coin"></i></b></div>
       <div class="chip"><small data-en="Best">Récord</small><b id="oBest">0 m</b></div>
     </div>
-    <p class="note new" id="oNew" hidden data-en="New best!">¡Nuevo récord!</p><div class="rc-box" id="oShare" hidden>
+    <div class="rec-banner" id="oNew" hidden></div><div class="rc-box" id="oShare" hidden>
       <img id="rcImg" alt="" hidden>
       <div class="rc-btns"><button class="rc-b pub" id="rcPub" data-en="📣 Post in the community">📣 Publicar en la comunidad</button><button class="rc-b dare" id="rcDare" data-en="⚔️ Challenge a friend">⚔️ Retar a un amigo</button></div>
       <p class="rc-msg" id="rcMsg" hidden></p>
     </div>
-    <p class="note win" id="oExtra" hidden></p>
+    <div class="ach-list" id="oAch" hidden></div><p class="note win" id="oExtra" hidden></p>
     <p class="note" id="oTour"></p>
     <div class="chal-box" id="oChal" hidden></div>
     <div class="wbar" id="oWorlds" hidden></div>
@@ -3236,14 +3257,20 @@ function showMenu(){holeWindStop();unfreeze();ghFlush();state='menu';obs=[];pick
 function showOver(m,rec){
   state='over';overAt=performance.now();lastRec={m,coins:Math.floor(coins),skin:SK.id,when:Date.now()};rcReset(rec);$('hud').hidden=true;overChals();worldBar('oWorlds');{const k=$('oKey');k.hidden=!(PORTAL&&matchMedia('(hover:hover)').matches)}
   $('oWhy').textContent=whyDead;$('oM').textContent=fmt(m);$('oC').textContent=fmt(coins);
-  $('oBest').textContent=fmt(M.best)+' m';$('oNew').hidden=!rec;$('oShare').hidden=!rec;
+  $('oBest').textContent=fmt(M.best)+' m';{const nb=$('oNew');nb.hidden=!rec;if(rec){const pv=runBest;nb.innerHTML='<span class="tr">🏆</span><h3>'+L('¡NUEVO RÉCORD!','NEW BEST!')+'</h3><div class="rv">'+(pv>0?L('Antes ','Before ')+fmt(pv)+' m → <b>'+fmt(m)+' m</b> · <b>+'+fmt(m-pv)+' m</b>':'<b>'+fmt(m)+' m</b>')+'</div>'+[[8,10],[86,14],[14,62],[90,58],[48,4],[70,78]].map((p,i)=>'<span class="sp" style="left:'+p[0]+'%;top:'+p[1]+'%;animation-delay:'+(i*.3)+'s">'+(i%2?'✨':'⭐')+'</span>').join('');
+    beep(784,.12,'square',.06,1568);setTimeout(()=>beep(1046,.14,'square',.06,2093),110);setTimeout(()=>beep(1568,.3,'triangle',.06,2637),240);buzz([30,30,60])}}
+  $('oShare').hidden=!rec;
   const w=weekInfo(),rk=myRank(board(w.key,w.prog,M.tourBest));
   $('oTour').innerHTML='';$('oTour').hidden=!tourOn;const s=document.createElement('span');
   s.textContent=rk<=3?L(`Torneo: vas ${rk}.º. ¡Ahora mismo ganarías el Dragón Real!`,`Tournament: you're #${rk}. Right now you'd win the Royal Dragon!`):L(`Torneo: vas ${rk}.º. Top 3 gana el Dragón Real.`,`Tournament: you're #${rk}. Top 3 win the Royal Dragon.`);
   if(rk<=3)s.className='win';$('oTour').append(s);
   $('bRevive').hidden=revives<=0;$('oRev').textContent='('+revives+L(' de 3)',' of 3)');
   {const ex=[];if(lastDaily){const md=dailyRun||dailyMod();ex.push('🎯 '+L('Reto del día: ','Daily challenge: ')+fmt(lastDaily.m)+' m'+(lastDaily.rec?L(' · ¡tu mejor de hoy!',' · your best today!'):'')+(lastDaily.m>=md.goal?' ✅':' · '+L('objetivo ','goal ')+fmt(md.goal)+' m'))}
-    for(const a of lastAch)ex.push('🏅 '+L('Logro conseguido: ','Badge unlocked: ')+L(a.n[0],a.n[1]));
+    {const oa=$('oAch');oa.innerHTML='';oa.hidden=!lastAch.length;lastAch.forEach((a,i)=>{const el=document.createElement('div');el.className='ach-card';el.style.animationDelay=(.2+i*.18)+'s';
+      el.innerHTML='<span class="ic">'+a.ic+'</span><div><small>'+L('🏅 LOGRO DESBLOQUEADO','🏅 BADGE UNLOCKED')+'</small><b>'+esc(L(a.n[0],a.n[1]))+'</b><span class="d">'+esc(L(a.d[0],a.d[1]))+'</span></div>';
+      const b=document.createElement('button');b.className='rw';b.textContent=L('Recoger','Claim')+' +'+fmt(a.r)+' 🪙';
+      b.onclick=()=>{if(b.disabled)return;M.ach=M.ach||{};if(!M.ach[a.id]){M.ach[a.id]=1;M.coins+=a.r;save();claimFx()}b.textContent='✓ +'+fmt(a.r)+' 🪙';b.disabled=true;b.classList.add('got')};
+      el.append(b);oa.append(el)})}
     $('oExtra').hidden=!ex.length;$('oExtra').innerHTML=ex.map(esc).join('<br>');$('bDailyAgain').hidden=!dailyRun;if(dailyRun||IS_APP){$('oShare').hidden=true}}
   checkUnl();unlCard($('oUnl'));
   M.offered+=(revives>0?1:0)+1;save();show('pOver');
