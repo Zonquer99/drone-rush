@@ -842,7 +842,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
 (function(){
 /* ======================= CONFIG ======================= */
 // si hay una versión nueva publicada, recarga saltándose la caché del móvil
-const BUILD='20261109223826';
+const BUILD='20261109224359';
 (function(){try{if(BUILD.indexOf('__')===0||window.CG_BUILD||window.POKI_BUILD)return;fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.text():'').then(v=>{v=(v||'').trim();
   if(v&&v!==BUILD&&sessionStorage.getItem('dr.vr')!==v){sessionStorage.setItem('dr.vr',v);location.replace(location.pathname+'?v='+v+location.hash)}}).catch(()=>{})}catch(e){}})();
 const MODO_PRUEBA_CFG=false; // modo prueba del desarrollador (apagado: juego publicado)
@@ -991,23 +991,35 @@ const BASSP=[0,0,12,0,0,12,0,7];
 const LS=[69,72,74,76,79,81,84];                             // pentatónica menor de La
 const LEAD=[[[0,4,2],[3,3,1],[4,2,2],[6,1,2]],[[0,2,3],[3,3,1],[4,4,4]],[[0,5,2],[2,4,2],[4,3,2],[6,2,2]],[[0,3,2],[2,2,2],[4,1,4]],
             [[0,4,1],[1,5,1],[2,6,3],[5,5,1],[6,4,2]],[[0,3,3],[3,2,1],[4,1,2],[6,0,2]],[[0,5,2],[2,6,2],[4,5,2],[6,4,2]],[[0,4,4],[4,3,2],[6,2,2]]];
+const BROOT=[40,40,41,38],BBASS=[0,0,12,0,0,12,0,0,0,0,12,0,0,7,6,5];     // Mi frigio: E E F D
+const BRIFF=[[[0,76,1],[1,77,1],[2,76,1],[3,79,1],[4,77,2],[6,76,2]],[[0,76,1],[1,77,1],[2,76,1],[3,79,1],[4,81,2],[6,79,2]],
+             [[0,77,1],[1,79,1],[2,77,1],[3,81,1],[4,84,2],[6,83,2]],[[0,74,1],[1,76,1],[2,77,1],[3,79,1],[4,81,1],[5,83,1],[6,84,2]]];
+function bossBar(t0,e8,bar){const c=bar%4,r=BROOT[c],bt=e8*2,h=e8/2;
+  for(let i=0;i<16;i++)voice(nf(r+BBASS[i]),t0+i*h,h*.9,'sawtooth',.05,.004,.04);
+  voice(nf(r+12),t0,e8*8,'sawtooth',.014,.5,.8);voice(nf(r+19),t0,e8*8,'sawtooth',.012,.5,.8);
+  for(const q of[0,5]){voice(nf(r+24),t0+q*e8,e8*1.6,'square',.016,.005,.2);voice(nf(r+31),t0+q*e8,e8*1.6,'square',.012,.005,.2)}
+  for(let k=0;k<4;k++)mKick(t0+k*bt,.27);mKick(t0+5.5*e8,.2);mKick(t0+7*e8,.16);
+  mNoise(t0+bt,.16,'bandpass',1900,.15);mNoise(t0+3*bt,.16,'bandpass',1900,.15);
+  if(c===3)for(let k=0;k<4;k++)mNoise(t0+6*e8+k*h,.08,'bandpass',2200,.05+k*.04);
+  for(let i=0;i<16;i++)mNoise(t0+i*h,.03,'highpass',8000,i%2?.034:.022);
+  for(const[o,n,l]of BRIFF[c])voice(nf(n),t0+o*e8,l*e8*.9,'sawtooth',.03,.006,.15)}
 let musT=null,bar=0,nextBar=0;
 function startMusic(){if(musT||!AC)return;musInit();
   musT=setInterval(()=>{if(!AC||AC.state!=='running')return;
-    const play=state==='play',bs=play&&typeof boss!=='undefined'&&boss&&boss.ph!=='out',e8=bs?.205:play?.235:.30,bl=e8*8;
+    const play=state==='play',bs=play&&typeof boss!=='undefined'&&boss&&boss.ph!=='out',e8=bs?.172:play?.235:.30,bl=e8*8;
     if(nextBar<AC.currentTime)nextBar=AC.currentTime+.1;
     while(nextBar<AC.currentTime+.6){
       if(M.music!==false&&!document.hidden){const c=bar%4,t0=nextBar,bt=e8*2,r=MROOT[c];
+        if(bs)bossBar(t0,e8,bar);else{
         for(let i=0;i<8;i++){const t=t0+i*e8,sm=BASSP[i];voice(nf(r+sm),t,e8*.8,'sawtooth',play?.05:.036,.006,.07)}
         for(const n of MCH[c])voice(nf(n),t0,bl*.95,'triangle',.016,.25,.9);
         if(play){for(let k=0;k<4;k++){mKick(t0+k*bt,k%2?.16:.24)}
           mNoise(t0+bt,.14,'bandpass',1800,.1);mNoise(t0+3*bt,.14,'bandpass',1800,.1);
           for(let i=0;i<8;i++)mNoise(t0+i*e8+(i%2?0:0),i%2?.05:.03,'highpass',7000,i%2?.05:.026);
-          if(bs)for(let i=0;i<8;i++)mNoise(t0+i*e8+e8/2,.03,'highpass',8000,.03);
           const ar=MCH[c];for(let i=0;i<16;i++){voice(nf(ar[i%3]+(i%6<3?12:24)),t0+i*e8/2,e8*.4,'square',.011,.004,.05)}
-          if(bar>=4||bs)for(const[o,i,l]of LEAD[bar%8])voice(nf(LS[i]),t0+o*e8,l*e8*.9,'square',.026,.01,.18)}
+          if(bar>=4)for(const[o,i,l]of LEAD[bar%8])voice(nf(LS[i]),t0+o*e8,l*e8*.9,'square',.026,.01,.18)}
         else{mKick(t0,.14);mKick(t0+bt*2,.1);mNoise(t0+bt,.12,'bandpass',1800,.05);mNoise(t0+3*bt,.12,'bandpass',1800,.05);
-          for(const[o,i,l]of LEAD[bar%8])voice(nf(LS[i]-12),t0+o*e8,l*e8*.9,'triangle',.05,.02,.4)}}
+          for(const[o,i,l]of LEAD[bar%8])voice(nf(LS[i]-12),t0+o*e8,l*e8*.9,'triangle',.05,.02,.4)}}}
       bar++;nextBar+=bl}},120)}
 /* sonido de viento para el agujero negro */
 let noiseBuf=null,holeWind=null;
