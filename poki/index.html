@@ -842,7 +842,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
 (function(){
 /* ======================= CONFIG ======================= */
 // si hay una versión nueva publicada, recarga saltándose la caché del móvil
-const BUILD='20261108191906';
+const BUILD='20261109223826';
 (function(){try{if(BUILD.indexOf('__')===0||window.CG_BUILD||window.POKI_BUILD)return;fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.text():'').then(v=>{v=(v||'').trim();
   if(v&&v!==BUILD&&sessionStorage.getItem('dr.vr')!==v){sessionStorage.setItem('dr.vr',v);location.replace(location.pathname+'?v='+v+location.hash)}}).catch(()=>{})}catch(e){}})();
 const MODO_PRUEBA_CFG=false; // modo prueba del desarrollador (apagado: juego publicado)
@@ -971,33 +971,43 @@ function beep(f,d,type,vol,f2){
     g.gain.setValueAtTime(Math.min(.35,(vol||.05)*2.6),t0);g.gain.exponentialRampToValueAtTime(.0001,t0+d);
     o.connect(g);g.connect(SFX);o.start(t0);o.stop(t0+d+.02);}catch(e){}
 }
-/* música de fondo: lo-fi tranquilo de atardecer (pads cálidos, bajo suave y melodía con eco) */
+/* música de fondo: loop arcade synthwave (La menor): kick, caja, hats, bajo en corcheas, arpegio y melodía; sube en partida y se acelera con jefes */
 const nf=m=>440*Math.pow(2,(m-69)/12);
 let musBus=null;
 function musInit(){if(musBus||!AC)return;
-  const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=1600;lp.Q.value=.4;
-  const dl=AC.createDelay(1.5);dl.delayTime.value=.45;const fb=AC.createGain();fb.gain.value=.3;const wet=AC.createGain();wet.gain.value=.32;
+  const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=6500;lp.Q.value=.3;
+  const dl=AC.createDelay(1.5);dl.delayTime.value=.28;const fb=AC.createGain();fb.gain.value=.26;const wet=AC.createGain();wet.gain.value=.2;
   MUS.disconnect();MUS.connect(lp);lp.connect(AC.destination);lp.connect(dl);dl.connect(fb);fb.connect(dl);dl.connect(wet);wet.connect(AC.destination);musBus=lp}
 function voice(f,st,dur,type,vol,att,rel){try{const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(f,st);
   g.gain.setValueAtTime(0,st);g.gain.linearRampToValueAtTime(vol,st+att);g.gain.setValueAtTime(vol,st+Math.max(att,dur));g.gain.exponentialRampToValueAtTime(.0001,st+dur+rel);
   o.connect(g);g.connect(MUS);o.start(st);o.stop(st+dur+rel+.05)}catch(e){}}
-const CHORDS=[[53,57,60,64],[52,55,59,62],[50,53,57,60],[48,52,55,59]];   // Fmaj7 · Em7 · Dm7 · Cmaj7
-const MEL=[72,74,76,79,81,84];
-const PHR=[[[0,4],[1.5,3],[2,2]],[[.5,1],[2,0],[3,1]],[[0,2],[1,3],[2.5,4]],[[0,3],[2,2],[3.5,0]],
-           [[0,5],[1,4],[2,3],[3,2]],[[1,1],[2.5,2]],[[0,0],[1.5,2],[2,3],[3,4]],[[0,2],[2,1]]];
+function mKick(t,v){try{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.setValueAtTime(150,t);o.frequency.exponentialRampToValueAtTime(42,t+.16);
+  g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+.24);o.connect(g);g.connect(MUS);o.start(t);o.stop(t+.27)}catch(e){}}
+function mNoise(t,dur,type,fr,v){try{const s=AC.createBufferSource();s.buffer=getNoise();s.loop=true;const f=AC.createBiquadFilter();f.type=type;f.frequency.value=fr;f.Q.value=.8;
+  const g=AC.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);s.connect(f);f.connect(g);g.connect(MUS);s.start(t,Math.random());s.stop(t+dur+.03)}catch(e){}}
+const MROOT=[45,41,48,43];                                   // Am · F · C · G
+const MCH=[[57,60,64],[53,57,60],[55,60,64],[55,59,62]];
+const BASSP=[0,0,12,0,0,12,0,7];
+const LS=[69,72,74,76,79,81,84];                             // pentatónica menor de La
+const LEAD=[[[0,4,2],[3,3,1],[4,2,2],[6,1,2]],[[0,2,3],[3,3,1],[4,4,4]],[[0,5,2],[2,4,2],[4,3,2],[6,2,2]],[[0,3,2],[2,2,2],[4,1,4]],
+            [[0,4,1],[1,5,1],[2,6,3],[5,5,1],[6,4,2]],[[0,3,3],[3,2,1],[4,1,2],[6,0,2]],[[0,5,2],[2,6,2],[4,5,2],[6,4,2]],[[0,4,4],[4,3,2],[6,2,2]]];
 let musT=null,bar=0,nextBar=0;
 function startMusic(){if(musT||!AC)return;musInit();
   musT=setInterval(()=>{if(!AC||AC.state!=='running')return;
-    const play=state==='play',beat=play?.62:.78,bl=beat*4;
+    const play=state==='play',bs=play&&typeof boss!=='undefined'&&boss&&boss.ph!=='out',e8=bs?.205:play?.235:.30,bl=e8*8;
     if(nextBar<AC.currentTime)nextBar=AC.currentTime+.1;
     while(nextBar<AC.currentTime+.6){
-      if(M.music!==false&&!document.hidden){const ch=CHORDS[bar%4],t0=nextBar;
-        for(const n of ch)voice(nf(n),t0,bl*.85,'triangle',.022,.7,1.6);
-        voice(nf(ch[0]-12),t0,bl*.9,'sine',.10,.06,.5);
-        voice(nf(ch[0]-12),t0+beat*2.5,beat*1.2,'sine',.07,.04,.4);
-        for(const[o,i]of PHR[bar%8])voice(nf(MEL[i]),t0+o*beat,.18,'sine',.055,.008,.9);
-        if(play)for(let k=0;k<4;k++){const tk=t0+k*beat;try{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.setValueAtTime(95,tk);o.frequency.exponentialRampToValueAtTime(45,tk+.18);
-          g.gain.setValueAtTime(k%2?.05:.09,tk);g.gain.exponentialRampToValueAtTime(.0001,tk+.22);o.connect(g);g.connect(MUS);o.start(tk);o.stop(tk+.25)}catch(e){}}}
+      if(M.music!==false&&!document.hidden){const c=bar%4,t0=nextBar,bt=e8*2,r=MROOT[c];
+        for(let i=0;i<8;i++){const t=t0+i*e8,sm=BASSP[i];voice(nf(r+sm),t,e8*.8,'sawtooth',play?.05:.036,.006,.07)}
+        for(const n of MCH[c])voice(nf(n),t0,bl*.95,'triangle',.016,.25,.9);
+        if(play){for(let k=0;k<4;k++){mKick(t0+k*bt,k%2?.16:.24)}
+          mNoise(t0+bt,.14,'bandpass',1800,.1);mNoise(t0+3*bt,.14,'bandpass',1800,.1);
+          for(let i=0;i<8;i++)mNoise(t0+i*e8+(i%2?0:0),i%2?.05:.03,'highpass',7000,i%2?.05:.026);
+          if(bs)for(let i=0;i<8;i++)mNoise(t0+i*e8+e8/2,.03,'highpass',8000,.03);
+          const ar=MCH[c];for(let i=0;i<16;i++){voice(nf(ar[i%3]+(i%6<3?12:24)),t0+i*e8/2,e8*.4,'square',.011,.004,.05)}
+          if(bar>=4||bs)for(const[o,i,l]of LEAD[bar%8])voice(nf(LS[i]),t0+o*e8,l*e8*.9,'square',.026,.01,.18)}
+        else{mKick(t0,.14);mKick(t0+bt*2,.1);mNoise(t0+bt,.12,'bandpass',1800,.05);mNoise(t0+3*bt,.12,'bandpass',1800,.05);
+          for(const[o,i,l]of LEAD[bar%8])voice(nf(LS[i]-12),t0+o*e8,l*e8*.9,'triangle',.05,.02,.4)}}
       bar++;nextBar+=bl}},120)}
 /* sonido de viento para el agujero negro */
 let noiseBuf=null,holeWind=null;
