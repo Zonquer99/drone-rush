@@ -842,7 +842,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
 (function(){
 /* ======================= CONFIG ======================= */
 // si hay una versión nueva publicada, recarga saltándose la caché del móvil
-const BUILD='20261110165324';
+const BUILD='20261110170311';
 (function(){try{if(BUILD.indexOf('__')===0||window.CG_BUILD||window.POKI_BUILD)return;fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.text():'').then(v=>{v=(v||'').trim();
   if(v&&v!==BUILD&&sessionStorage.getItem('dr.vr')!==v){sessionStorage.setItem('dr.vr',v);location.replace(location.pathname+'?v='+v+location.hash)}}).catch(()=>{})}catch(e){}})();
 const MODO_PRUEBA_CFG=false; // modo prueba del desarrollador (apagado: juego publicado)
@@ -1062,7 +1062,9 @@ const obCenter=o=>o.type==='pylon'?[o.x+o.w/2,(o.top+o.bot)/2]:o.type==='turbine
 const holePos=()=>[drone.x+90,drone.y];
 let freezeT=0,nextFreeze=500,lastFz='';const FREEZE_EVERY=500,FREEZE_DUR=15,FREEZE_SLOW=.65;
 // velocidad por tramos: 0-700 fácil · 700-2000 normal · 2000-3000 mucho más rápido · 3000+ a tope
-const speedAt=mm=>mm<700?(PORTAL?235+mm*.0643:200+mm*.1143):mm<2000?280+(mm-700)*.05:mm<3000?345+(mm-2000)*.115:Math.min(600,460+(mm-3000)*.07);
+const speedAt0=mm=>mm<700?(PORTAL?235+mm*.0643:200+mm*.1143):mm<2000?280+(mm-700)*.05:mm<3000?345+(mm-2000)*.115:Math.min(600,460+(mm-3000)*.07);
+// impulso de arranque: el principio va más rápido (primer jefe en ~20 s) y se desvanece hacia los 1.200 m
+const speedAt=mm=>speedAt0(mm)+70*Math.max(0,1-mm/1200);
 // a partir de 3.000 m: lluvia de monedas cada 200 m (3 s)
 const RAIN_FROM=3000,RAIN_EVERY=200;let rainNext=RAIN_FROM,rainT=0,rainGap=0,rainPh=0,rainY=300;
 let phaseT=0;const PHASE_DUR=1.6;let mythRun=false,royal=0,royalFx=0,shields=0,phases=0,SK=SKINS[0],banked=0,turboEnd=0,turboOn=false,rubyT=0,rubyRush=0,rubyGap=0,rubyPh=0,rubyY=300;
@@ -1650,7 +1652,7 @@ function drawBigMsg(){if(!bigM)return;const m=bigM,o=m.o||{},u=1-m.life/m.max,al
   ctx.restore()}
 function drawSpeedLines(){if(state!=='play'||turboOn||speed<390)return;const a=Math.min(.5,(speed-390)/400);ctx.strokeStyle=`rgba(255,255,255,${a.toFixed(3)})`;ctx.lineWidth=1.2;ctx.beginPath();
   for(let i=0;i<10;i++){const y=(i*67+29)%(GY+TOPX)-TOPX,x=LW-((t*speed*2.2+i*211)%(LW+160));ctx.moveTo(x,y);ctx.lineTo(x+40+i%3*25,y)}ctx.stroke()}
-function v3Reset(){worldNow=0;pwK='';pwT=0;pwScale=1;evK='';evT=0;evNext=PORTAL?rnd(350,480):rnd(800,1100);comboN=0;comboT=0;nearRun=0;bigM=null;runBest=M.best||0;recFx=false;tsc=1;tscT=0;boss=null;bossNext=(M.best||0)<3000?500:BOSS_FROM;runBossN=0}
+function v3Reset(){worldNow=0;pwK='';pwT=0;pwScale=1;evK='';evT=0;evNext=PORTAL?rnd(350,480):rnd(800,1100);comboN=0;comboT=0;nearRun=0;bigM=null;runBest=M.best||0;recFx=false;tsc=1;tscT=0;boss=null;bossNext=(M.best||0)<3000?280:BOSS_FROM;runBossN=0}
 function v3Tick(dt){const m=dist/PXM;
   // mundos
   const wi=battleOn()?0:wIdx(m);if(wi!==worldNow){worldNow=wi;if(wi>0){const w=WORLDS[wi];flash=Math.max(flash,.55);bigMsg(w.ic+' '+L(w.n[0],w.n[1]).toUpperCase(),L('¡Nuevo mundo!','New world!'),w.c,2.4);beep(523,.18,'triangle',.06,1046);setTimeout(()=>beep(784,.3,'triangle',.06,1568),120);buzz([40,30,40]);M.stats=M.stats||{};M.stats.world=Math.max(M.stats.world||0,wi)}}
