@@ -890,7 +890,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
 (function(){
 /* ======================= CONFIG ======================= */
 // si hay una versión nueva publicada, recarga saltándose la caché del móvil
-const BUILD='20261110195546';
+const BUILD='20261110201313';
 (function(){try{if(BUILD.indexOf('__')===0||window.CG_BUILD||window.POKI_BUILD)return;fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.text():'').then(v=>{v=(v||'').trim();
   if(v&&v!==BUILD&&sessionStorage.getItem('dr.vr')!==v){sessionStorage.setItem('dr.vr',v);location.replace(location.pathname+'?v='+v+location.hash)}}).catch(()=>{})}catch(e){}})();
 const MODO_PRUEBA_CFG=false; // modo prueba del desarrollador (apagado: juego publicado)
@@ -961,6 +961,9 @@ const SKINS=[
   {id:'calabaza',rar:'temporada',season:1,kind:'pumpkin',en:["Cursed Pumpkin","Season 1 only. It comes out on the Night of Souls and never returns.","x1.8 coins and ghost mode every 400 m (phases through everything for 10 s)"],
     name:'Calabaza Maldita',desc:'Solo de la Temporada 1. Sale en la Noche de Ánimas y no vuelve nunca.',perk:'x1,8 monedas y modo fantasma cada 400 m (atraviesa todo durante 10 s)',
     coinX:1.8,ghost:true,accent:'#ff8a1a',trail:['#f4f0ff','#c58bff','#ff8a1a'],tr:.7,tsz:3,add:true},
+  {id:'trineo',rar:'temporada',season:2,kind:'santa',en:["Santa Drone","Season 2 only. Born at Christmas, it never returns.","x1.8 coins, 1 free shield and a big magnet"],
+    name:'Dron de Papá Noel',desc:'Solo de la Temporada 2. Nace en Navidad y no vuelve nunca.',perk:'x1,8 monedas, 1 escudo gratis y un imán grande',
+    coinX:1.8,shield:1,mag:140,accent:'#ff3b3b',trail:['#ffffff','#ff5d5d','#ffd35a'],tr:.7,tsz:3,add:true},
   {id:'emperador',rar:'leyenda',league:1,kind:'emperor',en:["Emperor","The crown of the Legend league. Gold wings, ruby heart.","x2.5 coins and a royal shield every 600 m (up to 3)"],
     name:'Emperador',desc:'La corona de la liga Leyenda. Alas de oro y corazón de rubí.',perk:'x2,5 monedas y un escudo real cada 600 m (hasta 3)',
     coinX:2.5,crown:true,accent:'#ffd35a',trail:['#ffd35a','#fff1a8','#b45cff','#ffe27a'],tr:.9,sh:'star',tsz:3.2,add:true},
@@ -1279,7 +1282,7 @@ function drawWeather(w){if(!w.part)return;const H=GY+TOPX;
   if(w.part==='snow'){ctx.fillStyle='rgba(255,255,255,.85)';for(let i=0;i<55;i++){const x=((i*73.1-t*(40+i%5*14)-dist*.3)%(LW+20)+LW+20)%(LW+20)-10,y=((i*97.3+t*(50+i%7*9))%H+H)%H-TOPX;ctx.beginPath();ctx.arc(x+Math.sin(t*2+i)*6,y,1.2+i%3*.7,0,6.28);ctx.fill()}}
   else if(w.part==='rain'){ctx.strokeStyle='rgba(170,200,240,.45)';ctx.lineWidth=1.2;ctx.beginPath();for(let i=0;i<70;i++){const x=((i*53.7-t*260-dist*.4)%(LW+40)+LW+40)%(LW+40)-20,y=((i*91.1+t*720)%H+H)%H-TOPX;ctx.moveTo(x,y);ctx.lineTo(x-7,y+16)}ctx.stroke()}
   else if(w.part==='sand'){ctx.fillStyle='rgba(255,225,170,.5)';for(let i=0;i<40;i++){const x=((i*83.3-t*(300+i%6*40))%(LW+40)+LW+40)%(LW+40)-20,y=((i*61.7+Math.sin(t+i)*20)%H+H)%H-TOPX;ctx.fillRect(x,y,3+i%3*2,1.3)}}}
-function drawWorldFull(i){if(i===0){if(hallOn()){topBand('#07040f');drawBgHall();drawGroundHall()}else{topBand('#1b1638');drawBg();drawGround()}}else{const w=WORLDS[i];drawWorldBg(w);drawWorldGround(w)}}
+function drawWorldFull(i){if(i===0){if(hallOn()){topBand('#07040f');drawBgHall();drawGroundHall()}else if(xmasOn()){topBand('#050a24');drawBgXmas();drawGroundXmas()}else{topBand('#1b1638');drawBg();drawGround()}}else{const w=WORLDS[i];drawWorldBg(w);drawWorldGround(w)}}
 
 /* ----- obstáculos nuevos ----- */
 const enemyY=o=>o.y0+Math.sin(t*2+o.ph)*o.amp;
@@ -1939,10 +1942,11 @@ function update(dt){
     if(drone.y<26){drone.y=26;if(drone.vy<0)drone.vy=0}
     drone.tilt+=(clamp(drone.vy/1000,-.32,.42)-drone.tilt)*Math.min(1,dt*10);
     if(diamOn()&&Math.random()<.4)parts.push({x:drone.x-16+rnd(-6,6),y:drone.y+rnd(-9,9),vx:-speed*.4+rnd(-20,20),vy:rnd(-25,25),gr:30,life:rnd(.5,.9),max:.9,c:'#bfefff',r:rnd(2.4,4.2),sh:'gem',ph:Math.floor(Math.random()*3),add:true});
+    if(flakeOn()&&Math.random()<.45)parts.push({x:drone.x-18+rnd(-6,6),y:drone.y+rnd(-8,10),vx:-speed*.3+rnd(-30,10),vy:rnd(-30,30),gr:15,life:rnd(.6,1.1),max:1.1,c:'#e8f6ff',r:rnd(2.4,4.2),sh:'flake',ph:Math.random()*6});
     if(batsOn()&&Math.random()<.3)parts.push({x:drone.x-18+rnd(-6,6),y:drone.y+rnd(-10,10),vx:-speed*.35+rnd(-30,10),vy:rnd(-40,20),gr:-10,life:rnd(.6,1.1),max:1.1,c:'#140a20',r:rnd(3.5,6),sh:'bat',ph:Math.random()*6});
     if(confOn()&&Math.random()<.5)parts.push({x:drone.x-16+rnd(-6,6),y:drone.y+rnd(-9,9),vx:-speed*.4+rnd(-30,20),vy:rnd(-60,30),gr:120,life:rnd(.6,1.1),max:1.1,c:CONF_C[Math.floor(Math.random()*6)],r:rnd(2.2,3.6),sh:'conf',ph:Math.random()*6});
-    if(!batsOn()&&!diamOn()&&!confOn()&&SK.trail&&Math.random()<SK.tr)emitTrail(SK,speed);
-    else if(!batsOn()&&!diamOn()&&!confOn()&&thrust&&!SK.trail&&Math.random()<.5)parts.push({x:drone.x+rnd(-20,20),y:drone.y+8,vx:-speed*.3,vy:rnd(40,90),life:.3,max:.3,c:'rgba(255,246,234,.5)',r:1.5});
+    if(!batsOn()&&!diamOn()&&!confOn()&&!flakeOn()&&SK.trail&&Math.random()<SK.tr)emitTrail(SK,speed);
+    else if(!batsOn()&&!diamOn()&&!confOn()&&!flakeOn()&&thrust&&!SK.trail&&Math.random()<.5)parts.push({x:drone.x+rnd(-20,20),y:drone.y+8,vx:-speed*.3,vy:rnd(40,90),life:.3,max:.3,c:'rgba(255,246,234,.5)',r:1.5});
     ghRecTick(dt);raceUpdate(dt);
     acc+=speed*dt;if(acc>=spacing){acc=0;{const mm=dist/PXM;spacing=(mm<700?(PORTAL?crsR(310,380):crsR(360,430)):mm<2500?crsR(300,370):crsR(270,350))*Math.max(1,speedAt(mm)/400)}spawn()}
     {const mm=dist/PXM;if(mm>=rainNext){while(rainNext<=mm)rainNext+=(PORTAL&&rainNext<RAIN_FROM)?400:RAIN_EVERY;rainT=3;rainGap=0;rainPh=0;rainY=clamp(drone.y,140,GY-160);
@@ -2057,6 +2061,8 @@ function rr(x,y,w,h,r){rrg(ctx,x,y,w,h,r)}
 /* ======================= ESCENARIO HALLOWEEN ======================= */
 if(M.scene==null)M.scene=M.hallOwned&&M.hallOn!==false?'halloween':'base';
 const hallOn=()=>!!(M.hallOwned&&M.scene==='halloween');
+const xmasOn=()=>!!(M.xmasOwned&&M.scene==='navidad');
+const flakeOn=()=>!!(M.flakesOwned&&M.trail==='flakes');
 const diamOn=()=>!!(M.diamondTrail&&M.trail==='diamond');
 function gemShape(g,x,y,s,v){const cols=[['#ffffff','#9fe8ff','#3a8fd8'],['#ffffff','#c9b8ff','#6a4ad8'],['#ffffff','#bfffe8','#2aa88a']][v||0];
   const gr=g.createLinearGradient(x,y-s*1.4,x,y+s*1.4);cols.forEach((c,i)=>gr.addColorStop(i/2,c));g.fillStyle=gr;
@@ -2066,6 +2072,7 @@ const batsOn=()=>!!(M.batsOwned&&M.trail==='bats');
 const confOn=()=>!!(M.confettiOwned&&M.trail==='confetti');
 const CONF_C=['#ff5d5d','#ffd35a','#7bd88f','#7fb8ff','#ff7af5','#ff8a3d'];
 let skyH=null;
+function flakeShape(g,x,y,r,rot){g.save();g.strokeStyle=g.fillStyle;g.lineWidth=Math.max(1,r*.35);g.lineCap='round';g.beginPath();for(let i=0;i<3;i++){const a=rot+i*Math.PI/3,c=Math.cos(a)*r*1.6,d=Math.sin(a)*r*1.6;g.moveTo(x-c,y-d);g.lineTo(x+c,y+d)}g.stroke();g.restore()}
 function batShape(g,x,y,s,fl){g.beginPath();g.moveTo(x,y);
   g.quadraticCurveTo(x-s*.6,y-s*(.9+fl),x-s*1.6,y-s*(.4+fl));g.quadraticCurveTo(x-s*1.2,y-s*.1,x-s*1.3,y+s*.3);
   g.quadraticCurveTo(x-s*.9,y+s*.05,x-s*.6,y+s*.4);g.quadraticCurveTo(x-s*.3,y+s*.15,x,y+s*.45);
@@ -2093,6 +2100,52 @@ function drawBgHall(){
   ctx.fillStyle=Math.sin(t*3)>-.6?'#ffcf4d':'#7a5a20';ctx.fillRect(cx+25,450,8,12);ctx.fillRect(cx+66,410,6,9);
   hills(552,12,.014,.55,'#120a1e');
 }
+/* ======================= ESCENARIO NAVIDAD ======================= */
+let skyX=null;
+function snowfall(n,sz,sp,al,par){ctx.fillStyle='#fff';ctx.globalAlpha=al;
+  for(let i=0;i<n;i++){const x=((i*137.5+Math.sin(t*.7+i)*22-dist*par)%LW+LW)%LW,y=(i*61+t*sp*(1+i%3*.35))%(GY+20);ctx.beginPath();ctx.arc(x,y,sz*(1+i%3*.3),0,6.28);ctx.fill()}ctx.globalAlpha=1}
+function drawBgXmas(){
+  if(!skyX){skyX=ctx.createLinearGradient(0,0,0,GY);skyX.addColorStop(0,'#050a24');skyX.addColorStop(.5,'#10285a');skyX.addColorStop(.85,'#2a5a8a');skyX.addColorStop(1,'#7fb0d8')}
+  ctx.fillStyle=skyX;ctx.fillRect(0,0,LW,GY);
+  for(const s of stars){ctx.globalAlpha=.35+.45*Math.sin(t*2+s.p);ctx.fillStyle='#fff';ctx.fillRect(s.x,s.y,s.r,s.r)}ctx.globalAlpha=1;
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  for(let b=0;b<3;b++){const c=['rgba(80,255,170,','rgba(90,200,255,','rgba(170,120,255,'][b],gr=ctx.createLinearGradient(0,70+b*28,0,240+b*28);
+    gr.addColorStop(0,c+'0)');gr.addColorStop(.5,c+(.2-b*.04)+')');gr.addColorStop(1,c+'0)');ctx.fillStyle=gr;ctx.beginPath();ctx.moveTo(0,310);
+    for(let x=0;x<=LW+10;x+=10)ctx.lineTo(x,110+b*28+Math.sin(x*.012+t*.5+b*2)*34+Math.sin(x*.03-t*.8)*10);
+    ctx.lineTo(LW,310);ctx.closePath();ctx.fill()}
+  ctx.restore();
+  const mx=LW*.76,my=150,mgl=ctx.createRadialGradient(mx,my,16,mx,my,130);mgl.addColorStop(0,'rgba(200,225,255,.4)');mgl.addColorStop(1,'rgba(200,225,255,0)');ctx.fillStyle=mgl;ctx.fillRect(mx-130,my-130,260,260);
+  ctx.fillStyle='#f2f7ff';ctx.beginPath();ctx.arc(mx,my,34,0,6.28);ctx.fill();ctx.fillStyle='rgba(150,175,215,.35)';for(const[cx,cy,r]of[[-10,-7,6],[9,6,8],[-3,14,4]]){ctx.beginPath();ctx.arc(mx+cx,my+cy,r,0,6.28);ctx.fill()}
+  ctx.fillStyle='rgba(190,215,245,.22)';
+  for(const c of clouds){const x=((c.x-dist*.06)%(LW*1.5)+LW*1.5)%(LW*1.5)-100;ctx.beginPath();ctx.ellipse(x,c.y,60*c.s,12*c.s,0,0,6.28);ctx.ellipse(x+30*c.s,c.y-7*c.s,36*c.s,10*c.s,0,0,6.28);ctx.fill()}
+  hills(470,22,.006,.12,'#2a4a7a');hills(515,18,.009,.28,'#cfe0f4');
+  const hx=((LW*.3-dist*.2)%(LW*2)+LW*2)%(LW*2)-100;
+  ctx.fillStyle='#16284a';ctx.fillRect(hx,455,56,50);ctx.fillRect(hx+40,418,8,24);
+  ctx.fillStyle='#eaf3ff';ctx.beginPath();ctx.moveTo(hx-7,456);ctx.lineTo(hx+28,424);ctx.lineTo(hx+63,456);ctx.closePath();ctx.fill();ctx.fillRect(hx+38,415,12,5);
+  ctx.fillStyle='rgba(255,255,255,.2)';for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(hx+44+Math.sin(t+i)*5+i*3,408-((t*10+i*14)%34),4+i*1.5,0,6.28);ctx.fill()}
+  ctx.fillStyle=Math.sin(t*3)>-.7?'#ffd35a':'#9a7a30';ctx.fillRect(hx+9,470,11,13);ctx.fillRect(hx+34,470,11,13);
+  hills(552,12,.014,.55,'#bcd2ec');
+  snowfall(34,1.6,26,.6,.04)}
+function xmasTree(x,b,s,idx){ctx.fillStyle='#5a3a22';ctx.fillRect(x-3*s,b-8*s,6*s,10*s);
+  for(let k=0;k<3;k++){const w=(30-k*7)*s,y=b-(8+k*20)*s;ctx.fillStyle=k%2?'#1f6b45':'#1a5a3a';ctx.beginPath();ctx.moveTo(x-w,y);ctx.lineTo(x,y-26*s);ctx.lineTo(x+w,y);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(x-w*.55,y-12*s);ctx.lineTo(x,y-26*s);ctx.lineTo(x+w*.55,y-12*s);ctx.quadraticCurveTo(x,y-18*s,x-w*.55,y-12*s);ctx.fill()}
+  const cols=['#ff4a4a','#ffd35a','#5ad1ff','#7bff8a'];
+  for(let k=0;k<7;k++){const a=k/7;ctx.globalAlpha=.55+.45*Math.sin(t*5+k+idx);ctx.fillStyle=cols[(k+idx+4)&3];ctx.beginPath();ctx.arc(x+Math.sin(k*2.1+idx)*(14-a*6)*s,b-(14+a*50)*s,2.2*s,0,6.28);ctx.fill()}ctx.globalAlpha=1;
+  ctx.fillStyle='#ffd35a';starPath(ctx,x,b-76*s,5.5*s,2.4*s,0);ctx.fill()}
+function xmasMan(x,b){ctx.fillStyle='#fff';for(const[cy,r]of[[-11,12],[-31,9],[-47,7]]){ctx.beginPath();ctx.arc(x,b+cy,r,0,6.28);ctx.fill()}
+  ctx.fillStyle='#2a2438';ctx.beginPath();ctx.arc(x-2.5,b-48,1,0,6.28);ctx.arc(x+2.5,b-48,1,0,6.28);ctx.arc(x,b-31,1,0,6.28);ctx.arc(x,b-25,1,0,6.28);ctx.fill();
+  ctx.fillStyle='#ff8a1a';ctx.beginPath();ctx.moveTo(x,b-46);ctx.lineTo(x+9,b-44);ctx.lineTo(x,b-43);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#d62a2a';ctx.fillRect(x-8,b-40,16,3.5);ctx.fillRect(x+4,b-40,4,11);
+  ctx.fillStyle='#1b1638';ctx.fillRect(x-6,b-60,12,9);ctx.fillRect(x-9,b-52,18,2.5)}
+function xmasGift(x,b,c){ctx.fillStyle=c;ctx.fillRect(x-8,b-13,16,13);ctx.fillStyle='#ffd35a';ctx.fillRect(x-1.5,b-13,3,13);ctx.fillRect(x-8,b-8,16,3);
+  ctx.beginPath();ctx.ellipse(x-3,b-15,3.5,2.4,-.4,0,6.28);ctx.ellipse(x+3,b-15,3.5,2.4,.4,0,6.28);ctx.fill()}
+function drawGroundXmas(){
+  ctx.fillStyle='#eaf2fc';ctx.fillRect(0,GY,LW,VBOT-GY);ctx.fillStyle='#c4d6ee';ctx.fillRect(0,GY+18,LW,3);
+  ctx.fillStyle='rgba(255,255,255,.9)';for(let i=0;i<10;i++){const x=((i*91-dist*1.1)%(LW+40)+LW+40)%(LW+40),a=.4+.5*Math.sin(t*4+i*2);ctx.globalAlpha=a;ctx.fillRect(x,GY+6+i%4*9,2,2)}ctx.globalAlpha=1;
+  const o1=dist%230;for(let x=-o1-230,n=0;x<LW+230;x+=230,n++){const idx=Math.round((x+dist)/230);xmasTree(x+40,GY+2,1+((idx%3+3)%3)*.12,((idx%4)+4)%4)}
+  const o2=(dist+120)%520;for(let x=-o2-520;x<LW+520;x+=520)xmasMan(x,GY+3);
+  const o3=(dist+60)%330;for(let x=-o3-330;x<LW+330;x+=330){const idx=Math.round((x+dist+60)/330);xmasGift(x,GY+3,['#e03a3a','#2fa8d8','#6b4ad8','#2fa86a'][((idx%4)+4)%4])}
+  snowfall(16,2.6,48,.9,.2)}
 function drawGroundHall(){
   ctx.fillStyle='#1f1420';ctx.fillRect(0,GY,LW,VBOT-GY);ctx.fillStyle='#160d18';ctx.fillRect(0,GY+18,LW,3);
   const o1=dist%120;
@@ -2702,6 +2755,25 @@ function droneShape(g,sk,spin){
       g.beginPath();g.arc(0,-2,4.5,Math.PI,0);g.lineTo(4.5,4);g.lineTo(3,2.6);g.lineTo(1.5,4);g.lineTo(0,2.6);g.lineTo(-1.5,4);g.lineTo(-3,2.6);g.lineTo(-4.5,4);g.closePath();g.fill();
       g.shadowBlur=0;g.fillStyle='#1b1638';g.beginPath();g.arc(-1.5,-2.5,.8,0,6.28);g.arc(1.5,-2.5,.8,0,6.28);g.fill();g.restore()}
   }
+  else if(k==='santa'){
+    g.save();g.globalCompositeOperation='lighter';
+    g.fillStyle=rad(g,0,0,3,44,['rgba(255,80,70,.5)','rgba(255,211,90,.16)','rgba(255,211,90,0)']);g.beginPath();g.arc(0,0,44,0,6.28);g.fill();g.restore();
+    g.strokeStyle='#e8b93a';g.lineWidth=2.6;g.beginPath();g.moveTo(-18,13);g.quadraticCurveTo(0,17,17,13);g.quadraticCurveTo(22,12,22,6);g.stroke();
+    g.lineWidth=1.6;g.beginPath();g.moveTo(-9,6);g.lineTo(-10,13);g.moveTo(9,6);g.lineTo(10,13);g.stroke();
+    g.strokeStyle='#7a2a1a';g.lineWidth=3.5;g.beginPath();g.moveTo(-25,-2);g.lineTo(25,-2);g.stroke();
+    g.fillStyle='#fff';g.fillRect(-27,-8,5,6);g.fillRect(22,-8,5,6);
+    blur(g,-24.5,-9,16,'rgba(255,230,230,A)',spin);blur(g,24.5,-9,16,'rgba(255,230,230,A)',spin);
+    g.fillStyle=lin(g,0,-8,0,8,['#ff6b5a','#e02a2a','#8f1010']);rrg(g,-16,-8,32,15,6);g.fill();
+    g.fillStyle='rgba(255,255,255,.45)';rrg(g,-12,-7,15,3,1.5);g.fill();
+    g.fillStyle='#fff';rrg(g,-16,3,32,5,2.5);g.fill();
+    g.fillStyle='#ffd35a';g.fillRect(-3,-8,6,11);g.strokeStyle='#a8740f';g.lineWidth=.9;g.strokeRect(-3,-8,6,11);
+    glow(g,'#ff2a2a',9);g.fillStyle=(!spin||Math.sin(t*6)>-.3)?'#ff3a3a':'#8a1a1a';g.beginPath();g.arc(13,-2,2.8,0,6.28);g.fill();noGlow(g);
+    g.save();g.translate(-4,-8);g.rotate(spin?Math.sin(t*3)*.05:0);
+    g.fillStyle=lin(g,-12,0,10,-18,['#c41a1a','#ff4a3a']);g.beginPath();g.moveTo(-11,0);g.quadraticCurveTo(-6,-20,8,-19+f*.8);g.quadraticCurveTo(14,-17,15,-10+f*1.2);g.quadraticCurveTo(6,-8,10,0);g.closePath();g.fill();
+    g.fillStyle='#fff';rrg(g,-13,-3,26,5,2.5);g.fill();g.beginPath();g.arc(15,-10+f*1.2,3.4,0,6.28);g.fill();g.restore();
+    for(let i=0;i<3;i++){const a=(spin?t*1.6:0)+i*2.09,x=Math.cos(a)*34,y=Math.sin(a)*12-4;g.save();g.globalAlpha=.9;g.shadowColor='#bfe3ff';g.shadowBlur=7*GS;
+      g.translate(x,y);g.rotate(a*2);g.strokeStyle='#fff';g.lineWidth=1;g.beginPath();for(let j=0;j<3;j++){const b=j*Math.PI/3;g.moveTo(Math.cos(b)*3.6,Math.sin(b)*3.6);g.lineTo(-Math.cos(b)*3.6,-Math.sin(b)*3.6)}g.stroke();g.restore()}
+  }
   else if(k==='emperor'){
     // aura dorada y rayos de luz
     g.save();g.globalCompositeOperation='lighter';
@@ -2825,7 +2897,7 @@ function draw(){
   if(state==='play'&&turboOn){ctx.strokeStyle='rgba(255,246,234,.5)';ctx.lineWidth=1.5;ctx.beginPath();
     for(let i=0;i<14;i++){const y=(i*47+13)%GY,x=LW-((t*1400+i*173)%(LW+200));ctx.moveTo(x,y);ctx.lineTo(x+60+i%3*30,y)}ctx.stroke()}
   for(const p of parts){ctx.globalAlpha=Math.max(0,p.life/p.max);ctx.fillStyle=p.c;ctx.globalCompositeOperation=p.add?'lighter':'source-over';
-    if(p.sh==='star')sparkle(ctx,p.x,p.y,p.r*1.6);else if(p.sh==='bat')batShape(ctx,p.x,p.y,p.r,Math.sin(t*16+p.ph)*.35);else if(p.sh==='gem')gemShape(ctx,p.x,p.y,p.r,p.ph);else if(p.sh==='heart')heartShape(ctx,p.x,p.y,p.r);else if(p.sh==='px')ctx.fillRect(p.x-p.r/2,p.y-p.r/2,p.r,p.r);else if(p.sh==='conf'){ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.ph+t*8);ctx.fillRect(-p.r,-p.r*.45,p.r*2,p.r*.9);ctx.restore()}else{ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,6.28);ctx.fill()}}
+    if(p.sh==='star')sparkle(ctx,p.x,p.y,p.r*1.6);else if(p.sh==='bat')batShape(ctx,p.x,p.y,p.r,Math.sin(t*16+p.ph)*.35);else if(p.sh==='flake')flakeShape(ctx,p.x,p.y,p.r,p.ph+t*2);else if(p.sh==='gem')gemShape(ctx,p.x,p.y,p.r,p.ph);else if(p.sh==='heart')heartShape(ctx,p.x,p.y,p.r);else if(p.sh==='px')ctx.fillRect(p.x-p.r/2,p.y-p.r/2,p.r,p.r);else if(p.sh==='conf'){ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.ph+t*8);ctx.fillRect(-p.r,-p.r*.45,p.r*2,p.r*.9);ctx.restore()}else{ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,6.28);ctx.fill()}}
   ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;
   if(royalFx>0){const u=1-royalFx/.9;ctx.save();ctx.globalCompositeOperation='lighter';
     const rg=ctx.createRadialGradient(drone.x,drone.y,0,drone.x,drone.y,60+u*220);rg.addColorStop(0,`rgba(255,240,180,${(.55*(1-u)).toFixed(3)})`);rg.addColorStop(1,'rgba(255,180,40,0)');
@@ -3069,13 +3141,13 @@ function findRival(){unlock();clearTimeout(matchT);$('mtMe').innerHTML=myTag();
     $('mtInfo').textContent=L(`Récord ${fmt(r.best)} m · ${fmt(r.trophies)} trofeos`,`Best ${fmt(r.best)} m · ${fmt(r.trophies)} trophies`)+' · '+(r.real?L('Jugador real','Real player'):L('Piloto de entrenamiento','Training pilot'));
     $('mtSkin').textContent=SN(skinById(r.skin));mtRival=r;beep(880,.15,'triangle',.05,1320)},Math.max(0,1400+Math.random()*900-(performance.now()-t0)))})}
 let mtRival=null;
-function payLeague(){if(seasonOn()||M.leaguePaid===SEASON.n)return;
+function payLeague(){const endedN=Math.max(0,...SEASONS.filter(s=>new Date()>=s.end).map(s=>s.n));if(!endedN||(M.leaguePaid||0)>=endedN)return;
   const lg=leagueOf(M.trophies||0),i=LEAGUES.indexOf(lg);M.coins+=lg.end;
   if(i>=2)M.nameChanges=(M.nameChanges||0)+1;
   M.frames=M.frames||[];if(i>=3&&!M.frames.includes('platino'))M.frames.push('platino');
   if(i>=4){if(!M.frames.includes('diamante'))M.frames.push('diamante');M.diamondTrail=true}
   if(i>=5){if(!M.frames.includes('leyenda'))M.frames.push('leyenda');if(!M.owned.includes('emperador'))M.owned.push('emperador')}
-  M.leaguePaid=SEASON.n;M.tourMsg=L(`Fin de temporada: liga ${LN(lg)}. Has ganado ${fmt(lg.end)} monedas${lg.extra[0]?' '+lg.extra[0]:''}.`,`Season over: ${LN(lg)} league. You won ${fmt(lg.end)} coins${lg.extra[1]?' '+lg.extra[1]:''}.`);save()}
+  M.leaguePaid=endedN;M.tourMsg=L(`Fin de temporada: liga ${LN(lg)}. Has ganado ${fmt(lg.end)} monedas${lg.extra[0]?' '+lg.extra[0]:''}.`,`Season over: ${LN(lg)} league. You won ${fmt(lg.end)} coins${lg.extra[1]?' '+lg.extra[1]:''}.`);save()}
 function renderPvp(){cloudTrophyBoard();const tr=M.trophies||0,lg=leagueOf(tr),i=LEAGUES.indexOf(lg),nx=LEAGUES[i+1];
   $('pvpTro').textContent=fmt(tr);$('pvpWins').textContent=fmt(M.raceWins||0)+' / '+fmt(M.races||0);
   $('pvpLeague').innerHTML=`<i class="lg-badge" style="--lc:${lg.c}"></i><b style="color:${lg.c}">${LN(lg)}</b>`;
@@ -3110,9 +3182,20 @@ const SEA_MIS=[
   ['coins',5000,400],['ruby',50,400],['run',2000,450],['ads',25,450],['daily',15,500],
   ['games',60,500],['dist',60000,550],['coins',10000,550],['revive',25,550],['run',2500,600],
   ['ruby',150,600],['daily',25,700],['dist',100000,800],['run',3500,900],['coins',25000,1000]];
-const SEASON={n:1,name:['Noche de Ánimas','Night of Souls'],end:new Date(2026,10,30,23,59,59),levels:30,xpLv:500,skin:'calabaza'};
+const SEASONS=[
+  {n:1,name:['Noche de Ánimas','Night of Souls'],end:new Date(2026,10,30,23,59,59),levels:30,xpLv:500,skin:'calabaza',tiers:{15:{theme:1},26:{bats:1}},
+   info:['Ganas XP volando (1 por cada 10 m) y completando misiones. En el nivel 30 te llevas la Calabaza Maldita, que solo existe esta temporada.','Earn XP by flying (1 per 10 m) and completing missions. At level 30 you get the Cursed Pumpkin, which only exists this season.'],
+   legend:[[15,'Escenario Halloween: luna llena, murciélagos, castillo encantado, tumbas y calabazas. Se elige en Bolsa › Escenarios.','Halloween scene: full moon, bats, haunted castle, graves and pumpkins. Pick it in Shop › Scenes.'],
+     [26,'Estela de murciélagos: se equipa en Bolsa › Estelas y sustituye la estela de cualquier skin.','Bat trail: equip it in Shop › Trails; it replaces the trail of any skin.'],
+     [30,'Calabaza Maldita: skin exclusiva de esta temporada.','Cursed Pumpkin: this season\'s exclusive skin.']]},
+  {n:2,name:['Navidad Nevada','Snowy Christmas'],end:new Date(2027,0,6,23,59,59),levels:30,xpLv:500,skin:'trineo',tiers:{15:{theme:'xmas'},26:{flakes:1}},
+   info:['Ganas XP volando (1 por cada 10 m) y completando misiones. En el nivel 30 te llevas el Dron de Papá Noel, que solo existe esta temporada. Termina el 6 de enero, Día de Reyes.','Earn XP by flying (1 per 10 m) and completing missions. At level 30 you get the Santa Drone, which only exists this season. Ends January 6.'],
+   legend:[[15,'Escenario Navidad: aurora boreal, nieve cayendo, pinos con luces, casitas y muñecos de nieve. Se elige en Bolsa › Escenarios.','Christmas scene: northern lights, falling snow, lit pine trees, cottages and snowmen. Pick it in Shop › Scenes.'],
+     [26,'Estela de copos de nieve: se equipa en Bolsa › Estelas y sustituye la estela de cualquier skin.','Snowflake trail: equip it in Shop › Trails; it replaces the trail of any skin.'],
+     [30,'Dron de Papá Noel: skin exclusiva de esta temporada.','Santa Drone: this season\'s exclusive skin.']]}];
+const SEASON=SEASONS.find(s=>new Date()<s.end)||SEASONS[SEASONS.length-1];
 const XP={m10:1,daily:150,dchest:200,weekly:500,wchest:1000};
-const tierReward=l=>l===SEASON.levels?{skin:SEASON.skin}:l===15?{theme:1}:l===26?{bats:1}:{coins:l%5===0?l*400:500+l*100};
+const tierReward=l=>l===SEASON.levels?{skin:SEASON.skin}:SEASON.tiers[l]||{coins:l%5===0?l*400:500+l*100};
 const mkList=d=>d.map(m=>({id:m.id,g:m.g,rw:m.rw||0,p:0,c:false}));
 function missions(){const d=new Date().toDateString();
   if(!M.mis||M.mis.day!==d||M.mis.v!==2){M.mis={v:2,day:d,bonus:false,list:mkList(DAILY)};save()}return M.mis}
@@ -3186,7 +3269,7 @@ function renderMis(){
       <h3>${SEASON.name[LANG==='en'?1:0]}</h3>
       <div class="sea-lv"><b>${L('Nivel','Level')} ${lv}</b><span>/ ${SEASON.levels}</span><small>${lv>=SEASON.levels?L('¡Pase completado!','Pass complete!'):fmt(inLv)+' / '+fmt(SEASON.xpLv)+' XP'}</small></div>
       <div class="inv-bar sea-bar"><i style="width:${lv>=SEASON.levels?100:Math.round(inLv/SEASON.xpLv*100)}%"></i></div>
-      <p class="note">${L('Ganas XP volando (1 por cada 10 m) y completando misiones. En el nivel 30 te llevas la Calabaza Maldita, que solo existe esta temporada.','Earn XP by flying (1 per 10 m) and completing missions. At level 30 you get the Cursed Pumpkin, which only exists this season.')}</p></div>`;
+      <p class="note">${L(SEASON.info[0],SEASON.info[1])}</p></div>`;
     box.append(top);
     if(MODO_PRUEBA&&on){const tb=document.createElement('button');tb.className='btn ad';tb.innerHTML=`+1.000 XP <span class="tag test">${L('MODO PRUEBA','TEST MODE')}</span>`;
       tb.onclick=()=>{addXP(1000);save();renderMis()};box.append(tb)}
@@ -3195,24 +3278,23 @@ function renderMis(){
     for(let l=1;l<=SEASON.levels;l++){const r=tierReward(l),got=s.tiers.includes(l),ready=on&&l<=lv&&!got;
       const c=document.createElement('button');c.className='tier'+(got?' got':ready?' ready':'')+(r.skin?' big':'')+(l%5===0&&!r.skin?' gold':'');
       c.disabled=!ready;c.setAttribute('aria-label',L('Nivel ','Level ')+l);
-      if(r.theme||r.bats)c.classList.add('spc');
-      c.innerHTML=`<small>${l}</small>`+(r.skin?`<canvas class="tier-sk"></canvas><b>${SN(skinById(r.skin))}</b>`:r.theme?`<span class="spc-ic">☾</span><b>${L('Escenario','Scene')}</b>`:r.bats?`<span class="spc-ic bat"></span><b>${L('Estela','Trail')}</b>`:`<b>${short(r.coins)}</b><i class="coin"></i>`)+(got?'<em>✓</em>':'');
+      if(r.theme||r.bats||r.flakes)c.classList.add('spc');
+      c.innerHTML=`<small>${l}</small>`+(r.skin?`<canvas class="tier-sk"></canvas><b>${SN(skinById(r.skin))}</b>`:r.theme?`<span class="spc-ic">${r.theme==='xmas'?'❄':'☾'}</span><b>${L('Escenario','Scene')}</b>`:r.bats?`<span class="spc-ic bat"></span><b>${L('Estela','Trail')}</b>`:r.flakes?`<span class="spc-ic">❄</span><b>${L('Estela','Trail')}</b>`:`<b>${short(r.coins)}</b><i class="coin"></i>`)+(got?'<em>✓</em>':'');
       if(ready)c.onclick=()=>{s.tiers.push(l);
         if(r.skin){if(!M.owned.includes(r.skin))M.owned.push(r.skin);beep(660,.6,'square',.06,1980);buzz([40,40,80])}
-        else if(r.theme){M.hallOwned=true;M.sceneMsg=1;beep(660,.6,'square',.06,1980);buzz([40,40,80])}
+        else if(r.theme){if(r.theme==='xmas')M.xmasOwned=true;else M.hallOwned=true;M.sceneMsg=1;beep(660,.6,'square',.06,1980);buzz([40,40,80])}
+        else if(r.flakes){M.flakesOwned=true;M.trailMsg=1;beep(660,.6,'square',.06,1980);buzz([40,40,80])}
         else if(r.bats){M.batsOwned=true;M.trailMsg=1;beep(660,.6,'square',.06,1980);buzz([40,40,80])}
         else{M.coins+=r.coins;claimFx()}save();renderMis()};
       grid.append(c)}
     box.append(grid);
     const sk=grid.querySelector('canvas.tier-sk');if(sk){const g=sk.getContext('2d');sk.width=150;sk.height=100;g.translate(75,52);g.scale(1.5,1.5);droneShape(g,skinById(SEASON.skin),false)}
     const lg=document.createElement('div');lg.className='spc-legend';
-    lg.innerHTML=`<div><b>15</b><span>${L('Escenario Halloween: luna llena, murciélagos, castillo encantado, tumbas y calabazas. Se elige en Bolsa › Escenarios.','Halloween scene: full moon, bats, haunted castle, graves and pumpkins. Pick it in Shop › Scenes.')}</span></div>
-      <div><b>26</b><span>${L('Estela de murciélagos: se equipa en Bolsa › Estelas y sustituye la estela de cualquier skin.','Bat trail: equip it in Shop › Trails; it replaces the trail of any skin.')}</span></div>
-      <div><b>30</b><span>${L('Calabaza Maldita: skin exclusiva de esta temporada.','Cursed Pumpkin: this season\'s exclusive skin.')}</span></div>`;box.append(lg);
+    lg.innerHTML=SEASON.legend.map(e=>`<div><b>${e[0]}</b><span>${L(e[1],e[2])}</span></div>`).join('');box.append(lg);
     const doneN=s.done.length;
     const t3=document.createElement('p');t3.className='eyebrow';t3.textContent=L(`Misiones de temporada · ${doneN}/30`,`Season missions · ${doneN}/30`);box.append(t3);
     SEA_MIS.forEach(([id,g,xp],i)=>{const m={id,g,p:seaProg(i),c:s.done.includes(i)};
-      const el=misCard(m,`+${fmt(xp)} XP`,()=>{s.done.push(i);addXP(xp)});el.querySelector('.mis-t').prepend(Object.assign(document.createElement('span'),{className:'mis-n',textContent:(i+1)+'. '}));box.append(el)});
+      const el=misCard(m,`+${fmt(xp)} XP`,()=>{s.done.push(i);addXP(xp)});el.querySelector('.tx b').prepend(Object.assign(document.createElement('span'),{className:'mis-n',textContent:(i+1)+'. '}));box.append(el)});
   }
 }
 function misBadge(){const n=misReady(),b=$('misBadge');b.hidden=!n;b.textContent=n}
@@ -3507,7 +3589,7 @@ function renderShop(){
   $('sCoins').textContent=walletTxt();
   $('tSkins').setAttribute('aria-selected',shopTab==='skins');$('tUps').setAttribute('aria-selected',shopTab==='ups');$('tTrails').setAttribute('aria-selected',shopTab==='trails');$('sTrails').hidden=shopTab!=='trails';$('tScenes').setAttribute('aria-selected',shopTab==='scenes');$('sScenes').hidden=shopTab!=='scenes';
   $('sSkins').style.display=shopTab==='skins'?'flex':'none';$('sUps').hidden=shopTab!=='ups';
-  {const tr=!gateOn()||M.diamondTrail||M.batsOwned||M.confettiOwned,sc=!gateOn()||M.hallOwned;$('tTrails').hidden=!tr;$('tScenes').hidden=!sc;
+  {const tr=!gateOn()||M.diamondTrail||M.batsOwned||M.confettiOwned||M.flakesOwned,sc=!gateOn()||M.hallOwned||M.xmasOwned;$('tTrails').hidden=!tr;$('tScenes').hidden=!sc;
    if((shopTab==='trails'&&!tr)||(shopTab==='scenes'&&!sc))shopTab='skins';
    const vis=['tSkins','tTrails','tScenes','tUps'].filter(i=>!$(i).hidden).length;$('tSkins').parentNode.style.gridTemplateColumns=`repeat(${vis},1fr)`}
   const fl=freeLeft(),bf=$('bFree');bf.disabled=fl<=0;bf.hidden=!isOn('free');
@@ -3654,9 +3736,16 @@ $('tUps').onclick=()=>{shopTab='ups';renderShop()};
 $('tTrails').onclick=()=>{shopTab='trails';renderShop()};
 $('tScenes').onclick=()=>{shopTab='scenes';renderShop()};
 const SCENES=[{id:'base',name:['Viñedos al atardecer','Vineyard sunset'],desc:['El escenario de siempre: colinas, viñas y el sol cayendo.','The classic scene: hills, vines and the setting sun.']},
-  {id:'halloween',name:['Noche de Ánimas','Night of Souls'],desc:['Luna llena, murciélagos, castillo encantado, tumbas y calabazas.','Full moon, bats, a haunted castle, graves and pumpkins.'],lock:['Nivel 15 del pase de temporada','Season pass level 15'],tag:['TEMPORADA 1','SEASON 1']}];
+  {id:'halloween',name:['Noche de Ánimas','Night of Souls'],desc:['Luna llena, murciélagos, castillo encantado, tumbas y calabazas.','Full moon, bats, a haunted castle, graves and pumpkins.'],lock:['Nivel 15 del pase de temporada','Season pass level 15'],tag:['TEMPORADA 1','SEASON 1']},
+  {id:'navidad',name:['Navidad Nevada','Snowy Christmas'],desc:['Aurora boreal, nieve cayendo, pinos con luces, casitas y muñecos de nieve.','Northern lights, falling snow, lit pine trees, cottages and snowmen.'],lock:['Nivel 15 del pase de temporada','Season pass level 15'],tag:['TEMPORADA 2','SEASON 2']}];
 function scenePreview(c,id){const d=Math.min(window.devicePixelRatio||1,2);c.width=84*d;c.height=48*d;const g=c.getContext('2d');g.scale(d,d);
   const sk=g.createLinearGradient(0,0,0,48);
+  if(id==='navidad'){sk.addColorStop(0,'#050a24');sk.addColorStop(.6,'#1a3f78');sk.addColorStop(1,'#6fa4d4');g.fillStyle=sk;g.fillRect(0,0,84,48);
+    g.fillStyle='rgba(90,255,170,.22)';g.beginPath();g.moveTo(0,22);for(let x=0;x<=84;x+=6)g.lineTo(x,12+Math.sin(x*.12)*5);g.lineTo(84,26);g.lineTo(0,26);g.fill();
+    g.fillStyle='#f2f7ff';g.beginPath();g.arc(64,13,6,0,6.28);g.fill();
+    g.fillStyle='#d6e6f7';g.beginPath();g.moveTo(0,38);g.quadraticCurveTo(30,30,84,37);g.lineTo(84,48);g.lineTo(0,48);g.fill();
+    for(const x of[14,30,52]){g.fillStyle='#1a5a3a';g.beginPath();g.moveTo(x-6,42);g.lineTo(x,28);g.lineTo(x+6,42);g.fill();g.fillStyle='#ffd35a';g.fillRect(x-1,34,2,2)}
+    g.fillStyle='#fff';for(let i=0;i<12;i++){g.fillRect((i*29)%84,(i*17)%40,1.6,1.6)}return}
   if(id==='halloween'){sk.addColorStop(0,'#07040f');sk.addColorStop(.7,'#2a1040');sk.addColorStop(1,'#4a1e40')}else{sk.addColorStop(0,'#2a2050');sk.addColorStop(.6,'#c45f72');sk.addColorStop(1,'#ffb36b')}
   g.fillStyle=sk;g.fillRect(0,0,84,48);
   if(id==='halloween'){g.fillStyle='rgba(200,255,180,.25)';g.beginPath();g.arc(60,16,13,0,6.28);g.fill();g.fillStyle='#e8f2c8';g.beginPath();g.arc(60,16,9,0,6.28);g.fill();
@@ -3669,8 +3758,8 @@ function scenePreview(c,id){const d=Math.min(window.devicePixelRatio||1,2);c.wid
     g.fillStyle='#4f8a3e';for(let x=4;x<84;x+=9){g.beginPath();g.ellipse(x,44,4,3,0,0,6.28);g.fill()}}}
 function renderScenes(){const box=$('sScenes');box.innerHTML='';
   if(M.sceneMsg){const n=document.createElement('p');n.className='note win';n.textContent=L('¡Nuevo escenario conseguido! Elige si quieres usarlo.','New scene unlocked! Choose whether to use it.');box.append(n)}
-  const cur=hallOn()?'halloween':'base';
-  for(const sc of SCENES){const own=sc.id==='base'||(sc.id==='halloween'&&M.hallOwned),on=cur===sc.id;
+  const cur=hallOn()?'halloween':xmasOn()?'navidad':'base';
+  for(const sc of SCENES){const own=sc.id==='base'||(sc.id==='halloween'&&M.hallOwned)||(sc.id==='navidad'&&M.xmasOwned),on=cur===sc.id;
     const el=document.createElement('div');el.className='item trail'+(on?' on':'');
     const c=document.createElement('canvas');scenePreview(c,sc.id);
     const tx=document.createElement('div');tx.className='item-txt';
@@ -3683,18 +3772,20 @@ function renderScenes(){const box=$('sScenes');box.innerHTML='';
 const TRAILS=[{id:'skin',name:['De la skin','Skin default'],desc:['Cada skin lleva su propia estela: estrellas, fuego, hielo…','Each skin has its own trail: stars, fire, ice…']},
   {id:'diamond',name:['Diamante','Diamond'],desc:['Una lluvia de diamantes brillantes. Solo para la élite.','A shower of sparkling diamonds. Only for the elite.'],lock:['Premio de la liga Diamante','Diamond league reward'],tag:['LIGA','LEAGUE']},
   {id:'confetti',name:['Confeti','Confetti'],desc:['Una fiesta de confeti de colores detrás de tu dron.','A party of colorful confetti behind your drone.'],lock:['Invita a 3 amigos','Invite 3 friends'],tag:['AMIGOS','FRIENDS']},
-  {id:'bats',name:['Murciélagos','Bats'],desc:['Una nube de murciélagos te sigue. Sustituye la estela de la skin.','A swarm of bats follows you. It replaces the skin\'s trail.'],lock:['Nivel 26 del pase de temporada','Season pass level 26'],tag:['TEMPORADA 1','SEASON 1']}];
+  {id:'bats',name:['Murciélagos','Bats'],desc:['Una nube de murciélagos te sigue. Sustituye la estela de la skin.','A swarm of bats follows you. It replaces the skin\'s trail.'],lock:['Nivel 26 del pase de temporada','Season pass level 26'],tag:['TEMPORADA 1','SEASON 1']},
+  {id:'flakes',name:['Copos de nieve','Snowflakes'],desc:['Una nevada de copos te sigue. Sustituye la estela de la skin.','A flurry of snowflakes follows you. It replaces the skin\'s trail.'],lock:['Nivel 26 del pase de temporada','Season pass level 26'],tag:['TEMPORADA 2','SEASON 2']}];
 function trailPreview(c,id){const d=Math.min(window.devicePixelRatio||1,2);c.width=112*d;c.height=64*d;const g=c.getContext('2d');g.scale(d,d);
   g.fillStyle='#120d28';g.fillRect(0,0,112,64);
   if(id==='confetti'){for(let i=0;i<16;i++){g.fillStyle=CONF_C[i%6];g.save();g.translate(62-i*3.4,32+Math.sin(i*1.9)*12);g.rotate(i);g.fillRect(-3,-1.3,6,2.6);g.restore()}}
   if(id==='diamond'){for(let i=0;i<9;i++){const x=60-i*6.5,y=32+Math.sin(i*1.3)*8,s=3.6-i*.3;g.globalAlpha=1-i/10;gemShape(g,x,y,s,i%3)}g.globalAlpha=1}
   else if(id==='bats'){g.fillStyle='#c9b8ff';for(let i=0;i<6;i++)batShape(g,58-i*10,30+Math.sin(i*1.7)*9,3.4-i*.25,.15*(i%2))}
+  else if(id==='flakes'){g.fillStyle='#e8f6ff';for(let i=0;i<7;i++){g.globalAlpha=1-i/9;flakeShape(g,58-i*8,30+Math.sin(i*1.7)*9,3.6-i*.3,i)}g.globalAlpha=1}
   else{const sk=skin();for(let i=0;i<12;i++){g.globalAlpha=1-i/12;g.fillStyle=sk.trail?sk.trail[i%sk.trail.length]:'#fff6ea';g.beginPath();g.arc(62-i*4.5,32+Math.sin(i)*3,2.4-i*.12,0,6.28);g.fill()}g.globalAlpha=1}
   g.save();g.translate(80,32);g.scale(.62,.62);GS=d*.62;droneShape(g,skin(),false);g.restore()}
 function renderTrails(){const box=$('sTrails');box.innerHTML='';
   if(M.trailMsg){const n=document.createElement('p');n.className='note win';n.textContent=L('¡Nueva estela conseguida! Elige si quieres llevarla.','New trail unlocked! Choose whether to use it.');box.append(n)}
   const cur=M.trail||'skin';
-  for(const tr of TRAILS){const own=tr.id==='skin'||(tr.id==='bats'&&M.batsOwned)||(tr.id==='diamond'&&M.diamondTrail)||(tr.id==='confetti'&&M.confettiOwned),on=cur===tr.id;
+  for(const tr of TRAILS){const own=tr.id==='skin'||(tr.id==='bats'&&M.batsOwned)||(tr.id==='flakes'&&M.flakesOwned)||(tr.id==='diamond'&&M.diamondTrail)||(tr.id==='confetti'&&M.confettiOwned),on=cur===tr.id;
     const el=document.createElement('div');el.className='item trail'+(on?' on':'');
     const c=document.createElement('canvas');trailPreview(c,tr.id);
     const tx=document.createElement('div');tx.className='item-txt';
