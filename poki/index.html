@@ -909,7 +909,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
 (function(){
 /* ======================= CONFIG ======================= */
 // si hay una versión nueva publicada, recarga saltándose la caché del móvil
-const BUILD='20261110212207';
+const BUILD='20261110214918';
 (function(){try{if(BUILD.indexOf('__')===0||window.CG_BUILD||window.POKI_BUILD)return;fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.text():'').then(v=>{v=(v||'').trim();
   if(v&&v!==BUILD&&sessionStorage.getItem('dr.vr')!==v){sessionStorage.setItem('dr.vr',v);location.replace(location.pathname+'?v='+v+location.hash)}}).catch(()=>{})}catch(e){}})();
 const MODO_PRUEBA_CFG=false; // modo prueba del desarrollador (apagado: juego publicado)
@@ -1469,6 +1469,8 @@ const BOSSES=[{n:['Dron Centinela','Sentinel Drone'],c:'#ff2e4a',b:'#2a1c34',tip
   {n:['Muñeco Gélido','Frost Snowman'],c:'#bfefff',b:'#1d3a5a',tip:['¡Bolas de nieve y regalos que explotan!','Snowballs and exploding gifts!'],rw:{s:3,pw:'x3'}}];
 const EASYB={n:['Dron Aprendiz','Rookie Drone'],c:'#ffd35a',b:'#2a1c34',tip:['¡Arrastra o usa flechas para esquivar!','Drag or use arrows to dodge!']},BDIFF=[1,1,1,1.1,1.1,1.12,1.14,1.16];
 const BOSS_FROM=1100,BOSS_EVERY=1000,BOSS_DUR=15,NB=8;
+// duración y furia: Centinela→Trueno (y Muñeco) 20 s con furia a los 10 s; Nodriza→Titán 30 s con furia a los 10 s; Ojo 60 s con furia a los 30 s
+[0,1,2,3,8].forEach(k=>{BOSSES[k].dur=20;BOSSES[k].rage=10});[4,5,6].forEach(k=>{BOSSES[k].dur=30;BOSSES[k].rage=20});
 let boss=null,bossNext=BOSS_FROM;
 /* ----- control libre durante los jefes: arrastra o flechas/WASD; al terminar, 1,2 s de bloqueo ----- */
 const ptr={on:false,sx:0,sy:0,x0:0,y0:0,tx:0,ty:0},kb={l:0,r:0,u:0,d:0};let lockT=0,fcPrev=false;
@@ -1493,7 +1495,7 @@ function bRain(b,ty,sp,r,sty,d){const an=Math.PI/2+.4,vx=Math.cos(an)*sp,vy=Math
 function bLaser(b,y,ex){const o={type:'laser',x:b.x-40,y:clamp(y,50,GY-40),warn:.95,on:.45,c:b.c,nmDone:1};if(ex)Object.assign(o,ex);obs.push(o);return o}
 const MUZ=[-34,-58,-34,-34,-34,-64,-90,-24],TAU=Math.PI*2;
 function bMine(b,y){obs.push({type:'mine',x:b.x-30,y,y0:y,ph:Math.random()*6,r:12})}
-function bossAtk(b,dt){const a=b.a,f=(1+.12*b.cyc)*(BDIFF[b.k]||1)*(b.enr?1.3:1)*(b.dur>20?1+.3*b.t/b.dur:1),ax=b.x+(MUZ[b.k]||-34),aim=Math.atan2(drone.y-b.y,drone.x-ax);for(const k in a)a[k]-=dt;
+function bossAtk(b,dt){const a=b.a,f=(1+.12*b.cyc)*(BDIFF[b.k]||1)*(b.enr?1.3:1)*(b.dur>40?1+.3*b.t/b.dur:1),ax=b.x+(MUZ[b.k]||-34),aim=Math.atan2(drone.y-b.y,drone.x-ax);for(const k in a)a[k]-=dt;
   for(let i=b.q.length-1;i>=0;i--){const w=b.q[i];w.t-=dt;if(w.t<=0){b.q.splice(i,1);w.fn()}}
   b.warn=b.warn.filter(w=>(w.t-=dt)>0);if(b.pull>0)b.pull=Math.max(0,b.pull-dt);
   if(b.easy){if(a.s<=0){a.s=1.8;bShot(b,ax,b.y,aim,185,7)}return}
@@ -1890,7 +1892,7 @@ function renderAdv(){const g=$('advGrid');g.innerHTML='';M.adv=M.adv||{};const t
     if(got)b.innerHTML=`<b>${i}</b><small>✓ ${advTxt(r)}</small>`;
     else if(op)b.innerHTML=`<b>${i}</b><small>${i===24?L('¡PREMIO GORDO!','GRAND PRIZE!'):L('Abrir','Open')}</small>`;
     else b.innerHTML=`<b>${i}</b><small>🔒 ${i} ${L('dic','Dec')}</small>`;
-    if(i===24)b.innerHTML=`<b>${got?'✓':op?'🎁':'🔒'} ${L('Día 24 · Premio gordo','Day 24 · Grand prize')}</b><small>${L('5.000 🪙 · 🛡️+3 · estela Bastón de caramelo','5,000 🪙 · 🛡️+3 · Candy cane trail')}</small>`;
+    if(i===24)b.innerHTML=`<b>${got?'✓':op?'🎁':'🔒'} ${L('Gran Premio','Grand Prize')}</b><small>${got?L('Día 24','Day 24'):L('Día 24 · 24 dic','Day 24 · 24 Dec')}</small>`;
     if(op)b.onclick=()=>advClaim(i);else b.disabled=true;
     g.append(b)}
   $('advCoins').textContent=walletTxt()}
