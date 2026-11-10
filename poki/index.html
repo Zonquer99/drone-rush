@@ -100,6 +100,29 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
 @keyframes recsh{0%{left:-60%}55%,100%{left:130%}}
 .rec-banner .sp{position:absolute;font-size:15px;opacity:0;animation:tw 1.8s ease-in-out infinite}
 @keyframes tw{0%,100%{opacity:0;transform:scale(.3) rotate(0)}50%{opacity:1;transform:scale(1.15) rotate(25deg)}}
+.ach-sum{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;border:1px solid rgba(255,211,90,.45);background:linear-gradient(135deg,rgba(255,179,107,.16),rgba(122,60,255,.16))}
+.ach-sum .as-ic{font-size:30px;filter:drop-shadow(0 0 8px rgba(255,200,60,.7))}.ach-sum .as-m{flex:1;min-width:0}
+.ach-sum .as-t{font-family:var(--ui);font-weight:800;font-size:14px;color:var(--muted)}.ach-sum .as-t b{color:#fff;font-size:18px;margin-left:4px}
+.ach-sum .trk{height:9px;border-radius:5px;background:rgba(0,0,0,.4);overflow:hidden;margin-top:6px}
+.ach-sum .trk i{display:block;height:100%;width:0;border-radius:5px;background:linear-gradient(90deg,#ffb300,#ffe27a);box-shadow:0 0 10px rgba(255,200,60,.6);transition:width .6s}
+.ach-sum .as-p{font-family:var(--ui);font-weight:900;font-size:12px;color:#3a2400;background:linear-gradient(180deg,#ffe27a,#ffb300);border-radius:999px;padding:6px 10px;white-space:nowrap}
+.ar{display:grid;grid-template-columns:50px 1fr auto;gap:6px 12px;align-items:center;padding:11px 12px;border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.03)}
+.ar .md{position:relative;grid-row:1/3;width:50px;height:50px;border-radius:50%;display:grid;place-items:center;font-size:25px;background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.14);filter:grayscale(.9) brightness(.75)}
+.ar .tx b{display:block;font-family:var(--ui);font-weight:800;font-size:16px;color:#fff;line-height:1.2}
+.ar .tx .d{display:block;font-family:var(--ui);font-weight:600;font-size:12.5px;color:var(--muted);margin-top:2px}
+.ar .rwd{font-family:var(--ui);font-weight:800;color:var(--gold);display:flex;align-items:center;gap:4px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.ar .bar{grid-column:2/-1;display:flex;align-items:center;gap:10px}
+.ar .bar .trk{flex:1;height:8px;border-radius:4px;background:rgba(0,0,0,.4);overflow:hidden}
+.ar .bar .trk i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,#ffb300,#ffe27a)}
+.ar .bar small{font-family:var(--ui);font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.ar.done{border:1.5px solid rgba(255,211,90,.85);background:linear-gradient(135deg,rgba(255,179,107,.2),rgba(122,60,255,.18));box-shadow:0 0 18px rgba(255,211,90,.3)}
+.ar.done .md{filter:none;background:radial-gradient(circle at 35% 30%,#fff3b0,#ffb300 55%,#9a5a00);border-color:#ffe27a;box-shadow:0 0 16px rgba(255,200,60,.8);animation:arp 1.6s ease-in-out infinite}
+@keyframes arp{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+.ar.done .rw{border:0;border-radius:999px;padding:9px 12px;font-weight:900;font-family:var(--ui);font-size:12px;color:#3a2400;background:linear-gradient(180deg,#ffe27a,#ffb300);box-shadow:0 3px 0 #a06a00,0 0 14px rgba(255,200,60,.5);cursor:pointer;white-space:nowrap}
+.ar.claimed{opacity:.62}.ar.claimed .md{filter:none;background:rgba(125,255,176,.14);border-color:#7dffb0}
+.ar.claimed .md::after{content:'✓';position:absolute;right:-4px;bottom:-4px;width:20px;height:20px;border-radius:50%;background:#35d07f;color:#04361c;font-size:13px;font-weight:900;display:grid;place-items:center;box-shadow:0 0 0 2px #1b1a2e}
+.ar.claimed .rwd{color:#7dffb0}
+@media (max-width:430px){.ar{grid-template-columns:44px 1fr auto;gap:6px 10px;padding:10px}.ar .md{width:44px;height:44px;font-size:22px}.ar .tx b{font-size:15px}}
 .ach-list{display:flex;flex-direction:column;gap:8px}
 .ach-card{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:16px;background:linear-gradient(135deg,rgba(255,179,107,.22),rgba(122,60,255,.2));border:1.5px solid rgba(255,211,90,.75);box-shadow:0 0 18px rgba(255,211,90,.28);font-family:var(--ui);text-align:left;animation:achin .55s cubic-bezier(.2,1.3,.4,1) both}
 @keyframes achin{from{transform:translateY(12px) scale(.94);opacity:0}to{transform:none;opacity:1}}
@@ -605,7 +628,8 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
   </section>
   <section class="panel tall" id="pAch" hidden>
     <div class="shop-head"><h2 data-en="Badges">Logros</h2><span class="wallet"><span id="aCoins">0</span> <i class="coin spin"></i></span></div>
-    <p class="note"><span data-en="Completed">Conseguidos</span>: <b id="aCount">0</b></p>
+    <div class="ach-sum"><span class="as-ic">🏅</span><div class="as-m"><div class="as-t"><span data-en="Completed">Conseguidos</span> <b id="aCount">0</b></div><div class="trk"><i id="aBar"></i></div></div><span class="as-p" id="aPend" hidden></span></div>
+    <button class="btn gold" id="aAll" hidden></button>
     <div class="items" id="aList"></div>
     <button class="btn sec plain" id="aBack" data-en="Back">Volver</button>
   </section>
@@ -849,7 +873,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
 (function(){
 /* ======================= CONFIG ======================= */
 // si hay una versión nueva publicada, recarga saltándose la caché del móvil
-const BUILD='20261110191310';
+const BUILD='20261110194005';
 (function(){try{if(BUILD.indexOf('__')===0||window.CG_BUILD||window.POKI_BUILD)return;fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.text():'').then(v=>{v=(v||'').trim();
   if(v&&v!==BUILD&&sessionStorage.getItem('dr.vr')!==v){sessionStorage.setItem('dr.vr',v);location.replace(location.pathname+'?v='+v+location.hash)}}).catch(()=>{})}catch(e){}})();
 const MODO_PRUEBA_CFG=false; // modo prueba del desarrollador (apagado: juego publicado)
@@ -1773,12 +1797,15 @@ const ACH=[
 const achDone=a=>a.v()>=a.g;
 const achReady=()=>ACH.filter(a=>achDone(a)&&!(M.ach||{})[a.id]).length;
 function achNew(){M.achSeen=M.achSeen||{};const out=[];for(const a of ACH)if(achDone(a)&&!M.achSeen[a.id]){M.achSeen[a.id]=1;out.push(a)}return out}
-function renderAch(){const box=$('aList');box.innerHTML='';M.ach=M.ach||{};const got=ACH.filter(a=>M.ach[a.id]).length;$('aCount').textContent=got+' / '+ACH.length;
+function renderAch(){const box=$('aList');box.innerHTML='';M.ach=M.ach||{};const got=ACH.filter(a=>M.ach[a.id]).length;$('aCount').textContent=got+' / '+ACH.length;$('aBar').style.width=Math.round(got/ACH.length*100)+'%';
+  const pend=ACH.filter(a=>!M.ach[a.id]&&Math.min(a.g,a.v())>=a.g),sum=pend.reduce((t,a)=>t+a.r,0);
+  {const pe=$('aPend');pe.hidden=!pend.length;pe.textContent='🎁 '+pend.length+' '+L(pend.length>1?'por recoger':'por recoger','to claim')}
+  {const al=$('aAll');al.hidden=pend.length<2;al.innerHTML=L('🎁 Recoger todo','🎁 Claim all')+' · +'+fmt(sum)+' <i class="coin"></i>';al.onclick=()=>{for(const a of pend){M.ach[a.id]=1;M.coins+=a.r}save();claimFx();renderAch();$('aCoins').textContent=walletTxt()}}
   for(const a of [...ACH].sort((x,y)=>(!!M.ach[x.id])-(!!M.ach[y.id])||(achDone(y)-achDone(x)))){const p=Math.min(a.g,a.v()),done=p>=a.g,cl=!!M.ach[a.id];
-    const el=document.createElement('div');el.className='mis ach'+(cl?' claimed':done?' done':'');
-    el.innerHTML=`<div class="mis-t"><span class="ach-ic">${a.ic}</span> ${L(a.n[0],a.n[1])}<small>${L(a.d[0],a.d[1])}</small></div><div class="mis-rw">${cl?'✓':fmt(a.r)+' <i class="coin"></i>'}</div>
-      <div class="mis-bar"><div class="trk"><i style="width:${Math.round(p/a.g*100)}%"></i></div><small>${fmt(p)}/${fmt(a.g)}</small></div>`;
-    if(done&&!cl){const b=document.createElement('button');b.className='buy';b.textContent=L('Recoger','Claim');b.onclick=()=>{M.ach[a.id]=1;M.coins+=a.r;save();claimFx();renderAch();$('aCoins').textContent=walletTxt()};el.append(b)}
+    const el=document.createElement('div');el.className='ar'+(cl?' claimed':done?' done':'');
+    el.innerHTML=`<span class="md">${a.ic}</span><div class="tx"><b>${L(a.n[0],a.n[1])}</b><span class="d">${L(a.d[0],a.d[1])}</span></div><div class="rwd">${cl?'✓':'+'+fmt(a.r)+' <i class="coin"></i>'}</div>
+      <div class="bar"><div class="trk"><i style="width:${Math.round(p/a.g*100)}%"></i></div><small>${fmt(p)}/${fmt(a.g)}</small></div>`;
+    if(done&&!cl){const b=document.createElement('button');b.className='rw';b.textContent=L('Recoger','Claim');b.onclick=()=>{M.ach[a.id]=1;M.coins+=a.r;save();claimFx();renderAch();$('aCoins').textContent=walletTxt()};el.querySelector('.rwd').replaceChildren(b)}
     box.append(el)}$('aCoins').textContent=walletTxt()}
 function openAch(){unlock();renderAch();show('pAch');$('pAch').scrollTop=0}
 /* ----- personalizar el dron ----- */
