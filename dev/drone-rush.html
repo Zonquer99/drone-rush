@@ -1408,6 +1408,7 @@ function bossMove(dt,fc){
 let runBossN=0,lastDaily=null,lastAch=[];
 function bossStart(m){const easy=!dMod('boss')&&bossNext<BOSS_FROM,idx=dMod('boss')?runBossN:Math.max(0,Math.round((bossNext-BOSS_FROM)/BOSS_EVERY)),k=easy?0:idx%BOSSES.length,cyc=easy?0:Math.floor(idx/BOSSES.length),B=easy?EASYB:BOSSES[k],lv=easy?1:Math.min(5,k+1);runBossN++;
   boss={k,cyc,lv,easy,dur:easy?10:(B.dur||BOSS_DUR),rage:B.rage||10,n:B.n,c:B.c,b:B.b,at:bossNext,x:LW+110,y:260,ph:'in',t:0,a:{s:1.2,l:3.4,m:2.2,r:3,q:5,g:7,w:2.5,e:2,x:1},q:[],warn:[],pull:0,cnt:0,hit:0};evK='';evT=0;
+  for(const q of obs)if(q.x>-40&&q.x<LW+60)burst(q.x,q.y,'#ffffff',9,150,true);obs=[];invuln=Math.max(invuln,2.2);
   bigMsg('⚠️ '+L('¡JEFE!','BOSS!'),L(B.n[0],B.n[1]),B.c,3,{kind:'boss',tip:L(B.tip[0],B.tip[1])});
   for(let i=0;i<3;i++)setTimeout(()=>beep(440,.18,'square',.06,220),i*260);buzz([80,60,80])}
 // ataques de cada jefe: cada uno tiene su propio patrón
@@ -1874,7 +1875,7 @@ function update(dt){
     {const mm=dist/PXM,base=speedAt(mm);
     speed=base*(dailyRun?(dMod('fast')?1.35:dMod('mini')?1.15:1):1)*(freezeT>0?FREEZE_SLOW:1)*(pwOn('slow')?.55:1)*(turboOn?2.2:1);dist+=speed*dt}
     if(!turboOn&&!boss)battery=Math.max(0,battery-dt*3.3*(1-.08*M.up.bat)*(SK.drain||1)*(dist/PXM<700?.8:1));
-    const fc=!!boss&&boss.ph!=='out';if(fc!==fcPrev){fcPrev=fc;if(fc){drone.vy=0;holding=false;ptr.on=false;const h=(PORTAL&&LW>=500)?L('🎮 ¡Control libre! Flechas / WASD o arrastra','🎮 Free control! Arrows / WASD or drag'):L('🎮 ¡Control libre! Arrastra el dron','🎮 Free control! Drag the drone');floatTxt(LW/2,262,h,'#ffffff');setTimeout(()=>floatTxt(LW/2,262,h,'#ffffff'),1000)}else{lockT=1.2;holding=false;ptr.on=false;floatTxt(LW/2,262,L('✋ Vuelve el control normal','✋ Normal controls back'),'#7dffb0')}}
+    const fc=!!boss&&boss.ph!=='out';if(fc!==fcPrev){fcPrev=fc;if(fc){drone.vy=0;holding=false;ptr.on=false;const h=(PORTAL&&LW>=500)?L('🎮 ¡Control libre! Flechas / WASD o arrastra','🎮 Free control! Arrows / WASD or drag'):L('🎮 ¡Control libre! Arrastra el dron','🎮 Free control! Drag the drone');floatTxt(LW/2,262,h,'#ffffff');setTimeout(()=>floatTxt(LW/2,262,h,'#ffffff'),1000)}else{lockT=1.2;invuln=Math.max(invuln,1.6);holding=false;ptr.on=false;floatTxt(LW/2,262,L('✋ Vuelve el control normal','✋ Normal controls back'),'#7dffb0')}}
     const thrust=holding&&battery>0&&!fc&&lockT<=0;
     if(turboOn){drone.vy=0;drone.y+=(LH*.45-drone.y)*Math.min(1,dt*3);
       for(let i=0;i<2;i++)parts.push({x:drone.x-22,y:drone.y+rnd(-5,5),vx:-rnd(300,500),vy:rnd(-30,30),gr:0,life:rnd(.2,.4),max:.4,c:['#ff8a3d','#ffd35a','#fff3b0'][i%3],r:rnd(2,4.5),add:true})}
