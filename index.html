@@ -890,7 +890,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
 (function(){
 /* ======================= CONFIG ======================= */
 // si hay una versión nueva publicada, recarga saltándose la caché del móvil
-const BUILD='20261110195231';
+const BUILD='20261110195546';
 (function(){try{if(BUILD.indexOf('__')===0||window.CG_BUILD||window.POKI_BUILD)return;fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.text():'').then(v=>{v=(v||'').trim();
   if(v&&v!==BUILD&&sessionStorage.getItem('dr.vr')!==v){sessionStorage.setItem('dr.vr',v);location.replace(location.pathname+'?v='+v+location.hash)}}).catch(()=>{})}catch(e){}})();
 const MODO_PRUEBA_CFG=false; // modo prueba del desarrollador (apagado: juego publicado)
@@ -3163,7 +3163,7 @@ function renderMis(){
    if(on)clearNew('pass')}
   for(const[id,tab]of[['mtD','daily'],['mtW','weekly'],['mtS','season']])$(id).setAttribute('aria-selected',misTab===tab);
   const box=$('misBody');box.innerHTML='';
-  const head=(txt,time)=>{const h=document.createElement('div');h.className='mis-head';h.innerHTML=`<p class="note">${txt}</p><span class="tour-time">⏳ ${time}</span>`;box.append(h)};
+  const head=(txt,time)=>{const h=document.createElement('div');h.className='mis-head';h.style.justifyContent='center';h.innerHTML=`<span class="tour-time">⏳ ${time}</span>`;box.append(h)};
   if(misTab==='daily'){const d=missions();
     head(L('Tres misiones cada día. Cada una da 1.000 monedas y XP de temporada.','Three missions every day. Each gives 1,000 coins and season XP.'),untilMidnight());
     for(const m of d.list)box.append(misCard(m,`+${fmt(m.rw)} ${COIN}`,()=>{M.coins+=m.rw;addXP(XP.daily);misAdd('daily',1)}));

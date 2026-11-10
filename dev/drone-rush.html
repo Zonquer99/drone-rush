@@ -3162,7 +3162,7 @@ function renderMis(){
    if(on)clearNew('pass')}
   for(const[id,tab]of[['mtD','daily'],['mtW','weekly'],['mtS','season']])$(id).setAttribute('aria-selected',misTab===tab);
   const box=$('misBody');box.innerHTML='';
-  const head=(txt,time)=>{const h=document.createElement('div');h.className='mis-head';h.innerHTML=`<p class="note">${txt}</p><span class="tour-time">⏳ ${time}</span>`;box.append(h)};
+  const head=(txt,time)=>{const h=document.createElement('div');h.className='mis-head';h.style.justifyContent='center';h.innerHTML=`<span class="tour-time">⏳ ${time}</span>`;box.append(h)};
   if(misTab==='daily'){const d=missions();
     head(L('Tres misiones cada día. Cada una da 1.000 monedas y XP de temporada.','Three missions every day. Each gives 1,000 coins and season XP.'),untilMidnight());
     for(const m of d.list)box.append(misCard(m,`+${fmt(m.rw)} ${COIN}`,()=>{M.coins+=m.rw;addXP(XP.daily);misAdd('daily',1)}));
