@@ -49,6 +49,14 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
 .rc-msg{flex-basis:100%;margin:0;font-family:var(--ui);font-weight:700;font-size:13px;color:#cfe9ff;text-align:center;max-width:300px}
 .rc-msg a{color:#7fd0ff}
 .cg #bInv,.cg .comm-row,.cg #oShare,.cg #qShare,.cg #iShare{display:none!important}
+/* portales: menú limpio (sin torneo, duelos, equipo ni reto diario) y pantalla de fin corta, con los botones de jugar justo bajo el récord */
+.cg #bTour,.cg #bPvp,.cg #bSquad,.cg #bDaily,.cg #mWho,.cg #oTour{display:none!important}
+.cg .duo{display:flex}.cg .duo>.btn{flex:1 1 0;min-width:0}
+.cg #pOver>*{order:6}
+.cg #pOver .eyebrow{order:0}.cg #pOver .big{order:1}.cg #pOver .stats{order:2}.cg #oNew{order:3}
+.cg #bRevive,.cg #bAgainX2,.cg #bDailyAgain,.cg #bAgain{order:4}.cg #oKey{order:5}.cg #pOver .links{order:9}
+/* Basic Launch de CrazyGames: sin anuncios, fuera todos los botones de vídeo */
+.noads #wAd,.noads #rrRevive,.noads #bFree,.noads .buy.vid{display:none!important}
 .cg #wrap{max-width:1100px}
 @media (min-aspect-ratio:1/1){.cg .panel{left:50%;right:auto;width:440px;transform:translateX(-50%)}.cg .hud{max-width:520px}}
 .qrow{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
@@ -3680,6 +3688,7 @@ function showPokiAd(label,onReward,back){
   try{window.PokiSDK.rewardedBreak({size:'medium',onStart:()=>{try{AC&&AC.suspend()}catch(e){}}}).then(ok=>{
     try{AC&&AC.resume()}catch(e){}
     if(ok){adBusy=false;state=prev;M.completed++;misAdd('ads',1);save();window.__pkSkip=true;onReward()}else fail()}).catch(fail)}catch(e){fail()}}
+if(IS_CG||IS_POKI){try{const d=$('bShop').parentNode;d.appendChild($('bMis'));const d2=$('bInv').parentNode;if(d2!==d)d2.hidden=true}catch(e){}}
 if(IS_POKI){document.documentElement.classList.add('cg');
   try{window.PokiSDK.init().then(()=>{window.__pkReady=true;try{window.PokiSDK.gameLoadingFinished()}catch(e){}}).catch(()=>{try{window.PokiSDK.gameLoadingFinished()}catch(e){}})}catch(e){}
   window.addEventListener('keydown',e=>{if(['ArrowUp','ArrowDown','Space'].includes(e.code)&&!(e.target&&/INPUT|TEXTAREA/.test(e.target.tagName)))e.preventDefault()})}
