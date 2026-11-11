@@ -848,6 +848,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
       <div class="set-row"><span data-en="Sound effects">Efectos de sonido</span><button class="tgl" id="bSound"></button></div>
       <div class="set-row"><span data-en="Music">Música</span><button class="tgl" id="bMusic"></button></div>
       <div class="set-row"><span data-en="Language">Idioma</span><button class="tgl lang" id="bLang"></button></div>
+      <div class="set-row" id="rowNotify" hidden><span data-en="Bot notices">Avisos del bot</span><button class="tgl" id="bNotify"></button></div>
     </div>
     <div class="set-test" id="setTest" hidden>
       <p class="note"><span class="tag test" data-en="TEST MODE">MODO PRUEBA</span> <span id="setTestTxt"></span></p>
@@ -930,7 +931,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
 (function(){
 /* ======================= CONFIG ======================= */
 // si hay una versión nueva publicada, recarga saltándose la caché del móvil
-const BUILD='20261111145300';
+const BUILD='20261111152646';
 (function(){try{if(BUILD.indexOf('__')===0||window.CG_BUILD||window.POKI_BUILD)return;fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.text():'').then(v=>{v=(v||'').trim();
   if(v&&v!==BUILD&&sessionStorage.getItem('dr.vr')!==v){sessionStorage.setItem('dr.vr',v);location.replace(location.pathname+'?v='+v+location.hash)}}).catch(()=>{})}catch(e){}})();
 const MODO_PRUEBA_CFG=false; // modo prueba del desarrollador (apagado: juego publicado)
@@ -1094,6 +1095,13 @@ function bossBar(t0,e8,bar){const c=bar%4,r=BROOT[c],bt=e8*2,h=e8/2;
   if(c===3)for(let k=0;k<4;k++)mNoise(t0+6*e8+k*h,.08,'bandpass',2200,.05+k*.04);
   for(let i=0;i<16;i++)mNoise(t0+i*h,.03,'highpass',8000,i%2?.034:.022);
   for(const[o,n,l]of BRIFF[c])voice(nf(n),t0+o*e8,l*e8*.9,'sawtooth',.03,.006,.15)}
+// campanillas navideñas sobre la música normal mientras dura la temporada de Navidad
+function bell(t,m,v){voice(nf(m),t,.04,'sine',v,.002,.9);voice(nf(m)*2.76,t,.02,'sine',v*.3,.002,.4);voice(nf(m)*5.4,t,.01,'sine',v*.12,.002,.2)}
+const XB=[0,1,2,1,2,1,2,1],XJ=[[0,1],[.5,1],[1,2]];
+function xmasBells(t0,e8,c,play){const ch=MCH[c];
+  for(let i=0;i<8;i+=play?1:2)bell(t0+i*e8,ch[XB[i]]+24,play?.016:.022);
+  for(let i=0;i<8;i+=play?1:2)mNoise(t0+i*e8+e8*.5,.05,'highpass',9500,play?.03:.018);   // cascabeles de trineo
+  if(c%2===1)for(const[o,k]of XJ)bell(t0+(6+o)*e8,ch[k]+36,.012)}
 let musT=null,bar=0,nextBar=0;
 function startMusic(){if(musT||!AC)return;musInit();
   musT=setInterval(()=>{if(!AC||AC.state!=='running')return;
@@ -1110,7 +1118,8 @@ function startMusic(){if(musT||!AC)return;musInit();
           const ar=MCH[c];for(let i=0;i<16;i++){voice(nf(ar[i%3]+(i%6<3?12:24)),t0+i*e8/2,e8*.4,'square',.011,.004,.05)}
           if(bar>=4)for(const[o,i,l]of LEAD[bar%8])voice(nf(LS[i]),t0+o*e8,l*e8*.9,'square',.026,.01,.18)}
         else{mKick(t0,.14);mKick(t0+bt*2,.1);mNoise(t0+bt,.12,'bandpass',1800,.05);mNoise(t0+3*bt,.12,'bandpass',1800,.05);
-          for(const[o,i,l]of LEAD[bar%8])voice(nf(LS[i]-12),t0+o*e8,l*e8*.9,'triangle',.05,.02,.4)}}}
+          for(const[o,i,l]of LEAD[bar%8])voice(nf(LS[i]-12),t0+o*e8,l*e8*.9,'triangle',.05,.02,.4)}
+        if(xmasLive())xmasBells(t0,e8,c,play)}}
       bar++;nextBar+=bl}},120)}
 /* sonido de viento para el agujero negro */
 let noiseBuf=null,holeWind=null;
@@ -1505,7 +1514,7 @@ function bossMove(dt,fc){
 }
 let runBossN=0,lastDaily=null,lastAch=[];
 function bossStart(m){const easy=!dMod('boss')&&bossNext<BOSS_FROM,idx=dMod('boss')?runBossN:Math.max(0,Math.round((bossNext-BOSS_FROM)/BOSS_EVERY)),k=easy?0:(!dMod('boss')&&xmasLive()&&idx%4===0?8:idx%NB),cyc=easy?0:Math.floor(idx/NB),B=easy?EASYB:BOSSES[k],lv=easy?1:(k===8?3:Math.min(5,k+1));runBossN++;
-  boss={k,cyc,lv,easy,dur:easy?10:(B.dur||BOSS_DUR),rage:B.rage||10,n:B.n,c:B.c,b:B.b,at:bossNext,x:LW+110,y:260,ph:'in',t:0,a:{s:1.2,l:3.4,m:2.2,r:3,q:5,g:7,w:2.5,e:2,x:1},q:[],warn:[],pull:0,cnt:0,hit:0};evK='';evT=0;
+  track('boss',k);boss={k,cyc,lv,easy,dur:easy?10:(B.dur||BOSS_DUR),rage:B.rage||10,n:B.n,c:B.c,b:B.b,at:bossNext,x:LW+110,y:260,ph:'in',t:0,a:{s:1.2,l:3.4,m:2.2,r:3,q:5,g:7,w:2.5,e:2,x:1},q:[],warn:[],pull:0,cnt:0,hit:0};evK='';evT=0;
   for(const q of obs)if(q.x>-40&&q.x<LW+60)burst(q.x,q.y,'#ffffff',9,150,true);obs=[];invuln=Math.max(invuln,2.2);
   bigMsg('⚠️ '+L('¡JEFE!','BOSS!'),L(B.n[0],B.n[1]),B.c,3,{kind:'boss',tip:L(B.tip[0],B.tip[1])});
   for(let i=0;i<3;i++)setTimeout(()=>beep(440,.18,'square',.06,220),i*260);buzz([80,60,80])}
@@ -1930,7 +1939,7 @@ function advToday(){const n=new Date(),y=n.getFullYear(),mo=n.getMonth(),d=n.get
 function advOpenN(){M.adv=M.adv||{};const t=advToday();let n=0;for(let i=1;i<=t;i++)if(!M.adv[i])n++;return n}
 function advIcon(r){return r.tr?'🎁':r.c&&!r.s?'🪙':r.s?'🛡️':'💪'}
 function advTxt(r){const a=[];if(r.c)a.push(fmt(r.c));if(r.s)a.push('🛡️+'+r.s);if(r.pw)a.push(L('Objeto','Power-up'));return a.join(' ')}
-function advClaim(i){M.adv=M.adv||{};if(M.adv[i]||i>advToday())return;const r=ADV[i-1];M.adv[i]=1;const a=[];
+function advClaim(i){M.adv=M.adv||{};if(M.adv[i]||i>advToday())return;track('adv',i);const r=ADV[i-1];M.adv[i]=1;const a=[];
   if(r.c){M.coins+=r.c;a.push('+'+fmt(r.c)+' 🪙')}
   if(r.s){M.nextShield=(M.nextShield||0)+r.s;a.push('🛡️ +'+r.s+L(' en tu próxima partida',' next run'))}
   if(r.pw){M.nextPw=1;a.push(L('💪 objeto especial en tu próxima partida','💪 power-up on your next run'))}
@@ -3504,7 +3513,7 @@ function fillMenu(){
   worldBar('mWorlds');trackMax();payLeague();advBtn();seBtn();seAuto();$('mMsg').hidden=!M.tourMsg;$('mMsg').className='note win';$('mMsg').textContent=M.tourMsg;misBadge();applyUnl();quickDots();
 }
 function setTgl(el,on){el.classList.toggle('on',on);el.textContent=on?L('Sí','On'):L('No','Off');el.setAttribute('aria-pressed',on)}
-function refreshSet(){setTgl($('bSound'),!!M.sound);setTgl($('bMusic'),M.music!==false);
+function refreshSet(){$('rowNotify').hidden=!tgLinked;setTgl($('bNotify'),M.notify!==false);setTgl($('bSound'),!!M.sound);setTgl($('bMusic'),M.music!==false);
   $('bLang').textContent=LANG==='en'?'English':'Español';$('bLang2').textContent=LANG==='en'?'Español':'English';
   $('setTest').hidden=!MODO_PRUEBA_CFG;$('setNewbie').hidden=!!M.newbie;$('setAll').hidden=!M.newbie;$('setTestTxt').innerHTML=M.newbie?L('Estás jugando como un <b>jugador nuevo</b>: sin monedas infinitas ni skins de prueba. Tu partida de prueba está guardada aparte.','You are playing as a <b>new player</b>: no infinite coins or test skins. Your test save is kept aside.'):L('Prueba el juego como un jugador real desde cero: sin monedas, sin skins y con todo por desbloquear. Tu partida de prueba se guarda y puedes volver a ella.','Try the game as a real player from zero: no coins, no skins, everything locked. Your test save is kept and you can go back to it.');
   $('setId').textContent=L('ID de jugador: ','Player ID: ')+(M.refId||'')+(MODO_PRUEBA?' · v14c':'')+(MODO_PRUEBA&&netStat?' · '+netStat:'')}
@@ -3562,6 +3571,7 @@ $('setNameOk').onclick=()=>{const v=$('setName').value.trim(),e=nameError(v,M.pi
     M.pilot=v;M.nameChanges--;save();cloudPush();renderNameSet();m.textContent=L('Nombre cambiado.','Name changed.');m.className='note new'})};
 function showMenu(){holeWindStop();unfreeze();ghFlush();state='menu';obs=[];pick=[];$('hud').hidden=true;tourCheckWeek();fillMenu();M.offered++;save();show('pMenu')}
 function showOver(m,rec){
+  track('run',m);
   state='over';overAt=performance.now();lastRec={m,coins:Math.floor(coins),skin:SK.id,when:Date.now()};rcReset(rec);$('hud').hidden=true;overChals();worldBar('oWorlds');{const k=$('oKey');k.hidden=!(PORTAL&&matchMedia('(hover:hover)').matches)}
   $('oWhy').textContent=whyDead;$('oM').textContent=fmt(m);$('oC').textContent=fmt(coins);
   $('oBest').textContent=fmt(M.best)+' m';{const nb=$('oNew');nb.hidden=!rec;if(rec){const pv=runBest;nb.innerHTML='<span class="tr">🏆</span><h3>'+L('¡NUEVO RÉCORD!','NEW BEST!')+'</h3><div class="rv">'+(pv>0?L('Antes ','Before ')+fmt(pv)+' m → <b>'+fmt(m)+' m</b> · <b>+'+fmt(m-pv)+' m</b>':'<b>'+fmt(m)+' m</b>')+'</div>'+[[8,10],[86,14],[14,62],[90,58],[48,4],[70,78]].map((p,i)=>'<span class="sp" style="left:'+p[0]+'%;top:'+p[1]+'%;animation-delay:'+(i*.3)+'s">'+(i%2?'✨':'⭐')+'</span>').join('');
@@ -3654,8 +3664,15 @@ async function cloudInit(){try{
     // la nube tiene una partida más avanzada: la cargamos
     sessionStorage.setItem('dr.cloudload','1');try{localStorage.setItem(KEY,JSON.stringify(Object.assign({},data.save,{named:true,pilot:data.name})))}catch(e){}
     location.reload();return}
-  refRemember();await tgLink();cloudPush();cloudCount();cloudTourFetch();cloudCups();cloudRef();cloudInvClaim()}
+  track('session',M.games);refRemember();await tgLink();cloudPush();cloudCount();cloudTourFetch();cloudCups();cloudRef();cloudInvClaim()}
   catch(e){stat('Nube: error '+(e&&e.message||e));console.warn('[nube] sin conexión, se juega en local',e)}}
+// ---- métricas (sesiones, partidas, anuncios, jefes): se mandan en lotes cada 20 s ----
+var evQ=[];
+function plat(){return IS_POKI?'poki':IS_CG?'cg':IS_APP?'app':(window.Telegram&&Telegram.WebApp&&Telegram.WebApp.initData?'tg':'web')}
+function track(n,v){try{if(MODO_PRUEBA)return;if(evQ.length<80)evQ.push({n,v:Math.max(-1e8,Math.min(1e8,Math.floor(v||0)))})}catch(e){}}
+async function evFlush(){if(!cloudOk||!evQ.length)return;const b=evQ.splice(0,40);
+  try{const{error}=await sb.rpc('track_events',{evs:b,plat:plat()});if(error)evQ=b.concat(evQ).slice(0,80)}catch(e){evQ=b.concat(evQ).slice(0,80)}}
+setInterval(evFlush,20000);document.addEventListener('visibilitychange',()=>{if(document.hidden)evFlush()});
 // Liga la partida a la cuenta de Telegram (verificado en el servidor) o la recupera si cambias de móvil
 var tgLinked=false,netStat='';
 var netParts={};function stat(x){const k=String(x).split(':')[0];netParts[k]=x;netStat=Object.values(netParts).join(' · ');try{if(MODO_PRUEBA&&$('pSet')&&!$('pSet').hidden)refreshSet()}catch(e){}}
@@ -4034,6 +4051,7 @@ function showRealAd(label,onReward,back){
   }).catch(()=>{if(done)return;clearTimeout(to);fin();adFail(L('Ahora mismo no hay anuncios disponibles. Prueba otra vez en un momento.','No ads available right now. Try again in a moment.'))})}
 function showAd(label,onReward,back){
   if(adBusy)return;
+  track('ad_offer',1);{const _or=onReward;onReward=()=>{track('ad_ok',1);evFlush();_or&&_or()}}
   $('bAdOk').hidden=false;$('bAdSkip').hidden=false;$('bAdSkip').textContent=L('Saltar sin recompensa','Skip without reward');
   $('adMsg').textContent=L('Aquí se mostrará el anuncio real de la red de anuncios.','The real ad from the ad network will show here.');
   if(IS_POKI)return showPokiAd(label,onReward,back);
@@ -4184,6 +4202,7 @@ $('setNewbie').onclick=()=>{try{localStorage.setItem(KEY+'.prueba',JSON.stringif
   localStorage.setItem(KEY,JSON.stringify({newbie:true,lang:M.lang,sound:M.sound,music:M.music}))}catch(e){}location.reload()};
 $('setAll').onclick=()=>{try{const b=localStorage.getItem(KEY+'.prueba');if(b){localStorage.setItem(KEY,b);localStorage.removeItem(KEY+'.prueba')}else localStorage.removeItem(KEY)}catch(e){}location.reload()};
 $('bMusic').onclick=()=>{M.music=M.music===false;save();refreshSet()};
+$('bNotify').onclick=()=>{M.notify=M.notify===false;save();try{if(cloudOk)sb.from('players').update({notify:M.notify!==false}).eq('id',cloudUid).then(()=>{})}catch(e){}refreshSet()};
 $('bSound').onclick=()=>{M.sound=!M.sound;save();refreshSet();unlock();beep(880,.08)};
 
 /* ======================= INPUT ======================= */
