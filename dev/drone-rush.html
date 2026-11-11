@@ -71,6 +71,14 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
 .qbtn i{font-style:normal;font-size:22px;line-height:1}
 .qbtn:active{transform:translateY(2px)}
 .btn.adv{background:linear-gradient(135deg,rgba(214,48,60,.42),rgba(28,140,88,.42));border:1.5px solid rgba(255,211,90,.65);box-shadow:0 0 16px rgba(255,211,90,.18)}
+.se-card{display:flex;align-items:center;gap:12px;padding:14px;border-radius:16px;background:linear-gradient(135deg,rgba(255,179,107,.22),rgba(122,60,255,.2));border:1.5px solid rgba(255,211,90,.75);margin:8px 0}
+.se-card .lg-badge{flex:none;width:46px;height:46px}.se-card b{font-size:19px}.se-card small{display:block;opacity:.9;margin-top:2px}
+.se-chest{text-align:center;margin:12px 0}.se-chest .big{font-size:68px;line-height:1;animation:sef 2s ease-in-out infinite;margin-bottom:8px}
+@keyframes sef{50%{transform:translateY(-6px)}}
+.se-rew{padding:16px;border-radius:16px;border:2px solid var(--rc,#ffd35a);background:rgba(255,255,255,.06);animation:sepop .55s cubic-bezier(.2,1.6,.4,1);margin-bottom:10px}
+.se-rew i{font-style:normal;font-size:50px;display:block}.se-rew b{font-size:18px;display:block;margin-top:4px}.se-rew em{font-style:normal;font-size:12px;letter-spacing:.1em;font-weight:800;color:var(--rc)}
+@keyframes sepop{from{transform:scale(.6);opacity:0}}
+.se-odds{font-size:12px;opacity:.9;display:flex;gap:6px 12px;justify-content:center;flex-wrap:wrap;margin-top:10px}.se-odds span b{color:var(--rc)}
 .adv-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:10px 0 12px}
 .adv-d{position:relative;aspect-ratio:1;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--ink);font-family:var(--ui);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:0;cursor:default}
 .adv-d b{font-size:20px;line-height:1}.adv-d small{font-size:10px;opacity:.75;font-weight:700}
@@ -593,6 +601,7 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
       <button class="btn sec inv" id="bInv" data-en="Friends<small>invite &amp; win</small>">Amigos<small>invita y gana</small></button>
     </div>
     <button class="btn pvp" id="bPvp"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" y1="19" x2="19" y2="13"/><line x1="16" y1="16" x2="20" y2="20"/><line x1="19" y1="21" x2="21" y2="19"/><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" y1="14" x2="9" y2="18"/><line x1="7" y1="17" x2="4" y2="20"/><line x1="3" y1="19" x2="5" y2="21"/></svg><span data-en="PvP Battles">Batallas PvP</span></button>
+    <button class="btn sec mis adv" id="bSE" hidden><span data-en="🏆 Season over<small>open your chest</small>">🏆 Fin de temporada<small>abre tu cofre</small></span></button>
     <button class="btn sec mis adv" id="bAdv" hidden><span data-en="🎄 Advent calendar<small>a gift every day</small>">🎄 Calendario de Adviento<small>un regalo cada día</small></span><i class="badge" id="advBadge" hidden></i></button>
     <div class="qrow">
       <button class="qbtn" id="bDaily"><i>🎯</i><span data-en="Daily">Reto</span><b class="qdot" id="dDot" hidden></b></button>
@@ -659,6 +668,17 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
     <button class="btn gold" id="aAll" hidden></button>
     <div class="items" id="aList"></div>
     <button class="btn sec plain" id="aBack" data-en="Back">Volver</button>
+  </section>
+  <section class="panel tall" id="pSE" hidden>
+    <div class="shop-head"><h2 data-en="Season over">Fin de temporada</h2><span class="wallet"><span id="seCoins">0</span> <i class="coin spin"></i></span></div>
+    <div class="se-card"><i class="lg-badge" id="seBadge"></i><div><b id="seLg"></b><small id="seTr"></small></div></div>
+    <p class="note" id="seNote"></p>
+    <p class="note" id="seMax"></p>
+    <p class="note win" id="seFast"></p>
+    <div class="se-chest"><div class="big" id="seIc">🎁</div><div id="seRew" hidden></div>
+      <button class="btn gold" id="seOpen" data-en="Open chest">Abrir cofre</button>
+      <div class="se-odds" id="seOdds"></div></div>
+    <button class="btn sec plain" id="seBack" data-en="Continue">Continuar</button>
   </section>
   <section class="panel tall" id="pAdv" hidden>
     <div class="shop-head"><h2 data-en="Advent calendar">Calendario de Adviento</h2><span class="wallet"><span id="advCoins">0</span> <i class="coin spin"></i></span></div>
@@ -757,8 +777,9 @@ body{margin:0;background:var(--night);color:var(--ink);font-family:var(--body);o
     <div class="pvp-modes">
       <div class="lg-cur"><div class="lg-top"><span id="pvpLeague"></span><small id="pvpNext"></small></div><div class="inv-bar lg-bar"><i id="pvpBar"></i></div></div>
       <div class="pvp-stats"><div class="chip"><small data-en="Trophies">Trofeos</small><b id="pvpTro">0</b></div><div class="chip"><small data-en="Wins / races">Victorias / carreras</small><b id="pvpWins">0 / 0</b></div></div>
+      <p class="note" id="pvpMax" style="margin:6px 0"></p><p class="note win" id="pvpFast" hidden style="margin:6px 0"></p>
       <div class="pvp-card live"><div class="pvp-n">1</div><div><b data-en="Ghost race">Carrera de fantasmas</b> <span class="tag rar-comun" style="background:var(--good)" data-en="PLAY NOW">YA DISPONIBLE</span>
-        <p data-en="You race the ghost of a real player with your level on the same course. Whoever flies further wins. Works at any time, even with few players online.">Compites contra el fantasma de un jugador real de tu nivel, en el mismo recorrido. Gana quien llegue más lejos. Funciona a cualquier hora, aunque haya pocos jugadores conectados.</p><p class="pvp-rw" data-en="Win: +25 trophies and 250 to 1,000 coins depending on your league">Ganar: +25 trofeos y de 250 a 1.000 monedas según tu liga</p>
+        <p data-en="You race the ghost of a real player with your level on the same course. Whoever flies further wins. Works at any time, even with few players online.">Compites contra el fantasma de un jugador real de tu nivel, en el mismo recorrido. Gana quien llegue más lejos. Funciona a cualquier hora, aunque haya pocos jugadores conectados.</p><p class="pvp-rw" data-en="Win: <span id='pvpGain'>+25</span> trophies and 250 to 1,000 coins depending on your league">Ganar: <span id="pvpGain">+25</span> trofeos y de 250 a 1.000 monedas según tu liga</p>
         <button class="btn pvp go" id="bRace"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" y1="19" x2="19" y2="13"/><line x1="16" y1="16" x2="20" y2="20"/><line x1="19" y1="21" x2="21" y2="19"/><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" y1="14" x2="9" y2="18"/><line x1="7" y1="17" x2="4" y2="20"/><line x1="3" y1="19" x2="5" y2="21"/></svg><span data-en="Find rival">Buscar rival</span></button></div></div>
       <div class="pvp-card soon"><div class="pvp-n">2</div><div><span class="tag pvp-tag" data-en="COMING SOON">PRÓXIMAMENTE</span><br><b data-en="Live 1 vs 1 duel">Duelo 1 contra 1 en directo</b>
         <p data-en="Two players at the same time, seeing each other's drone. Both bet the same coins and the winner takes everything.">Dos jugadores a la vez, viendo el dron del otro. Los dos apuestan las mismas monedas y el ganador se lo lleva todo.</p></div></div>
@@ -1872,6 +1893,35 @@ function renderAch(){const box=$('aList');box.innerHTML='';M.ach=M.ach||{};const
     if(done&&!cl){const b=document.createElement('button');b.className='rw';b.textContent=L('Recoger','Claim');b.onclick=()=>{M.ach[a.id]=1;M.coins+=a.r;save();claimFx();renderAch();$('aCoins').textContent=walletTxt()};el.querySelector('.rwd').replaceChildren(b)}
     box.append(el)}$('aCoins').textContent=walletTxt()}
 function openAch(){unlock();renderAch();show('pAch');$('pAch').scrollTop=0}
+/* ----- fin de temporada: aviso + cofre ----- */
+const SE_R=[{id:'c500',r:0,w:[40,30,22,15,10,5],ic:'🪙',t:['500 monedas','500 coins'],coins:500},
+ {id:'sh3',r:0,w:[25,20,15,12,8,5],ic:'🛡️',t:['3 escudos para tu próxima partida','3 shields for your next run']},
+ {id:'c1500',r:1,w:[20,25,25,22,18,12],ic:'🪙',t:['1.500 monedas','1,500 coins'],coins:1500},
+ {id:'pw',r:1,w:[10,10,10,8,6,4],ic:'💪',t:['Un objeto especial para tu próxima partida','A power-up for your next run']},
+ {id:'nm',r:1,w:[0,5,6,6,5,4],ic:'✏️',t:['1 cambio de nombre','1 name change']},
+ {id:'c5k',r:2,w:[5,8,15,20,24,24],ic:'💰',t:['5.000 monedas','5,000 coins'],coins:5000},
+ {id:'conf',r:2,w:[0,2,5,9,13,15],ic:'🎊',t:['Estela Confeti','Confetti trail']},
+ {id:'c15k',r:3,w:[0,0,2,8,16,31],ic:'👑',t:['15.000 monedas','15,000 coins'],coins:15000}];
+const SE_RN=[['COMÚN','COMMON','#9fb0d0'],['RARA','RARE','#5ad1ff'],['ÉPICA','EPIC','#c58bff'],['LEGENDARIA','LEGENDARY','#ffd35a']];
+function seBtn(){const b=$('bSE');if(b)b.hidden=!(M.seasonEnd&&!M.seasonEnd.chest)}
+function seAuto(){const s=M.seasonEnd;if(!s||s.shown)return;s.shown=1;save();setTimeout(()=>{if(state==='menu'&&!$('pMenu').hidden)openSE()},450)}
+function renderSE(){const s=M.seasonEnd;if(!s)return;const lg=LEAGUES.find(l=>l.id===s.lg)||LEAGUES[0],i=LEAGUES.indexOf(lg),ml=maxLeague();
+  $('seBadge').style.setProperty('--lc',lg.c);$('seLg').innerHTML=L('Terminaste en ','You finished in ')+`<span style="color:${lg.c}">${LN(lg)}</span>`;
+  $('seTr').textContent=L(`${fmt(s.before)} → ${fmt(s.after)} trofeos · premio de liga +${fmt(s.prize)} monedas${s.extra&&s.extra[0]?' '+s.extra[0]:''}`,`${fmt(s.before)} → ${fmt(s.after)} trophies · league prize +${fmt(s.prize)} coins${s.extra&&s.extra[1]?' '+s.extra[1]:''}`);
+  $('seNote').textContent=s.after<s.before?L(`Empieza la nueva temporada: tus trofeos se ajustan a ${fmt(s.after)}. Conservas parte de lo que has subido, y la clasificación vuelve a empezar para todos.`,`New season: your trophies are adjusted to ${fmt(s.after)}. You keep part of your climb, and the ranking restarts for everyone.`):L('Empieza la nueva temporada. Tus trofeos se quedan como están.','New season. Your trophies stay as they are.');
+  $('seMax').innerHTML='🏅 '+L('Máximo histórico: ','All-time best: ')+`<b style="color:${ml.c}">${LN(ml)}</b> · ${fmt(Math.max(M.maxTrophies||0,s.before))} 🏆 `+L('(no se pierde nunca)','(never lost)');
+  $('seFast').textContent='⚡ '+L(`Racha de recuperación: tus ${FAST_N} primeras victorias seguidas de la temporada dan el doble de trofeos. Si pierdes una carrera, se corta.`,`Comeback streak: your first ${FAST_N} wins in a row this season give double trophies. Lose a race and it ends.`);
+  const rw=$('seRew'),op=$('seOpen');$('seCoins').textContent=walletTxt();
+  if(s.chest&&s.rew){const rn=SE_RN[s.rew.r];$('seIc').hidden=true;rw.hidden=false;rw.className='se-rew';rw.style.setProperty('--rc',rn[2]);rw.innerHTML=`<i>${(SE_R.find(x=>x.id===s.rew.id)||{}).ic||'🎁'}</i><em>${L(rn[0],rn[1])}</em><b>${s.rew.txt}</b>`;op.hidden=true;$('seOdds').hidden=true}
+  else{$('seIc').hidden=false;rw.hidden=true;op.hidden=false;$('seOdds').hidden=false;
+    const tot=SE_R.reduce((a,x)=>a+x.w[i],0),by=[0,0,0,0];for(const x of SE_R)by[x.r]+=x.w[i];
+    $('seOdds').innerHTML=by.map((v,r)=>v?`<span style="--rc:${SE_RN[r][2]}"><b>${L(SE_RN[r][0],SE_RN[r][1])}</b> ${Math.round(v/tot*100)} %</span>`:'').join('')}}
+function openSE(){if(!M.seasonEnd)return;unlock();renderSE();show('pSE');$('pSE').scrollTop=0}
+function seOpen(){const s=M.seasonEnd;if(!s||s.chest)return;const i=Math.max(0,LEAGUES.findIndex(l=>l.id===s.lg)),tot=SE_R.reduce((a,x)=>a+x.w[i],0);let r=Math.random()*tot,it=SE_R[0];for(const x of SE_R){r-=x.w[i];if(r<0){it=x;break}}
+  let txt=L(it.t[0],it.t[1]);
+  if(it.coins)M.coins+=it.coins;else if(it.id==='sh3')M.nextShield=(M.nextShield||0)+3;else if(it.id==='pw')M.nextPw=1;else if(it.id==='nm')M.nameChanges=(M.nameChanges||0)+1;
+  else if(it.id==='conf'){if(M.confettiOwned){M.coins+=3000;txt=L('Estela Confeti repetida: 3.000 monedas','Duplicate Confetti trail: 3,000 coins')}else{M.confettiOwned=true;M.trailMsg=1;txt+=L(' (Bolsa › Estelas)',' (Shop › Trails)')}}
+  s.chest=1;s.rew={id:it.id,r:it.r,txt};save();claimFx();if(it.r>=2){setTimeout(()=>beep(1046,.3,'square',.06,2093),150);buzz([40,40,80])}renderSE()}
 /* ----- calendario de Adviento ----- */
 const ADV=[{c:300},{s:1},{c:400},{pw:1},{c:500},{s:1},{c:600},{pw:1},{c:700},{s:2},{c:800},{pw:1},{c:900},{s:1},{c:1000},{pw:1},{c:1200},{s:2},{c:1400},{pw:1},{c:1600},{s:2},{c:2000},{c:5000,s:3,tr:1}];
 let advMsg='';
@@ -3186,11 +3236,12 @@ function raceHud(){if(!race)return'';const me=Math.floor(dist/PXM);
 function showRaceEnd(m){
   state='over';$('hud').hidden=true;const r=race,win=m>r.end;
   const lg0=leagueOf(M.trophies||0),prize=lg0.win||RACE_WIN,lost=lg0.lose;
-  M.trophies=Math.max(0,(M.trophies||0)+(win?TROPHY_WIN:-lost));if(win){M.coins+=prize;M.raceWins=(M.raceWins||0)+1}M.races=(M.races||0)+1;save();
+  const dbl=win&&(M.fastLeft||0)>0,gain=TROPHY_WIN*(dbl?2:1);
+  M.trophies=Math.max(0,(M.trophies||0)+(win?gain:-lost));if(win){M.coins+=prize;M.raceWins=(M.raceWins||0)+1;if(dbl)M.fastLeft--}else M.fastLeft=0;M.races=(M.races||0)+1;trackMax();save();
   const lg1=leagueOf(M.trophies);
   $('reTitle').textContent=win?L('¡VICTORIA!','VICTORY!'):L('DERROTA','DEFEAT');$('reTitle').className='race-title '+(win?'win':'lose');
   $('reMe').textContent=fmt(m)+' m';$('reRival').textContent=fmt(r.end)+' m';$('reRivalName').innerHTML=nameTag(r.name,r.frame,r.cups);$('reMeName').innerHTML=myTag();
-  $('reRw').innerHTML=win?`+${fmt(prize)} ${COIN} · +${TROPHY_WIN} ${L('trofeos','trophies')}`:(lost?`−${lost} ${L('trofeos','trophies')}`:L('En Bronce no pierdes trofeos','In Bronze you lose no trophies'));
+  $('reRw').innerHTML=win?`+${fmt(prize)} ${COIN} · +${gain} ${L('trofeos','trophies')}${dbl?' ⚡×2'+(M.fastLeft?L(` (${M.fastLeft} más)`,` (${M.fastLeft} left)`):''):''}`:(lost?`−${lost} ${L('trofeos','trophies')}`:L('En Bronce no pierdes trofeos','In Bronze you lose no trophies'));
   const up=$('reLeague');up.hidden=lg1.id===lg0.id;if(!up.hidden){up.textContent=lg1.min>lg0.min?L(`¡Has subido a la liga ${LN(lg1)}!`,`You reached the ${LN(lg1)} league!`):L(`Has bajado a la liga ${LN(lg1)}`,`You dropped to the ${LN(lg1)} league`);up.className='note '+(lg1.min>lg0.min?'win':'bad')}
   $('reCoins').textContent=fmt(coins);$('reTro').textContent=fmt(M.trophies);
   lastRival={name:r.name,skin:r.skin,frame:r.frame,trophies:r.trophies,best:Math.max(r.best,r.end),end:r.end,rivalWon:!win,ghost:r.real?{name:r.name,skin:r.skin,end:r.end,best:r.best,trophies:r.trophies,frame:r.frame,cups:r.cups,seed:r.seed,path:r.path,real:true}:null};
@@ -3225,17 +3276,25 @@ function findRival(){unlock();clearTimeout(matchT);$('mtMe').innerHTML=myTag();
     $('mtInfo').textContent=L(`Récord ${fmt(r.best)} m · ${fmt(r.trophies)} trofeos`,`Best ${fmt(r.best)} m · ${fmt(r.trophies)} trophies`)+' · '+(r.real?L('Jugador real','Real player'):L('Piloto de entrenamiento','Training pilot'));
     $('mtSkin').textContent=SN(skinById(r.skin));mtRival=r;beep(880,.15,'triangle',.05,1320)},Math.max(0,1400+Math.random()*900-(performance.now()-t0)))})}
 let mtRival=null;
+const FAST_N=5;
+function trackMax(){const t=M.trophies||0;if(t>(M.maxTrophies||0))M.maxTrophies=t}
+const maxLeague=()=>leagueOf(Math.max(M.maxTrophies||0,M.trophies||0));
 function payLeague(){const endedN=Math.max(0,...SEASONS.filter(s=>new Date()>=s.end).map(s=>s.n));if(!endedN||(M.leaguePaid||0)>=endedN)return;
-  const lg=leagueOf(M.trophies||0),i=LEAGUES.indexOf(lg);M.coins+=lg.end;
+  const tr0=M.trophies||0,lg=leagueOf(tr0),i=LEAGUES.indexOf(lg);M.coins+=lg.end;
   if(i>=2)M.nameChanges=(M.nameChanges||0)+1;
   M.frames=M.frames||[];if(i>=3&&!M.frames.includes('platino'))M.frames.push('platino');
   if(i>=4){if(!M.frames.includes('diamante'))M.frames.push('diamante');M.diamondTrail=true}
   if(i>=5){if(!M.frames.includes('leyenda'))M.frames.push('leyenda');if(!M.owned.includes('emperador'))M.owned.push('emperador')}
+  trackMax();const k=endedN<=1?.7:.5,tr1=tr0>500?Math.round(500+(tr0-500)*k):tr0;M.trophies=tr1;M.fastLeft=FAST_N;
+  if((M.races||0)>0||tr0>0){M.leaguePaid=endedN;M.seasonEnd={n:endedN,lg:lg.id,before:tr0,after:tr1,prize:lg.end,extra:i>=2?lg.extra:null,chest:0,rew:null,shown:0};M.tourMsg='';save();return}
   M.leaguePaid=endedN;M.tourMsg=L(`Fin de temporada: liga ${LN(lg)}. Has ganado ${fmt(lg.end)} monedas${lg.extra[0]?' '+lg.extra[0]:''}.`,`Season over: ${LN(lg)} league. You won ${fmt(lg.end)} coins${lg.extra[1]?' '+lg.extra[1]:''}.`);save()}
 function renderPvp(){cloudTrophyBoard();const tr=M.trophies||0,lg=leagueOf(tr),i=LEAGUES.indexOf(lg),nx=LEAGUES[i+1];
   $('pvpTro').textContent=fmt(tr);$('pvpWins').textContent=fmt(M.raceWins||0)+' / '+fmt(M.races||0);
   $('pvpLeague').innerHTML=`<i class="lg-badge" style="--lc:${lg.c}"></i><b style="color:${lg.c}">${LN(lg)}</b>`;
   $('pvpNext').textContent=nx?L(`${fmt(nx.min-tr)} trofeos para ${LN(nx)}`,`${fmt(nx.min-tr)} trophies to ${LN(nx)}`):L('Liga máxima','Top league');
+  {const g=$('pvpGain');if(g)g.textContent=(M.fastLeft>0?'+'+TROPHY_WIN*2+' (⚡×2)':'+'+TROPHY_WIN)}
+  {const ml=maxLeague();$('pvpMax').innerHTML='🏅 '+L('Máximo histórico: ','All-time best: ')+`<b style="color:${ml.c}">${LN(ml)}</b> · ${fmt(Math.max(M.maxTrophies||0,tr))} 🏆`;
+   const pf=$('pvpFast'),fl=M.fastLeft||0;pf.hidden=!fl;if(fl)pf.textContent='⚡ '+L(`Racha de recuperación: tus próximas ${fl} victorias seguidas dan el doble de trofeos. Si pierdes una carrera, se corta.`,`Comeback streak: your next ${fl} wins in a row give double trophies. Lose one race and it ends.`)}
   $('pvpBar').style.width=nx?Math.round((tr-lg.min)/(nx.min-lg.min)*100)+'%':'100%';$('pvpBar').style.background=lg.c;
   const box=$('lgTable');box.innerHTML='';
   for(const l of [...LEAGUES].reverse()){const j=LEAGUES.indexOf(l),hi=LEAGUES[j+1];
@@ -3245,7 +3304,7 @@ function renderPvp(){cloudTrophyBoard();const tr=M.trophies||0,lg=leagueOf(tr),i
       <div class="lg-end"><small>${L('Fin de temporada','Season end')}</small><b>${short(l.end)} <i class="coin"></i></b>${l.extra[0]?`<em>${l.extra[LANG==='en'?1:0]}</em>`:''}</div>`;
     box.append(el)}}
 
-const panels=['pAdv','pSquad','pDaily','pWheel','pAch','pCust','pMatch','pRaceEnd','pRaceRev','pMenu','pOver','pShop','pTour','pMis','pInv','pSet','pName','pPvp','pAd'];
+const panels=['pSE','pAdv','pSquad','pDaily','pWheel','pAch','pCust','pMatch','pRaceEnd','pRaceRev','pMenu','pOver','pShop','pTour','pMis','pInv','pSet','pName','pPvp','pAd'];
 /* ======================= MISIONES ======================= */
 const MTXT={
   run:[g=>`Recorre ${fmt(g)} m en una partida`,g=>`Fly ${fmt(g)} m in one run`],
@@ -3441,7 +3500,7 @@ function show(id){for(const p of panels)$(p).hidden=p!==id;if(id&&id!=='pAd')$('
 function fillMenu(){
   $('mBest').textContent=fmt(M.best)+' m';$('mCoins').textContent=walletTxt();$('mTest').hidden=!MODO_PRUEBA;
   $('mWho').innerHTML=L('Piloto: ','Pilot: ')+myTag();refreshSet();
-  worldBar('mWorlds');payLeague();advBtn();$('mMsg').hidden=!M.tourMsg;$('mMsg').className='note win';$('mMsg').textContent=M.tourMsg;misBadge();applyUnl();quickDots();
+  worldBar('mWorlds');trackMax();payLeague();advBtn();seBtn();seAuto();$('mMsg').hidden=!M.tourMsg;$('mMsg').className='note win';$('mMsg').textContent=M.tourMsg;misBadge();applyUnl();quickDots();
 }
 function setTgl(el,on){el.classList.toggle('on',on);el.textContent=on?L('Sí','On'):L('No','Off');el.setAttribute('aria-pressed',on)}
 function refreshSet(){setTgl($('bSound'),!!M.sound);setTgl($('bMusic'),M.music!==false);
@@ -4003,7 +4062,7 @@ const x2=back=>()=>{unlock();showAd(L('x2 monedas en la partida','x2 coins this 
 $('bPlay').onclick=()=>{unlock();startGame(1)};
 $('bDaily').onclick=openDaily;$('bSquad').onclick=openSquad;$('qBack').onclick=()=>{state='menu';fillMenu();show('pMenu')};$('qCreate').onclick=sqCreate;$('qJoin').onclick=sqJoin;$('qLeave').onclick=sqLeave;$('qShare').onclick=sqShare;$('bWheel').onclick=openWheel;$('bAch').onclick=openAch;$('bCust').onclick=openCust;
 const toMenu=()=>{state='menu';fillMenu();show('pMenu')};
-$('dBack').onclick=toMenu;$('wBack').onclick=()=>{if(!wheelSpin)toMenu()};$('aBack').onclick=toMenu;$('bAdv').onclick=openAdv;$('advBack').onclick=toMenu;$('cBack').onclick=toMenu;
+$('dBack').onclick=toMenu;$('wBack').onclick=()=>{if(!wheelSpin)toMenu()};$('aBack').onclick=toMenu;$('bAdv').onclick=openAdv;$('bSE').onclick=openSE;$('seBack').onclick=toMenu;$('seOpen').onclick=seOpen;$('advBack').onclick=toMenu;$('cBack').onclick=toMenu;
 $('dPlay').onclick=()=>{unlock();dailyNext=true;startGame(1)};$('bDailyAgain').onclick=()=>{unlock();dailyNext=true;startGame(1)};
 $('dClaim').onclick=()=>{const d=dState(),md=dailyMod();if(d.claimed||d.best<md.goal)return;d.claimed=true;M.coins+=DAILY_PRIZE;save();claimFx();renderDaily()};
 $('wFree').onclick=()=>spinWheel(false);$('wAd').onclick=()=>{unlock();showAd(L('otra tirada de la ruleta','another wheel spin'),()=>{state='menu';show('pWheel');spinWheel(true)},()=>{state='menu';show('pWheel')})};
