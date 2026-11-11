@@ -1094,21 +1094,56 @@ function bossBar(t0,e8,bar){const c=bar%4,r=BROOT[c],bt=e8*2,h=e8/2;
   if(c===3)for(let k=0;k<4;k++)mNoise(t0+6*e8+k*h,.08,'bandpass',2200,.05+k*.04);
   for(let i=0;i<16;i++)mNoise(t0+i*h,.03,'highpass',8000,i%2?.034:.022);
   for(const[o,n,l]of BRIFF[c])voice(nf(n),t0+o*e8,l*e8*.9,'sawtooth',.03,.006,.15)}
-// campanillas navideñas sobre la música normal mientras dura la temporada de Navidad
-function bell(t,m,v){voice(nf(m),t,.04,'sine',v,.002,.9);voice(nf(m)*2.76,t,.02,'sine',v*.3,.002,.4);voice(nf(m)*5.4,t,.01,'sine',v*.12,.002,.2)}
-const XB=[0,1,2,1,2,1,2,1],XJ=[[0,1],[.5,1],[1,2]];
-function xmasBells(t0,e8,c,play){const ch=MCH[c];
-  for(let i=0;i<8;i+=play?1:2)bell(t0+i*e8,ch[XB[i]]+24,play?.016:.022);
-  for(let i=0;i<8;i+=play?1:2)mNoise(t0+i*e8+e8*.5,.05,'highpass',9500,play?.03:.018);   // cascabeles de trineo
-  if(c%2===1)for(const[o,k]of XJ)bell(t0+(6+o)*e8,ch[k]+36,.012)}
+// ---- música de Navidad propia (1 dic – 6 ene): menú «Chimenea» y partida «Trineo Turbo» ----
+let XRV=null,XG=null;
+function xdst(){if(!XG){XG=AC.createGain();XG.gain.value=.3;XG.connect(MUS)}return XG}
+function xrv(){if(XRV)return XRV;XRV=AC.createConvolver();const n=Math.floor(AC.sampleRate*2.2),b=AC.createBuffer(2,n,AC.sampleRate);for(let ch=0;ch<2;ch++){const d=b.getChannelData(ch);for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,2.6)}XRV.buffer=b;const g=AC.createGain();g.gain.value=.5;XRV.connect(g);g.connect(xdst());return XRV}
+function xout(g,wet){g.connect(xdst());if(wet){const w=AC.createGain();w.gain.value=wet;g.connect(w);w.connect(xrv())}}
+function xo(type,m,t,dur,vol,att,rel,lp,wet,det){try{const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.value=nf(m);if(det)o.detune.value=det;let n=o;
+  if(lp){const b=AC.createBiquadFilter();b.type='lowpass';b.frequency.value=lp;o.connect(b);n=b}
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+att);g.gain.setValueAtTime(vol,t+Math.max(att,dur));g.gain.exponentialRampToValueAtTime(.0001,t+dur+rel);
+  n.connect(g);xout(g,wet);o.start(t);o.stop(t+dur+rel+.05)}catch(e){}}
+function xbell(m,t,v,dec,wet){try{const f=nf(m);for(const[k,a]of[[1,1],[2.76,.35],[5.4,.14],[.5,.3]]){const o=AC.createOscillator(),g=AC.createGain();o.frequency.value=f*k;
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v*a,t+.003);g.gain.exponentialRampToValueAtTime(.0001,t+dec/(k>1?k*.55:1));o.connect(g);xout(g,wet);o.start(t);o.stop(t+dec+.1)}}catch(e){}}
+function xmbox(m,t,v,dec,wet){xo('triangle',m,t,.01,v,.002,dec,null,wet);xo('sine',m+12,t,.01,v*.5,.002,dec*.5,null,wet);xo('sine',m+24,t,.01,v*.12,.002,dec*.25,null,wet)}
+function xrh(m,t,v,dur){xo('sine',m,t,.02,v,.004,dur,null,.35);xo('sine',m+12,t,.01,v*.25,.003,dur*.4,null,.35);xo('triangle',m,t,.01,v*.15,.003,dur*.7,2000,.35)}
+function xnz(t,dur,type,fr,v,q){try{const s=AC.createBufferSource();s.buffer=getNoise();s.loop=true;const f=AC.createBiquadFilter();f.type=type;f.frequency.value=fr;f.Q.value=q||.8;const g=AC.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);s.connect(f);f.connect(g);g.connect(xdst());s.start(t,Math.random());s.stop(t+dur+.03)}catch(e){}}
+function xkick(t,v,low){try{const o=AC.createOscillator(),g=AC.createGain();o.frequency.setValueAtTime(150,t);o.frequency.exponentialRampToValueAtTime(low||42,t+.16);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+.28);o.connect(g);g.connect(xdst());o.start(t);o.stop(t+.3)}catch(e){}}
+function xclap(t,v){xnz(t,.14,'bandpass',1600,v,1.2);xnz(t+.012,.1,'bandpass',2300,v*.7,1.2)}
+function xbars(h,n){const o=Array.from({length:n},()=>[]);let b=0;for(const[m,d]of h){const k=Math.floor(b/4);if(k<n)o[k].push([m,b-4*k,d]);b+=d}return o}
+// Menú · «Chimenea» (76 bpm): piano eléctrico, bajo suave y melodía de cajita de música
+const XM_Q=60/76,XM_BL=4*XM_Q,
+ XM_C=[[60,64,67,71],[57,60,64,67],[62,65,69,72],[55,59,62,65],[60,64,67,71],[64,67,71,74],[60,65,69,72],[55,59,62,65]],XM_B=[36,33,38,31,36,40,29,31],
+ XM_M=xbars([[76,1.5],[79,.5],[81,1],[79,1],[76,2],[72,1],[74,1],[77,1.5],[81,.5],[79,1],[77,1],[74,2],[79,2],[76,1.5],[79,.5],[84,1],[83,1],[79,2],[76,1],[79,1],[81,1.5],[79,.5],[77,1],[76,1],[74,4]],8);
+function xM2(t0,L){const q=XM_Q,cc=L%8,c=XM_C[cc],b=XM_B[cc];
+  for(const[o,l]of[[0,1],[1.5,.6],[3,.7]])for(const m of c)xrh(m,t0+o*q+Math.random()*.012,.05*l,1.6);
+  xo('sine',b,t0,q*1.6,.3,.01,.35);xo('sine',b+7,t0+2*q,q*.8,.2,.01,.3);xo('sine',b+(cc==3?5:4),t0+3*q,q*.8,.16,.01,.3);
+  xkick(t0,.35,50);xnz(t0+q,.16,'highpass',4000,.07);xnz(t0+3*q,.16,'highpass',4000,.07);for(let i=0;i<8;i++)xnz(t0+i*q/2,.03,'highpass',9000,i%2?.02:.035);
+  for(const[m,o]of XM_M[L%8]){const t=t0+o*q;if(L<8)xmbox(m,t,.2,1.4,.5);else{xbell(m+12,t,.22,1.6,.55);xrh(m,t,.07,1)}}}
+// Partida · «Trineo Turbo» (152 bpm): electrónica en La menor con cascabeles
+const XG_Q=60/152,XG_BL=4*XG_Q,XG_R=[45,41,38,40],XG_A=[[57,60,64],[57,60,65],[57,62,65],[56,59,64]],
+ XG_H=xbars([[81,.5],[81,.5],[84,1],[83,.5],[81,.5],[76,1],[77,.5],[77,.5],[81,1],[79,.5],[77,.5],[72,1],[74,.5],[77,.5],[81,1],[79,.5],[81,.5],[86,1],[83,.5],[80,.5],[76,1],[80,1],[83,1]],4);
+function xG1(t0,b){const q=XG_Q,cc=b%4,brk=b>=12&&b<16,on=b>=2&&!brk;
+  if(on){for(let i=0;i<4;i++)xkick(t0+i*q,.9);xclap(t0+q,.3);xclap(t0+3*q,.3);
+    for(let i=0;i<16;i++)xo('sawtooth',XG_R[cc]+([0,0,12,0,0,12,0,12,0,0,12,0,0,12,7,12][i]),t0+i*q/4,q*.2,.14,.003,.05,700);
+    for(let i=0;i<8;i++)xnz(t0+q*(i+.5)/2,.08,'highpass',7000,.07)}
+  for(let i=0;i<16;i++)xnz(t0+i*q/4,.03,'highpass',9500,.03);
+  for(let i=0;i<8;i++)xnz(t0+i*q/2,.05,'bandpass',10500,.05,2);
+  if(!brk)for(let i=0;i<16;i++)xo('sawtooth',XG_A[cc][i%3]+(i%6<3?12:24),t0+i*q/4,q*.2,.026,.004,.05,3200,.2);
+  else{for(const m of XG_A[cc])for(const d of[-8,8])xo('sawtooth',m,t0,q*4,.03,.5,.5,1000,.5,d);for(let i=0;i<4;i++)xbell(XG_A[cc][i%3]+24,t0+i*q,.14,1.2,.5);
+    if(b==15)for(let i=0;i<16;i++)xnz(t0+i*q/4,.1,'bandpass',500+i*500,.04+i*.008,2)}
+  if(b>=4&&b<24&&!brk){const hi=b>=20?12:0;for(const[m,o,d]of XG_H[(b-4)%4]){const t=t0+o*q,u=d*q;
+    xo('square',m+hi,t,u*.85,.05,.006,.08,3600,.15);xo('sawtooth',m+hi,t,u*.85,.03,.01,.08,2500,.1,9);xbell(m+12+hi,t,.15,1.1,.5)}}}
+let xMode=-1,xb=0;
 let musT=null,bar=0,nextBar=0;
 function startMusic(){if(musT||!AC)return;musInit();
   musT=setInterval(()=>{if(!AC||AC.state!=='running')return;
-    const play=state==='play',bs=play&&typeof boss!=='undefined'&&boss&&boss.ph!=='out',e8=bs?.172:play?.235:.30,bl=e8*8;
+    const play=state==='play',bs=play&&typeof boss!=='undefined'&&boss&&boss.ph!=='out',e8=bs?.172:play?.235:.30,xm=!bs&&xmasLive();let bl=e8*8;
+    if(xm){const md=play?1:0;if(md!==xMode){xMode=md;xb=0}bl=md?XG_BL:XM_BL}else xMode=-1;
     if(nextBar<AC.currentTime)nextBar=AC.currentTime+.1;
     while(nextBar<AC.currentTime+.6){
       if(M.music!==false&&!document.hidden){const c=bar%4,t0=nextBar,bt=e8*2,r=MROOT[c];
-        if(bs)bossBar(t0,e8,bar);else{
+        if(bs)bossBar(t0,e8,bar);else if(xm){if(xMode)xG1(t0,xb<4?xb:4+((xb-4)%20));else xM2(t0,xb%16);xb++}else{
         for(let i=0;i<8;i++){const t=t0+i*e8,sm=BASSP[i];voice(nf(r+sm),t,e8*.8,'sawtooth',play?.05:.036,.006,.07)}
         for(const n of MCH[c])voice(nf(n),t0,bl*.95,'triangle',.016,.25,.9);
         if(play){for(let k=0;k<4;k++){mKick(t0+k*bt,k%2?.16:.24)}
@@ -1118,7 +1153,7 @@ function startMusic(){if(musT||!AC)return;musInit();
           if(bar>=4)for(const[o,i,l]of LEAD[bar%8])voice(nf(LS[i]),t0+o*e8,l*e8*.9,'square',.026,.01,.18)}
         else{mKick(t0,.14);mKick(t0+bt*2,.1);mNoise(t0+bt,.12,'bandpass',1800,.05);mNoise(t0+3*bt,.12,'bandpass',1800,.05);
           for(const[o,i,l]of LEAD[bar%8])voice(nf(LS[i]-12),t0+o*e8,l*e8*.9,'triangle',.05,.02,.4)}
-        if(xmasLive())xmasBells(t0,e8,c,play)}}
+        }}
       bar++;nextBar+=bl}},120)}
 /* sonido de viento para el agujero negro */
 let noiseBuf=null,holeWind=null;
